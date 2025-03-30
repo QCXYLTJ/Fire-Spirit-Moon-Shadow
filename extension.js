@@ -2319,6 +2319,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     true
                 ); //BGM
             });
+            const style = document.createElement('style');
+            style.innerHTML = '@keyframes QQQ{';
+            for (var i = 1; i <= 20; i++) {
+                let rand1 = Math.floor(Math.random() * 255),
+                    rand2 = Math.floor(Math.random() * 255),
+                    rand3 = Math.floor(Math.random() * 255);
+                style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
+            }
+            style.innerHTML += '}';
+            document.head.appendChild(style);
             game.import('character', function (lib, game, ui, get, ai, _status) {
                 const QQQ = {
                     name: '火灵月影',
@@ -3811,6 +3821,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     info.trashBin = [`ext:火灵月影/image/${i}.jpg`];
                     info.dieAudios = [`ext:火灵月影/die/${i}.mp3`];
                 }
+                for (const i in QQQ.skill) {
+                    const info = QQQ.skill[i];
+                    info.nobracket = true;
+                    if (!info.audio) {
+                        info.audio = 'ext:火灵月影/audio:2';
+                    }
+                    if (info.subSkill) {
+                        for (const x in info.subSkill) {
+                            const infox = info.subSkill[x];
+                            if (!infox.audio) {
+                                infox.audio = 'ext:火灵月影/audio:2';
+                            } //如果是choosebutton,语音应该是xxx_backup
+                        }
+                    }
+                } //QQQ
                 if (!lib.config.all.characters.includes('火灵月影')) {
                     lib.config.all.characters.push('火灵月影');
                 }
