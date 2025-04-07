@@ -21,14 +21,18 @@ const sha = function () {
         game.saveConfig('dev', true);
     }
     Reflect.defineProperty(lib.config, 'dev', {
-        get: () => true,
+        get() {
+            return true;
+        },
         set() { },
     });
     if (lib.config.extension_alert) {
         game.saveConfig('extension_alert', false);
     }
     Reflect.defineProperty(lib.config, 'extension_alert', {
-        get: () => false,
+        get() {
+            return false;
+        },
         set() { },
     });
     if (lib.config.compatiblemode) {
@@ -43,12 +47,16 @@ const sha = function () {
     });
     const originalonerror = window.onerror;
     Reflect.defineProperty(window, 'onerror', {
-        get: () => originalonerror,
+        get() {
+            return originalonerror;
+        },
         set() { },
     });
     const originalAlert = window.alert;
     Reflect.defineProperty(window, 'alert', {
-        get: () => originalAlert,
+        get() {
+            return originalAlert;
+        },
         set() { },
     });
 };
@@ -665,6 +673,8 @@ const kangxing = function () {
 kangxing();
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
 const kangxingq = function () {
+    //醉诗
+    //每回合限两次,每轮开始时、体力值变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌
     Reflect.defineProperty(lib.skill, '醉诗', {
         get() {
             return {
@@ -687,19 +697,7 @@ const kangxingq = function () {
                             player.node.avatar.setBackgroundImage('extension/火灵月影/image/HL_李白2.jpg');
                             ui.background.setBackgroundImage('extension/火灵月影/image/HL_李白3.jpg');
                         }
-                        game.addVideo('jiuNode', player, true);
-                        if (!player.storage.jiu) {
-                            player.storage.jiu = 0;
-                        }
-                        player.storage.jiu += 1;
-                        player.markSkill('jiu');
-                        player.updateMarks();
-                        game.broadcastAll(function (player) {
-                            if (!player.node.jiu && lib.config.jiu_effect) {
-                                player.node.jiu = ui.create.div('.playerjiu', player.node.avatar);
-                                player.node.jiu2 = ui.create.div('.playerjiu', player.node.avatar2);
-                            }
-                        }, player);
+                        await player.quseCard('jiu', [player]);
                         for (const bool of [true, false]) {
                             const cards = bool ? Array.from(ui.cardPile.childNodes) : Array.from(ui.discardPile.childNodes).concat(Array.from(ui.ordering.childNodes));
                             const card = cards.filter((q) => get.tag(q, 'damage') || get.tag(q, 'recover')).randomGet();
@@ -739,28 +737,37 @@ const kangxingq = function () {
                 content() {
                     if (trigger.name == 'damage') {
                         Reflect.defineProperty(trigger, 'finished', {
-                            get: () => trigger.step > 5,
+                            get() {
+                                return trigger.step > 5;
+                            },
                             set() { },
                         });
                     }
                     if (trigger.name == 'useCard') {
                         Reflect.defineProperty(trigger, 'finished', {
-                            get: () => trigger.step > 16,
+                            get() {
+                                return trigger.step > 16;
+                            },
                             set() { },
                         });
                         Reflect.defineProperty(trigger, 'excluded', {
-                            get: () => [],
+                            get() {
+                                return [];
+                            },
+                            set() { },
                         });
                         Reflect.defineProperty(trigger, 'all_excluded', {
                             get() {
                                 return false;
                             },
+                            set() { },
                         });
                         if (get.tag(trigger.card, 'damage')) {
                             Reflect.defineProperty(trigger, 'targets', {
                                 get() {
                                     return player.getEnemies();
                                 },
+                                set() { },
                             });
                         } //用牌击穿
                     }
@@ -788,13 +795,19 @@ const kangxingq = function () {
                             if (info.trigger && lib.translate[`${i}_info`]) {
                                 for (const j in info.trigger) {
                                     const infox = info.trigger[j];
-                                    if (Array.isArray(infox)) {
-                                        for (const x of infox) {
-                                            triggerq[j][x] = numberq0(triggerq[j][x]) + 1;
+                                    const infoq = triggerq[j];
+                                    if (infoq) {
+                                        if (Array.isArray(infox)) {
+                                            for (const x of infox) {
+                                                infoq[x] = numberq0(infoq[x]) + 1;
+                                            }
+                                        }
+                                        else if (typeof infox == 'string') {
+                                            infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
                                     }
-                                    else if (typeof infox == 'string') {
-                                        triggerq[j][infox] = numberq0(triggerq[j][infox]) + 1;
+                                    else {
+                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1079,7 +1092,9 @@ const kangxingq = function () {
                         return card;
                     };
                     Reflect.defineProperty(player, 'skipList', {
-                        get: () => [],
+                        get() {
+                            return [];
+                        },
                         set() { },
                     });
                     var maxhp = lib.character[player.name][2];
@@ -1103,34 +1118,45 @@ const kangxingq = function () {
                     player.node.avatar.style.backgroundImage = `url('${lib.assetURL}extension/火灵月影/image/许劭.jpg')`;
                     if (['phaseUse', 'damage'].includes(trigger.name)) {
                         Reflect.defineProperty(trigger, 'finished', {
-                            get: () => trigger.step > 5,
+                            get() {
+                                return trigger.step > 5;
+                            },
                             set() { },
                         });
                     }
                     if (trigger.name == 'useCard') {
                         Reflect.defineProperty(trigger, 'finished', {
-                            get: () => trigger.step > 16,
+                            get() {
+                                return trigger.step > 16;
+                            },
                             set() { },
                         });
                         Reflect.defineProperty(trigger, 'excluded', {
-                            get: () => [],
+                            get() {
+                                return [];
+                            },
+                            set() { },
                         });
                         Reflect.defineProperty(trigger, 'all_excluded', {
                             get() {
                                 return false;
                             },
+                            set() { },
                         });
                         if (get.tag(trigger.card, 'damage')) {
                             Reflect.defineProperty(trigger, 'targets', {
                                 get() {
                                     return player.getEnemies();
                                 },
+                                set() { },
                             });
                         } //用牌击穿
                     }
                     if (trigger.name == 'phase') {
                         Reflect.defineProperty(trigger, 'finished', {
-                            get: () => trigger.step > 12,
+                            get() {
+                                return trigger.step > 12;
+                            },
                             set() { },
                         });
                     }
@@ -1147,7 +1173,9 @@ const kangxingq = function () {
                             },
                         });
                         Reflect.defineProperty(trigger, 'finished', {
-                            get: () => trigger.step > 2,
+                            get() {
+                                return trigger.step > 2;
+                            },
                             set() { },
                         });
                     }
@@ -1172,13 +1200,19 @@ const kangxingq = function () {
                             if (info.trigger && lib.translate[`${i}_info`]) {
                                 for (const j in info.trigger) {
                                     const infox = info.trigger[j];
-                                    if (Array.isArray(infox)) {
-                                        for (const x of infox) {
-                                            triggerq[j][x] = numberq0(triggerq[j][x]) + 1;
+                                    const infoq = triggerq[j];
+                                    if (infoq) {
+                                        if (Array.isArray(infox)) {
+                                            for (const x of infox) {
+                                                infoq[x] = numberq0(infoq[x]) + 1;
+                                            }
+                                        }
+                                        else if (typeof infox == 'string') {
+                                            infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
                                     }
-                                    else if (typeof infox == 'string') {
-                                        triggerq[j][infox] = numberq0(triggerq[j][infox]) + 1;
+                                    else {
+                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1399,13 +1433,19 @@ const kangxingq = function () {
                             if (info.trigger && lib.translate[`${i}_info`]) {
                                 for (const j in info.trigger) {
                                     const infox = info.trigger[j];
-                                    if (Array.isArray(infox)) {
-                                        for (const x of infox) {
-                                            triggerq[j][x] = numberq0(triggerq[j][x]) + 1;
+                                    const infoq = triggerq[j];
+                                    if (infoq) {
+                                        if (Array.isArray(infox)) {
+                                            for (const x of infox) {
+                                                infoq[x] = numberq0(infoq[x]) + 1;
+                                            }
+                                        }
+                                        else if (typeof infox == 'string') {
+                                            infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
                                     }
-                                    else if (typeof infox == 'string') {
-                                        triggerq[j][infox] = numberq0(triggerq[j][infox]) + 1;
+                                    else {
+                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1626,13 +1666,19 @@ const kangxingq = function () {
                             if (info.trigger && lib.translate[`${i}_info`]) {
                                 for (const j in info.trigger) {
                                     const infox = info.trigger[j];
-                                    if (Array.isArray(infox)) {
-                                        for (const x of infox) {
-                                            triggerq[j][x] = numberq0(triggerq[j][x]) + 1;
+                                    const infoq = triggerq[j];
+                                    if (infoq) {
+                                        if (Array.isArray(infox)) {
+                                            for (const x of infox) {
+                                                infoq[x] = numberq0(infoq[x]) + 1;
+                                            }
+                                        }
+                                        else if (typeof infox == 'string') {
+                                            infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
                                     }
-                                    else if (typeof infox == 'string') {
-                                        triggerq[j][infox] = numberq0(triggerq[j][infox]) + 1;
+                                    else {
+                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -2010,7 +2056,109 @@ boss();
 game.import('extension', function (lib, game, ui, get, ai, _status) {
     return {
         name: '火灵月影',
+        arenaReady() {
+            ui.create.system(
+                '火灵月影',
+                async function () {
+                    const div = window.document.createElement('div');
+                    div.id = 'divQ';
+                    const JUESELIST = [];
+                    const remove = [];
+                    //————————————————————————————————————————————————————————重置设置
+                    const chongzhi = window.document.createElement('div');
+                    chongzhi.className = 'chongzhiQ';
+                    chongzhi.innerHTML = '重置设置';
+                    chongzhi.onclick = function () {
+                        game.saveConfig('kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
+                    };
+                    remove.add(chongzhi);
+                    document.body.appendChild(chongzhi);
+                    //————————————————————————————————————————————————————————确定
+                    const OK = window.document.createElement('div');
+                    OK.className = 'backQ';
+                    OK.innerHTML = '确定';
+                    OK.onclick = function () {
+                        if (div.log) {
+                            lib.config.kangxing.add(div.log.link);
+                            game.saveConfig('kangxing', lib.config.kangxing);
+                        }
+                        for (const i of remove) {
+                            i.remove();
+                        }
+                    };
+                    remove.add(OK);
+                    document.body.appendChild(OK);
+                    //————————————————————————————————————————————————————————搜索
+                    const input = document.createElement('input');
+                    input.className = 'shuruQ';
+                    const FIND = window.document.createElement('div');
+                    FIND.className = 'findQ';
+                    FIND.innerHTML = '搜索';
+                    FIND.onclick = function () {
+                        for (const x of JUESELIST) {
+                            x.remove();
+                        }
+                        for (const j in lib.character) {
+                            if ((lib.translate[j] && lib.translate[j].includes(input.value)) || j.includes(input.value)) {
+                                //QQQ
+                                const JUESE = window.document.createElement('div');
+                                JUESE.style.backgroundImage = `url('${game.src(j)}')`;
+                                JUESE.className = 'characterQ';
+                                JUESE.innerHTML = get.translation(j);
+                                JUESE.link = j;
+                                JUESE.onclick = function () {
+                                    if (div.log) {
+                                        div.log.classList.remove('selected');
+                                    }
+                                    div.log = this;
+                                    this.classList.add('selected');
+                                };
+                                JUESELIST.push(JUESE);
+                                div.appendChild(JUESE);
+                            }
+                        }
+                    };
+                    remove.add(FIND);
+                    remove.add(input);
+                    document.body.appendChild(FIND);
+                    document.body.appendChild(input);
+                    //————————————————————————————————————————————————————————武将列表
+                    for (const i in lib.characterPack) {
+                        const PACK = window.document.createElement('div');
+                        PACK.className = 'packQ';
+                        PACK.innerHTML = get.translation(i + '_character_config');
+                        PACK.link = i;
+                        PACK.onclick = function () {
+                            for (const x of JUESELIST) {
+                                x.remove();
+                            }
+                            for (const j in lib.characterPack[this.link]) {
+                                const JUESE = window.document.createElement('div');
+                                JUESE.style.backgroundImage = `url('${game.src(j)}')`;
+                                JUESE.className = 'characterQ';
+                                JUESE.innerHTML = get.translation(j);
+                                JUESE.link = j;
+                                JUESE.onclick = function () {
+                                    if (div.log) {
+                                        div.log.classList.remove('selected');
+                                    }
+                                    div.log = this;
+                                    this.classList.add('selected');
+                                };
+                                JUESELIST.push(JUESE);
+                                div.appendChild(JUESE);
+                            }
+                        };
+                        div.appendChild(PACK);
+                    }
+                    remove.add(div);
+                    document.body.appendChild(div);
+                },
+                true
+            ); //BGM
+        },
         precontent() {
+            get.vcardInfo = function (card) { }; //卡牌storage里面存了DOM元素会循环引用导致不能JSON.stringify
             game.addGroup('仙', `<img src="${lib.assetURL}extension/火灵月影/other/xian.png"width="40"height="40">`, '仙', {
                 color: '#28e3ce',
                 image: 'ext:火灵月影/other/xian.png'
@@ -2143,13 +2291,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             }; //获取武将所有技能函数
             lib.element.player.quseCard = async function (card, targets, cards) {
                 const player = this;
-                const info = lib.card[card.name];
+                if (typeof card == 'string') {
+                    card = { name: card };
+                }
+                const name = card.name;
+                const info = lib.card[name];
                 if (!cards) {
                     cards = [card];
                 }
                 const skill = _status.event.skill;
                 if (info.contentBefore) {
-                    const next = game.createEvent(card.name + 'ContentBefore', false);
+                    const next = game.createEvent(name + 'ContentBefore', false);
                     next.parent.stocktargets = targets;
                     next.targets = targets;
                     next.card = card;
@@ -2164,14 +2316,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     for (const target of targets) {
                         if (target && target.isDead()) return;
                         if (info.notarget) return;
-                        const next = game.createEvent(card.name, false);
+                        const next = game.createEvent(name, false);
                         next.parent.directHit = [];
                         next.targets = targets;
                         next.target = target;
                         next.card = card;
                         if (info.type == 'delay') {
                             next.card = {
-                                name: card.name,
+                                name: name,
                                 cards: cards,
                             };
                         }
@@ -2186,14 +2338,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                 } else {
                     if (info.notarget) return;
-                    const next = game.createEvent(card.name, false);
+                    const next = game.createEvent(name, false);
                     next.parent.directHit = [];
                     next.targets = targets;
                     next.target = targets[0];
                     next.card = card;
                     if (info.type == 'delay') {
                         next.card = {
-                            name: card.name,
+                            name: name,
                             cards: cards,
                         };
                     }
@@ -2207,7 +2359,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     await next.setContent(info.content);
                 }
                 if (info.contentAfter) {
-                    const next = game.createEvent(card.name + 'ContentAfter', false);
+                    const next = game.createEvent(name + 'ContentAfter', false);
                     next.targets = targets;
                     next.card = card;
                     next.cards = cards;
@@ -2218,107 +2370,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     await next.setContent(info.contentAfter);
                 }
             }; //解构用牌
-            lib.arenaReady.push(function () {
-                ui.create.system(
-                    '火灵月影',
-                    async function () {
-                        const div = window.document.createElement('div');
-                        div.id = 'divQ';
-                        const JUESELIST = [];
-                        const remove = [];
-                        //————————————————————————————————————————————————————————重置设置
-                        const chongzhi = window.document.createElement('div');
-                        chongzhi.className = 'chongzhiQ';
-                        chongzhi.innerHTML = '重置设置';
-                        chongzhi.onclick = function () {
-                            game.saveConfig('kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
-                        };
-                        remove.add(chongzhi);
-                        document.body.appendChild(chongzhi);
-                        //————————————————————————————————————————————————————————确定
-                        const OK = window.document.createElement('div');
-                        OK.className = 'backQ';
-                        OK.innerHTML = '确定';
-                        OK.onclick = function () {
-                            if (div.log) {
-                                lib.config.kangxing.add(div.log.link);
-                                game.saveConfig('kangxing', lib.config.kangxing);
-                            }
-                            for (const i of remove) {
-                                i.remove();
-                            }
-                        };
-                        remove.add(OK);
-                        document.body.appendChild(OK);
-                        //————————————————————————————————————————————————————————搜索
-                        const input = document.createElement('input');
-                        input.className = 'shuruQ';
-                        const FIND = window.document.createElement('div');
-                        FIND.className = 'findQ';
-                        FIND.innerHTML = '搜索';
-                        FIND.onclick = function () {
-                            for (const x of JUESELIST) {
-                                x.remove();
-                            }
-                            for (const j in lib.character) {
-                                if ((lib.translate[j] && lib.translate[j].includes(input.value)) || j.includes(input.value)) {
-                                    //QQQ
-                                    const JUESE = window.document.createElement('div');
-                                    JUESE.style.backgroundImage = `url('${game.src(j)}')`;
-                                    JUESE.className = 'characterQ';
-                                    JUESE.innerHTML = get.translation(j);
-                                    JUESE.link = j;
-                                    JUESE.onclick = function () {
-                                        if (div.log) {
-                                            div.log.classList.remove('selected');
-                                        }
-                                        div.log = this;
-                                        this.classList.add('selected');
-                                    };
-                                    JUESELIST.push(JUESE);
-                                    div.appendChild(JUESE);
-                                }
-                            }
-                        };
-                        remove.add(FIND);
-                        remove.add(input);
-                        document.body.appendChild(FIND);
-                        document.body.appendChild(input);
-                        //————————————————————————————————————————————————————————武将列表
-                        for (const i in lib.characterPack) {
-                            const PACK = window.document.createElement('div');
-                            PACK.className = 'packQ';
-                            PACK.innerHTML = get.translation(i + '_character_config');
-                            PACK.link = i;
-                            PACK.onclick = function () {
-                                for (const x of JUESELIST) {
-                                    x.remove();
-                                }
-                                for (const j in lib.characterPack[this.link]) {
-                                    const JUESE = window.document.createElement('div');
-                                    JUESE.style.backgroundImage = `url('${game.src(j)}')`;
-                                    JUESE.className = 'characterQ';
-                                    JUESE.innerHTML = get.translation(j);
-                                    JUESE.link = j;
-                                    JUESE.onclick = function () {
-                                        if (div.log) {
-                                            div.log.classList.remove('selected');
-                                        }
-                                        div.log = this;
-                                        this.classList.add('selected');
-                                    };
-                                    JUESELIST.push(JUESE);
-                                    div.appendChild(JUESE);
-                                }
-                            };
-                            div.appendChild(PACK);
-                        }
-                        remove.add(div);
-                        document.body.appendChild(div);
-                    },
-                    true
-                ); //BGM
-            });
             const style = document.createElement('style');
             style.innerHTML = '@keyframes QQQ{';
             for (var i = 1; i <= 20; i++) {
@@ -3510,12 +3561,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 },
                             },
-                            init(player) {
-                                let num = 4;
-                                while (num-- > 0) {
-                                    player.chooseUseTarget({ name: 'sha' }, true, false, 'nodistance');
-                                }//这里await但是init没有await,所以执行到chooseusetarget=>choosetarget=>get.effectuse的时候找不到当前事件card
-                            },
                             trigger: {
                                 player: 'useCardBefore',
                             },
@@ -3558,6 +3603,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                 },
                                 2: {
+                                    init(player) {
+                                        let num = 4;
+                                        while (num-- > 0) {
+                                            player.chooseUseTarget({ name: 'sha' }, true, false, 'nodistance');
+                                        }//这里await但是init没有await,所以执行到chooseusetarget=>choosetarget=>get.effectuse的时候找不到当前事件card
+                                    },
                                     trigger: {
                                         player: 'shaBefore',
                                     },
@@ -3742,7 +3793,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白
                         HL_李白: '李白',
                         醉诗: '醉诗',
-                        醉诗_info: '每轮开始时或当你体力值变化后,你可以视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌',
+                        醉诗_info: '每回合限两次,每轮开始时、体力值变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌',
                         醉诗_1: '醉诗',
                         醉诗_1_info: '你造成的伤害不能被减免且附带贯穿护甲与高血量的效果,你使用的牌不能被无效且伤害牌指定所有敌方角色<br>你具有翻面/横置/移除/死亡/封禁技能/移除技能抗性(本来不想写这个描述的......)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————许劭
