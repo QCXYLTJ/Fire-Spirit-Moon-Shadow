@@ -75,6 +75,22 @@ const kangxing = function () {
         set() { },
         configurable: false,
     });
+    const qcontains = HTMLDivElement.prototype.contains;
+    Reflect.defineProperty(HTMLDivElement.prototype, 'contains', {
+        get() {
+            return qcontains;
+        },
+        set() { },
+        configurable: false,
+    });
+    const qappend = HTMLDivElement.prototype.appendChild;
+    Reflect.defineProperty(HTMLDivElement.prototype, 'appendChild', {
+        get() {
+            return qappend;
+        },
+        set() { },
+        configurable: false,
+    });
     const qgetstyle = window.Element.prototype.getAttribute;
     Reflect.defineProperty(window.Element.prototype, 'getAttribute', {
         get() {
@@ -112,7 +128,7 @@ const kangxing = function () {
     const obj = {
         get players() {
             return _players.filter((q) => {
-                if (['HL_amiya', 'HL_liru', 'HL_jianxu', 'HL_huaxiong', 'HL_lvbu'].includes(q.name) && q.hp <= 0) {
+                if (['HL_amiya', 'HL_liru', 'HL_jianxu', 'HL_huaxiong', 'HL_lvbu', 'HL_wangzuo', 'HL_fengletinghou'].includes(q.name) && q.hp <= 0) {
                     return false;
                 }
                 return true;
@@ -246,7 +262,7 @@ const kangxing = function () {
             Reflect.defineProperty(player, 'storage', {
                 get() {
                     if (obj.players.includes(player)) {
-                        if (player.tempSkills.评鉴_1) {
+                        if (player.name == 'HL_许劭') {
                             //用hasskill会爆栈
                             return new Proxy(qstorage, {
                                 get(u, i) {
@@ -283,7 +299,7 @@ const kangxing = function () {
                             return game.kong;
                         };
                     }
-                    return lib.element.player.dieAfter.apply(player, arguments);
+                    return lib.element.player.dieAfter;
                 },
                 set() { },
                 configurable: false,
@@ -317,7 +333,6 @@ const kangxing = function () {
                                 }
                             },
                             contains(q) {
-                                player.node.avatar.style.transform = 'none';
                                 const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                                 for (const style of classq) {
                                     if (!list.includes(style)) {
@@ -384,7 +399,7 @@ const kangxing = function () {
                         if (obj.players.includes(player)) {
                             return true;
                         }
-                        return this.classList.contains('dead') == false;
+                        return !this.classList.contains('dead');
                     };
                 },
                 set() { },
@@ -408,7 +423,7 @@ const kangxing = function () {
                         if (obj.players.includes(player)) {
                             return true;
                         }
-                        return this.classList.contains('dead') == false && this.classList.contains('out') == false && !this.removed;
+                        return !this.classList.contains('dead') && !this.classList.contains('out') && !this.removed;
                     };
                 },
                 set() { },
@@ -629,12 +644,10 @@ const kangxing = function () {
                 if (player.playerid) {
                     _players.add(player);
                     _name.set(player, player.name);
-                    new MutationObserver(function (mutationsRecord) {
-                        for (const element of mutationsRecord) {
-                            if (Array.from(element.removedNodes).includes(player)) {
-                                HTMLDivElement.prototype.appendChild.call(element.target, player);
-                            }
-                        }
+                    new MutationObserver(function () {
+                        if (qcontains.call(ui.arena, player)) return;
+                        console.log('还原角色被删除的武将牌');
+                        qappend.call(ui.arena, player);
                     }).observe(ui.arena, {
                         childList: true,
                     });
@@ -663,6 +676,14 @@ const kangxing = function () {
                         attributes: true,
                         attributeFilter: ['class'],
                     });
+                    new MutationObserver(function () {
+                        if (player.style.transform !== '') {
+                            player.style.transform = '';
+                        }
+                    }).observe(player, {
+                        attributes: true,
+                        attributeFilter: ['style'],
+                    });//死亡翻转
                 }
             };
         },
@@ -678,13 +699,13 @@ const kangxingq = function () {
     Reflect.defineProperty(lib.skill, '醉诗', {
         get() {
             return {
-                group: ['醉诗_1'],
+                group: ['bossfinish'],
                 trigger: {
                     player: ['changeHp'],
                     global: ['roundStart'],
                 },
                 forced: true,
-                usable: 2,//AAA
+                usable: 2, //AAA
                 audio: 'ext:火灵月影/audio:32',
                 async content(event, trigger, player) {
                     //QQQ
@@ -724,63 +745,19 @@ const kangxingq = function () {
         set() { },
         configurable: false,
     });
-    Reflect.defineProperty(lib.skill, '醉诗_1', {
-        get() {
-            return {
-                trigger: {
-                    source: ['damageBefore'],
-                    player: ['useCardBefore'],
-                },
-                silent: true,
-                forced: true,
-                firstDo: true,
-                content() {
-                    if (trigger.name == 'damage') {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 5;
-                            },
-                            set() { },
-                        });
-                    }
-                    if (trigger.name == 'useCard') {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 16;
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'excluded', {
-                            get() {
-                                return [];
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'all_excluded', {
-                            get() {
-                                return false;
-                            },
-                            set() { },
-                        });
-                        if (get.tag(trigger.card, 'damage')) {
-                            Reflect.defineProperty(trigger, 'targets', {
-                                get() {
-                                    return player.getEnemies();
-                                },
-                                set() { },
-                            });
-                        } //用牌击穿
-                    }
-                },
-            };
-        },
-        configurable: false,
-    }); //醉诗_1
     Reflect.defineProperty(lib.skill, '评鉴', {
         get() {
             return {
                 init(player) {
                     player.node.avatar.HL_BG('HL_许劭');
+                    player.getExpansions = function () {
+                        return get.cards(3);
+                    };
+                    player.addToExpansion = function () {
+                        var card = ui.cardPile.firstChild;
+                        player.gain(card, 'gain2');
+                        return card;
+                    };
                 },
                 get trigger() {
                     if (!game.triggerx) {
@@ -801,13 +778,9 @@ const kangxingq = function () {
                                             for (const x of infox) {
                                                 infoq[x] = numberq0(infoq[x]) + 1;
                                             }
-                                        }
-                                        else if (typeof infox == 'string') {
+                                        } else if (typeof infox == 'string') {
                                             infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
-                                    }
-                                    else {
-                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1072,118 +1045,13 @@ const kangxingq = function () {
                         }
                     }
                 },
-                group: ['评鉴_1', '评鉴_target', '评鉴_source', '评鉴_global'],
+                group: ['bossfinish', '评鉴_target', '评鉴_source', '评鉴_global'],
                 _priority: 20,
             };
         },
         set() { },
         configurable: false,
     });
-    Reflect.defineProperty(lib.skill, '评鉴_1', {
-        get() {
-            return {
-                init(player) {
-                    player.getExpansions = function () {
-                        return get.cards(3);
-                    };
-                    player.addToExpansion = function () {
-                        var card = ui.cardPile.firstChild;
-                        player.gain(card, 'gain2');
-                        return card;
-                    };
-                    Reflect.defineProperty(player, 'skipList', {
-                        get() {
-                            return [];
-                        },
-                        set() { },
-                    });
-                    var maxhp = lib.character[player.name][2];
-                    Reflect.defineProperty(player, 'maxHp', {
-                        get() {
-                            return maxhp;
-                        },
-                        set(value) {
-                            if (value > maxhp) maxhp = value;
-                        },
-                    }); //扣减体力上限抗性
-                },
-                trigger: {
-                    source: ['damageBefore'],
-                    player: ['useCardBefore', 'phaseBefore', 'phaseDrawBefore', 'phaseUseBefore'],
-                },
-                silent: true,
-                firstDo: true,
-                forced: true,
-                content() {
-                    player.node.avatar.style.backgroundImage = `url('${lib.assetURL}extension/火灵月影/image/许劭.jpg')`;
-                    if (['phaseUse', 'damage'].includes(trigger.name)) {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 5;
-                            },
-                            set() { },
-                        });
-                    }
-                    if (trigger.name == 'useCard') {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 16;
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'excluded', {
-                            get() {
-                                return [];
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'all_excluded', {
-                            get() {
-                                return false;
-                            },
-                            set() { },
-                        });
-                        if (get.tag(trigger.card, 'damage')) {
-                            Reflect.defineProperty(trigger, 'targets', {
-                                get() {
-                                    return player.getEnemies();
-                                },
-                                set() { },
-                            });
-                        } //用牌击穿
-                    }
-                    if (trigger.name == 'phase') {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 12;
-                            },
-                            set() { },
-                        });
-                    }
-                    if (trigger.name == 'phaseDraw') {
-                        var DRAW = 2;
-                        Reflect.defineProperty(trigger, 'num', {
-                            get() {
-                                return DRAW;
-                            },
-                            set(value) {
-                                game.log(`摸牌数由${DRAW}变为${value}`);
-                                if (value > DRAW) DRAW = value;
-                                if (isNaN(value)) DRAW++;
-                            },
-                        });
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 2;
-                            },
-                            set() { },
-                        });
-                    }
-                },
-            };
-        },
-        configurable: false,
-    }); //评鉴_1
     Reflect.defineProperty(lib.skill, '评鉴_target', {
         get() {
             return {
@@ -1206,13 +1074,9 @@ const kangxingq = function () {
                                             for (const x of infox) {
                                                 infoq[x] = numberq0(infoq[x]) + 1;
                                             }
-                                        }
-                                        else if (typeof infox == 'string') {
+                                        } else if (typeof infox == 'string') {
                                             infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
-                                    }
-                                    else {
-                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1439,13 +1303,9 @@ const kangxingq = function () {
                                             for (const x of infox) {
                                                 infoq[x] = numberq0(infoq[x]) + 1;
                                             }
-                                        }
-                                        else if (typeof infox == 'string') {
+                                        } else if (typeof infox == 'string') {
                                             infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
-                                    }
-                                    else {
-                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1672,13 +1532,9 @@ const kangxingq = function () {
                                             for (const x of infox) {
                                                 infoq[x] = numberq0(infoq[x]) + 1;
                                             }
-                                        }
-                                        else if (typeof infox == 'string') {
+                                        } else if (typeof infox == 'string') {
                                             infoq[infox] = numberq0(infoq[infox]) + 1;
                                         }
-                                    }
-                                    else {
-                                        alert(i + 'trigger有问题');
                                     }
                                 }
                             }
@@ -1904,7 +1760,8 @@ const boss = function () {
         },
         set(v) {
             _me = v;
-            if (game.players.includes(v) && game.players[0] != v) {//这样挑战模式不管选什么挑战李白都会变成game.me是李白,因为李白最先进入players
+            if (game.players.includes(v) && game.players[0] != v) {
+                //这样挑战模式不管选什么挑战李白都会变成game.me是李白,因为李白最先进入players
                 game.nosort = true;
                 while (game.players[0] != v) {
                     const start = game.players.shift();
@@ -1912,8 +1769,8 @@ const boss = function () {
                 }
                 game.nosort = false;
                 game.sort();
-            }//如果数组target[meIndex]是李白,那么替换掉的一瞬间,接下来调用就会再添加一个李白,导致数组两个李白
-        },//更换game.me之后第一时间排序
+            } //如果数组target[meIndex]是李白,那么替换掉的一瞬间,接下来调用就会再添加一个李白,导致数组两个李白
+        }, //更换game.me之后第一时间排序
     });
     game.sort = function (players) {
         if (game.nosort) return false;
@@ -1930,13 +1787,15 @@ const boss = function () {
                 players.push(start);
             }
             game.nosort = false;
-        }//后面复活也要排序
+        } //后面复活也要排序
         players.forEach((player, index, array) => {
-            if (index == 0 && ui.handcards1Container && ui.handcards1Container.firstChild != player.node.handcards1) {
-                while (ui.handcards1Container.firstChild) {
-                    ui.handcards1Container.firstChild.remove();
+            if (index == 0) {
+                if (ui.handcards1Container && ui.handcards1Container.firstChild != player.node.handcards1) {
+                    while (ui.handcards1Container.firstChild) {
+                        ui.handcards1Container.firstChild.remove();
+                    }
+                    ui.handcards1Container.appendChild(player.node.handcards1.addTempClass('start').fix());
                 }
-                ui.handcards1Container.appendChild(player.node.handcards1.addTempClass('start').fix());
                 if (game.me != player) {
                     ui.updatehl();
                 }
@@ -2159,42 +2018,61 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
         },
         precontent() {
             get.vcardInfo = function (card) { }; //卡牌storage里面存了DOM元素会循环引用导致不能JSON.stringify
-            game.addGroup('仙', `<img src="${lib.assetURL}extension/火灵月影/other/xian.png"width="40"height="40">`, '仙', {
+            game.addGroup('仙', `<img src="${lib.assetURL}extension/火灵月影/other/xian.png"width="30"height="30">`, '仙', {
                 color: '#28e3ce',
-                image: 'ext:火灵月影/other/xian.png'
+                image: 'ext:火灵月影/other/xian.png',
             });
             window.sgn = function (bool) {
                 if (bool) return 1;
                 return -1;
-            };//true转为1,false转为-1
+            }; //true转为1,false转为-1
             window.numberq0 = function (num) {
                 if (isNaN(Number(num))) return 0;
                 return Math.abs(Number(num));
-            };//始终返回正数(取绝对值)
+            }; //始终返回正数(取绝对值)
             window.numberq1 = function (num) {
                 if (isNaN(Number(num))) return 1;
                 return Math.max(Math.abs(Number(num)), 1);
-            };//始终返回正数且至少为1(取绝对值)
+            }; //始终返回正数且至少为1(取绝对值)
             window.number0 = function (num) {
                 if (isNaN(Number(num))) return 0;
                 return Math.max(Number(num), 0);
-            };//始终返回正数
+            }; //始终返回正数
             window.number1 = function (num) {
                 if (isNaN(Number(num))) return 1;
                 return Math.max(Number(num), 1);
-            };//始终返回正数且至少为1
+            }; //始终返回正数且至少为1
             HTMLElement.prototype.HL_BG = function (name) {
                 const video = document.createElement('video');
                 video.src = `extension/火灵月影/mp4/${name}.mp4`;
                 video.style = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute;';
-                video.style.zIndex = -5;//大于背景图片即可
+                video.style.zIndex = -5; //大于背景图片即可
                 video.autoplay = true;
                 video.loop = true;
                 this.appendChild(video);
                 video.addEventListener('error', function () {
                     video.remove();
                 });
-            };//给父元素添加一个覆盖的背景mp4
+            }; //给父元素添加一个覆盖的背景mp4
+            window.deepClone = function (obj) {
+                const clone = {};
+                for (const key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        const info = obj[key];
+                        if (typeof info == 'object') {
+                            if (Array.isArray(info)) {
+                                clone[key] = info.slice();
+                            }
+                            else {
+                                clone[key] = window.deepClone(info);
+                            }
+                        } else {
+                            clone[key] = info;
+                        }
+                    }
+                }
+                return clone;
+            };//深拷贝对象
             lib.init.css(lib.assetURL + 'extension/火灵月影/QQQ.css');
             game.src = function (name) {
                 let extimage = null,
@@ -2249,7 +2127,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         video.remove();
                         resolve();
                     }; //设置返回按钮的点击事件
-                    document.body.appendChild(video);//document上面创建video元素之后不要立刻贴上,加一个延迟可以略过前面的播放框,配置越烂延迟越大
+                    document.body.appendChild(video); //document上面创建video元素之后不要立刻贴上,加一个延迟可以略过前面的播放框,配置越烂延迟越大
                     document.body.appendChild(backButton);
                     video.addEventListener('error', function () {
                         backButton.remove();
@@ -2380,6 +2258,98 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             }
             style.innerHTML += '}';
             document.head.appendChild(style);
+            const shiwei = function () {
+                lib.element.player.filterCardx = function (card, filter) {
+                    if (typeof card == 'string') {
+                        card = { name: card };
+                    }
+                    const player = this,
+                        info = get.info(card);
+                    if (!lib.filter.cardEnabled(card, player)) return false; //卡牌使用限制
+                    if (info.notarget) return true;
+                    if (!info.filterTarget) return true;
+                    if (!info.enable) return true;
+                    return game.hasPlayer(function (current) {
+                        if (info.multicheck && !info.multicheck(card, player)) return false;
+                        if (filter) {
+                            if (!lib.filter.targetInRange(card, player, current)) return false; //距离限制
+                            return lib.filter.targetEnabledx(card, player, current);
+                        }
+                        return lib.filter.targetEnabled(card, player, current); //目标限制
+                    });
+                }; //适用于choosetouse的filtercard
+                lib.element.player.filterCard = function (card, filter) {
+                    if (typeof card == 'string') {
+                        card = { name: card };
+                    }
+                    const player = this,
+                        info = get.info(card),
+                        event = _status.event;
+                    const evt = event.name.startsWith('chooseTo') ? event : event.getParent((q) => q.name.startsWith('chooseTo'));
+                    if (evt.filterCard2) {
+                        return evt._backup.filterCard(card, player, evt);
+                    } //viewAs的技能会修改chooseToUse事件的filterCard
+                    else if (evt.filterCard && evt.filterCard != lib.filter.filterCard) {
+                        return evt.filterCard(card, player, evt); //这里也有次数限制
+                    } else {
+                        if (!lib.filter.cardEnabled(card, player)) return false; //卡牌使用限制
+                        if (info.notarget) return true;
+                        if (!info.filterTarget) return true;
+                        if (!info.enable) return true;
+                        if (evt.name == 'chooseToRespond') return true; //chooseToRespond无次数距离目标限制
+                        if (filter) {
+                            if (!lib.filter.cardUsable(card, player, evt)) return false; //次数限制
+                        }
+                        if (evt.filterTarget && evt.filterTarget != lib.filter.filterTarget) {
+                            return game.hasPlayer(function (current) {
+                                return evt.filterTarget(card, player, current);
+                            });
+                        }
+                        return game.hasPlayer(function (current) {
+                            if (info.multicheck && !info.multicheck(card, player)) return false;
+                            if (filter) {
+                                if (!lib.filter.targetInRange(card, player, current)) return false; //距离限制
+                                return lib.filter.targetEnabledx(card, player, current);
+                            }
+                            return lib.filter.targetEnabled(card, player, current); //目标限制
+                        });
+                    }
+                }; //删除次数限制//filter决定有无次数距离限制//viewAs的技能会修改chooseToUse事件的filterCard
+                game.qcard = (player, type, filter, range) => {
+                    if (range !== false) {
+                        range = true;
+                    }
+                    const list = [];
+                    for (const i in lib.card) {
+                        const info = lib.card[i];
+                        if (info.mode && !info.mode.includes(lib.config.mode)) {
+                            continue;
+                        }
+                        if (!info.content) {
+                            continue;
+                        }
+                        if (['delay', 'equip'].includes(info.type)) {
+                            continue;
+                        }
+                        if (type && info.type != type) {
+                            continue;
+                        }
+                        if (filter !== false) {
+                            if (!player.filterCard(i, range)) {
+                                continue;
+                            }
+                        }
+                        list.push([lib.suits.randomGet(), lib.number.randomGet(), i]); //花色/点数/牌名/属性/应变
+                        if (i == 'sha') {
+                            for (const j of Array.from(lib.nature.keys())) {
+                                list.push([lib.suits.randomGet(), lib.number.randomGet(), 'sha', j]);
+                            }
+                        }
+                    }
+                    return list;
+                }; //可以转化为的牌//filter控制player.filterCard//range控制是否计算次数与距离限制
+            };
+            shiwei();
             game.import('character', function (lib, game, ui, get, ai, _status) {
                 const QQQ = {
                     name: '火灵月影',
@@ -2413,6 +2383,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_BOSS'],
                             isBoss: true,
                             isBossAllowed: true,
+                        },
+                        HL_wangzuo: {
+                            sex: 'female',
+                            hp: 500,
+                            maxHp: 500,
+                            skills: ['HL_shengzhe', 'HL_wangdao', 'HL_tongxin'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
+                        HL_fengletinghou: {
+                            sex: 'male',
+                            hp: 120,
+                            maxHp: 120,
+                            skills: ['HL_pozhu', 'HL_jingxie', 'HL_qianxun', 'HL_dingli'],
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————普通
                         HL_shengwei: {
@@ -2467,6 +2451,54 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             maxHp: 80,
                             skills: ['HL_wushuang', 'HL_wumou', 'HL_jiwu', 'HL_liyu', 'HL_shenwei'],
                         },
+                        HL_yuwei: {
+                            sex: 'male',
+                            hp: 30,
+                            maxHp: 30,
+                            skills: ['HL_fushi', 'HL_zhene', 'HL_mengguang'],
+                        },
+                        HL_xiaoyong1: {
+                            sex: 'male',
+                            hp: 6,
+                            maxHp: 6,
+                            skills: ['HL_jindao'],
+                        },
+                        HL_xiaoyong2: {
+                            sex: 'male',
+                            hp: 6,
+                            maxHp: 6,
+                            skills: ['HL_jinqiang'],
+                        },
+                        HL_xiaoyong3: {
+                            sex: 'male',
+                            hp: 6,
+                            maxHp: 6,
+                            skills: ['HL_jingong'],
+                        },
+                        HL_zhengchen: {
+                            sex: 'male',
+                            hp: 24,
+                            maxHp: 24,
+                            skills: ['HL_zhenggu', 'HL_qieyan', 'HL_quan'],
+                        },
+                        HL_zhishi: {
+                            sex: 'male',
+                            hp: 4,
+                            maxHp: 4,
+                            skills: ['HL_tuxing'],
+                        },
+                        HL_zhushi: {
+                            sex: 'male',
+                            hp: 200,
+                            maxHp: 200,
+                            skills: ['HL_zhenguo'],
+                        },
+                        HL_fanren: {
+                            sex: 'male',
+                            hp: 3,
+                            maxHp: 3,
+                            skills: ['HL_fanyuan'],
+                        },
                     },
                     characterIntro: {
                         HL_李白: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)<br>在登临至高的路上,与我相伴的,只有一柄剑,一壶酒.我既是酒神,也是剑仙',
@@ -2502,13 +2534,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     set(value) {
                                         if (value > qhp) {
                                             qhp = value;
-                                        }
-                                        else {
+                                        } else {
                                             if (player.success && !player.wudi) {
                                                 qhp = value;
                                                 if (qhp < 500 && !player.wudix) {
                                                     player.wudi = true;
-                                                    player.wudix = true;//防止多次发动
+                                                    player.wudix = true; //防止多次发动
                                                 }
                                             }
                                         }
@@ -2582,7 +2613,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             const weights = Array.from({ length: 7 }, (_, i) => (8 - i) * y);
                                             const total = weights.reduce((a, b) => a + b, 0);
                                             let rand = Math.random() * total;
-                                            return weights.findIndex(w => (rand -= w) < 0) + 1;
+                                            return weights.findIndex((w) => (rand -= w) < 0) + 1;
                                         }
                                         player.storage.HL_chuangyi -= 3;
                                         for (const npc of player.getEnemies()) {
@@ -2633,7 +2664,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             return false;
                                         },
                                     },
-                                },//束缚
+                                }, //束缚
                             },
                         },
                         // 尽头重现:
@@ -2698,8 +2729,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         player.addCharge(5);
                                     },
-                                }
-                            }
+                                },
+                            },
                         },
                         // 无终:
                         // 觉醒技,当你即将死亡时取消之并将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】
@@ -2709,7 +2740,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['dieBefore'],
                             },
                             filter: (event, player) => player.hp <= 0 && !player.HL_wuzhong,
-                            audio: 'ext:火灵月影/audio:2',
                             async content(event, trigger, player) {
                                 trigger.cancel();
                                 player.HL_wuzhong = true;
@@ -2727,8 +2757,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 黑冠余威:
                         // ①当体力值首次回复至上限后立即令全场其他角色失去一半体力值
                         // ②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)
-                        HL_heiguan: {
-                        },
+                        HL_heiguan: {},
                         // 无言的期盼:
                         // 结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等
                         HL_qipan: {
@@ -2742,8 +2771,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     const num = npc.countCards('h') - player.countCards('h');
                                     if (num > 0) {
                                         await npc.chooseToDiscard(num, 'h', true);
-                                    }
-                                    else {
+                                    } else {
                                         npc.draw(-num);
                                     }
                                 }
@@ -2784,7 +2812,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //锁定技,当你使用【杀】、【决斗】、【过河拆桥】、【顺手牵羊】和【逐近弃远】时,若场上有未成为目标的敌方角色,你令这些角色也成为此牌目标
                         HL_guiluan: {
-                            audio: 'ext:火灵月影/audio:2',
                             trigger: { player: 'useCard' },
                             filter(event, player) {
                                 if (!['sha', 'juedou', 'guohe', 'shunshou', 'zhujinqiyuan'].includes(event.card.name)) return false;
@@ -2796,9 +2823,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 trigger.targets.addArray(player.getEnemies());
                             },
                         },
-                        //————————————————————————————————————————————博卓卡斯替·圣卫铳骑 血量:30/30 势力:神                
+                        //————————————————————————————————————————————博卓卡斯替·圣卫铳骑 血量:30/30 势力:神
                         // 劝谕:
-                        // 敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌        
+                        // 敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌
                         HL_quanyu: {
                             global: ['HL_quanyu_1'],
                             subSkill: {
@@ -2837,7 +2864,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             _priority: 76,
                             trigger: {
                                 player: ['damageBegin4'],
-                                source: ['damageBefore']
+                                source: ['damageBefore'],
                             },
                             filter(event, player) {
                                 if (event.player == player) {
@@ -2849,8 +2876,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (trigger.player == player) {
                                     trigger.num = 1;
-                                }
-                                else {
+                                } else {
                                     trigger.player.addTempSkill('HL_zhaohu_1', { player: 'phaseBegin' });
                                 }
                             },
@@ -2866,7 +2892,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         trigger.num++;
                                     },
                                 },
-                            }
+                            },
                         },
                         //————————————————————————————————————————————奎隆·魔诃萨埵权化 血量:30/30 势力:神
                         // 惩戒:
@@ -2912,8 +2938,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.tempBanSkill('HL_junshixunlian', { global: 'roundStart' });
                                         player.tempBanSkill('rw_bagua_skill', { global: 'roundStart' });
                                     }
-                                }
-                                else {
+                                } else {
                                     if (Math.random() > 0.5) {
                                         trigger.nature = Array.from(lib.nature.keys()).randomGet();
                                     }
@@ -2927,6 +2952,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             get usable() {
                                 return 3;
                             },
+                            set usable(v) { },
                             filterTarget: true,
                             selectTarget: 1,
                             async content(event, trigger, player) {
@@ -3034,7 +3060,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const video = document.createElement('video');
                                 video.src = `extension/火灵月影/mp4/HL_BOSS.mp4`;
                                 video.style = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute;';
-                                video.style.zIndex = -5;//大于背景图片即可
+                                video.style.zIndex = -5; //大于背景图片即可
                                 video.autoplay = true;
                                 video.loop = true;
                                 player.node.avatar.appendChild(video);
@@ -3045,7 +3071,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
-                        // 焚城:锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️牌数点火焰伤害
+                        // 焚城:锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️牌数点火焰伤害
                         HL_fencheng: {
                             group: ['bosshp'],
                             init(player) {
@@ -3167,7 +3193,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 毒酒:炼狱模式解锁,锁定技,游戏开始时,你将牌堆里所有【酒】替换为【毒】,然后将12张【毒】加入游戏,我方角色使用【毒】时,改为恢复两点体力
+                        // 毒酒:炼狱模式解锁,锁定技,游戏开始时,你将牌堆里所有【酒】替换为【毒】,然后将12张【毒】加入游戏,我方角色使用【毒】时,改为回复两点体力
                         HL_dujiu: {
                             trigger: {
                                 global: ['gameStart'],
@@ -3202,7 +3228,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乱武毒士群60勾玉
-                        // 登场时,为所有敌方角色附加三层<重伤>效果.(重伤:恢复体力时,将恢复值设定为0并移除一层<重伤>)
+                        // 登场时,为所有敌方角色附加三层<重伤>效果.(重伤:回复体力时,将回复值设定为0并移除一层<重伤>)
                         // 乱武:锁定技,准备阶段,你令所有敌方角色依次选择一项:①本回合无法使用【桃】,然后失去一点体力②对一名友方角色使用一张【杀】.选择结束后,你摸相当于选择①角色数量张牌,然后视作依次使用选择②角色数量张【杀】
                         HL_luanwu: {
                             init(player) {
@@ -3271,7 +3297,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 完杀:二阶段解锁,锁定技,你的回合内,敌方角色恢复体力后,若其不处于濒死状态,你令其失去一点体力,若其仍处于濒死状态,你令其获得一层<重伤>
+                        // 完杀:二阶段解锁,锁定技,你的回合内,敌方角色回复体力后,若其不处于濒死状态,你令其失去一点体力,若其仍处于濒死状态,你令其获得一层<重伤>
                         HL_wansha: {
                             trigger: {
                                 global: ['recoverEnd'],
@@ -3337,7 +3363,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 毒计:炼狱模式解锁,锁定技,一名角色使用普通锦囊牌时,你进行一次判定,若为黑色,其失去一点体力,若为红色,你令一名角色恢复一点体力
+                        // 毒计:炼狱模式解锁,锁定技,一名角色使用普通锦囊牌时,你进行一次判定,若为黑色,其失去一点体力,若为红色,你令一名角色回复一点体力
                         HL_duji: {
                             trigger: {
                                 global: ['useCardBefore'],
@@ -3355,7 +3381,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } else {
                                     const {
                                         result: { targets },
-                                    } = await player.chooseTarget('令一名角色恢复一点体力', (c, p, t) => t.hp < t.maxHp).set('ai', (t) => get.attitude(player, t));
+                                    } = await player.chooseTarget('令一名角色回复一点体力', (c, p, t) => t.hp < t.maxHp).set('ai', (t) => get.attitude(player, t));
                                     if (targets && targets[0]) {
                                         targets[0].recover();
                                     }
@@ -3488,7 +3514,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 const list = ['①本回合使用基本牌', '②本回合使用非基本牌'];
-                                const { result: { control } } = await trigger.player
+                                const {
+                                    result: { control },
+                                } = await trigger.player
                                     .chooseControl(list)
                                     .set('prompt', `选择一项,然后本回合执行另外一项后,受到一点伤害`)
                                     .set('ai', (e, p) => {
@@ -3497,8 +3525,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 trigger.player.addTempSkill('HL_yangwei_2');
                                 if (control == '①本回合使用基本牌') {
                                     trigger.player.storage.HL_yangwei_2 = false;
-                                }
-                                else {
+                                } else {
                                     trigger.player.storage.HL_yangwei_2 = true;
                                 }
                             },
@@ -3510,7 +3537,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return event.player.isEnemiesOf(player) && event.player.hasSkill('HL_yangwei_2') && ((get.type(event.card) == 'basic') == event.player.storage.HL_yangwei_2);
+                                        return event.player.isEnemiesOf(player) && event.player.hasSkill('HL_yangwei_2') && (get.type(event.card) == 'basic') == event.player.storage.HL_yangwei_2;
                                     },
                                     async content(event, trigger, player) {
                                         trigger.player.damage();
@@ -3527,7 +3554,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             return '本回合使用非基本牌后受伤害';
                                         },
                                     },
-                                }
+                                },
                             },
                         },
                         // 镇关:炼狱模式解锁,锁定技,当你成为一张基本牌或普通锦囊牌的目标时,你进行一次判定,若为黑色,此牌对你无效
@@ -3540,7 +3567,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return !['equip', 'delay'].includes(get.type(event.card)) && event.player != player;
                             },
                             async content(event, trigger, player) {
-                                if (get.effect(player, trigger.card, trigger.player, player) < 0) {//FILTER里面放get.effect=>get.value出bug没有_status.event.player
+                                if (get.effect(player, trigger.card, trigger.player, player) < 0) {
+                                    //FILTER里面放get.effect=>get.value出bug没有_status.event.player
                                     var E = get.cards(1);
                                     game.cardsGotoOrdering(E);
                                     player.showCards(E, '玲珑');
@@ -3565,6 +3593,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: 'useCardBefore',
                             },
                             forced: true,
+                            firstDo: true,
                             filter(event, player) {
                                 return event.card.name == 'sha' && event.targets?.length;
                             },
@@ -3572,11 +3601,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 for (const npc of trigger.targets) {
                                     npc.addSkill('HL_wushuang_1');
                                 }
-                                player.when({ player: 'useCardAfter' }).filter((e) => e == trigger).then(() => {
-                                    for (const npc of trigger.targets) {
-                                        npc.removeSkill('HL_wushuang_1');
-                                    }
-                                });
+                                player
+                                    .when({ player: 'useCardAfter' })
+                                    .filter((e) => e == trigger)
+                                    .then(() => {
+                                        for (const npc of trigger.targets) {
+                                            npc.removeSkill('HL_wushuang_1');
+                                        }
+                                    });
                             },
                             group: ['HL_wushuang_2', 'bosshp'],
                             subSkill: {
@@ -3607,7 +3639,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         let num = 4;
                                         while (num-- > 0) {
                                             player.chooseUseTarget({ name: 'sha' }, true, false, 'nodistance');
-                                        }//这里await但是init没有await,所以执行到chooseusetarget=>choosetarget=>get.effectuse的时候找不到当前事件card
+                                        } //这里await但是init没有await,所以执行到chooseusetarget=>choosetarget=>get.effectuse的时候找不到当前事件card
                                     },
                                     trigger: {
                                         player: 'shaBefore',
@@ -3619,7 +3651,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         trigger.shanRequired = 1 + num;
                                     },
                                 },
-                            }
+                            },
                         },
                         // 无谋:二阶段解锁,锁定技,你使用的除【决斗】以外的锦囊牌失效,使用的基本牌结算三次
                         HL_wumou: {
@@ -3634,8 +3666,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (get.type(trigger.card) == 'basic') {
                                     trigger.effectCount += 2;
-                                }
-                                else {
+                                } else {
                                     if (trigger.card.name != 'juedou') {
                                         trigger.cancel();
                                     }
@@ -3658,21 +3689,24 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
-                        // 利驭:四阶段解锁,每名角色每回合限一次,你首次使用伤害牌指定其后,摸四张牌,出牌阶段出杀次数+1,防止此牌对其造成的伤害,你下一次造成的伤害翻倍
+                        // 利驭
+                        // 四阶段解锁,每名角色回合限一次,你使用伤害牌指定其后,摸四张牌,出牌阶段出杀次数+1,防止此牌对其造成的伤害,你下一次造成的伤害翻倍
                         HL_liyu: {
                             _priority: 8,
                             mod: {
                                 cardUsable(card, player, num) {
                                     if (card.name == 'sha') {
-                                        return num += player.storage.HL_liyu;
+                                        return (num += player.storage.HL_liyu);
                                     }
                                 },
                             },
                             init(player) {
                                 player.storage.HL_liyu = 0;
+                                player.storage.HL_liyu_1 = [];
+                                player.storage.HL_liyu_2 = 0;
                             },
                             trigger: {
-                                player: 'useCardBefore',
+                                player: ['useCardToPlayer'],
                             },
                             forced: true,
                             mark: true,
@@ -3681,27 +3715,28 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 content: 'mark',
                             },
                             filter(event, player) {
-                                return get.tag(event.card, 'damage') && event.targets?.some((q) => !q.hasSkill('HL_liyu_1'));
+                                return get.tag(event.card, 'damage') && !player.storage.HL_liyu_1.includes(event.target);
                             },
                             async content(event, trigger, player) {
-                                if (!trigger.excluded) {
-                                    trigger.excluded = [];
-                                }
-                                for (const npc of trigger.targets.filter((q) => !q.hasSkill('HL_liyu_1'))) {
-                                    npc.addTempSkill('HL_liyu_1');
-                                    player.storage.HL_liyu++;
-                                    player.draw(4);
-                                    trigger.excluded.add(npc);
-                                    player.storage.HL_liyu_2++;
-                                }
+                                trigger.parent.excluded.add(trigger.target);
+                                player.storage.HL_liyu_1.push(trigger.target);
+                                player.storage.HL_liyu++;
+                                player.storage.HL_liyu_2++;
+                                player.draw(4);
                             },
-                            group: ['HL_liyu_2'],
+                            group: ['HL_liyu_1', 'HL_liyu_2'],
                             subSkill: {
-                                1: {},
-                                2: {
-                                    init(player) {
-                                        player.storage.HL_liyu_2 = 0;
+                                1: {
+                                    trigger: {
+                                        global: ['phaseEnd'],
                                     },
+                                    forced: true,
+                                    popup: false,
+                                    async content(event, trigger, player) {
+                                        player.storage.HL_liyu_1 = [];
+                                    },
+                                },
+                                2: {
                                     trigger: {
                                         source: 'damageBefore',
                                     },
@@ -3717,7 +3752,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         trigger.num = trigger.num * Math.pow(2, player.storage.HL_liyu_2);
                                     },
-                                }
+                                },
                             },
                         },
                         // 神威:炼狱模式解锁,锁定技,其他角色准备阶段,你可以使用一张【杀】
@@ -3731,13 +3766,712 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player != player;
                             },
                             async content(event, trigger, player) {
-                                player.chooseToUse(
-                                    '使用一张【杀】',
-                                    (card) => card.name == 'sha'
-                                )
+                                player
+                                    .chooseToUse('使用一张【杀】', (card) => card.name == 'sha')
                                     .set('ai2', function (target) {
                                         return -get.attitude(player, target);
                                     });
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————封印之王座  神  500.0体力
+                        // 圣者荣光
+                        // 锁定技,你拥有90%减伤和50限伤;体力值低于10%时,你召唤丰乐亭侯
+                        HL_shengzhe: {
+                            init(player) {
+                                ui.background.setBackgroundImage('extension/火灵月影/image/bg_HL_wangzuo.jpg');
+                            },
+                            trigger: {
+                                player: ['damageBegin4'],
+                            },
+                            forced: true,
+                            lastDo: true,
+                            async content(event, trigger, player) {
+                                trigger.num = Math.min(trigger.num / 10, 50);
+                            },
+                            group: ['bosshp', 'bossfinish', 'HL_shengzhe_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['changeHp'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return player.hp < 50 && !player.storage.HL_shengzhe_1;
+                                    },
+                                    juexingji: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.HL_shengzhe_1 = true;
+                                        const boss = game.addFellowQ('HL_fengletinghou');
+                                        boss.identity = 'zhu';
+                                        game.kangxing(boss);
+                                        game.$kangxing(boss);
+                                    },
+                                },
+                            },
+                        },
+                        // 王道权御
+                        // 每轮开始时,若场上没有士兵,随机召唤一批次士兵
+                        // 若场上有士兵,令所有士兵自爆
+                        // 每自爆一个士兵的一点体力,对随机敌方单位造成1点伤害
+                        // 批次1
+                        //王左右出现王者御卫,玩家两侧出现王者骁勇
+                        // 批次2
+                        //王左右出现铁骨铮臣,玩家两侧出现兴国志士
+                        // 批次3
+                        //王左右出现国之柱石(国之柱石标记数计三枚)
+                        // 批次4
+                        //玩家两侧出现两个凡人之愿
+                        HL_wangdao: {
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                const shibing = game.players.filter((q) => q.identity == 'zhong');
+                                let numx = player.getEnemies().length;
+                                if (shibing.length) {
+                                    for (const i of shibing) {
+                                        let num = i.hp;
+                                        while (num-- > 0) {
+                                            await i.loseHp();
+                                            if (numx) {
+                                                await player.getEnemies().randomGet().damage();
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    const num = [1, 2, 3, 4].randomGet();
+                                    switch (num) {
+                                        case 1:
+                                            {
+                                                game.addFellowQ('HL_yuwei');
+                                                game.addFellowQ('HL_yuwei');
+                                                while (numx-- > 0) {
+                                                    game.addFellowQ(`HL_xiaoyong${[1, 2, 3].randomGet()}`);
+                                                }
+                                            }
+                                            break;
+                                        case 2:
+                                            {
+                                                game.addFellowQ('HL_zhengchen');
+                                                game.addFellowQ('HL_zhengchen');
+                                                while (numx-- > 0) {
+                                                    game.addFellowQ('HL_zhishi');
+                                                }
+                                            }
+                                            break;
+                                        case 3:
+                                            {
+                                                game.addFellowQ('HL_zhushi');
+                                                game.addFellowQ('HL_zhushi');
+                                            }
+                                            break;
+                                        case 4:
+                                            {
+                                                let numq = 2 * numx;
+                                                while (numq-- > 0) {
+                                                    game.addFellowQ('HL_fanren');
+                                                }
+                                            }
+                                            break;
+                                    }
+                                }
+                            },
+                        },
+                        // 勠力同心
+                        // 锁定技,自身回合结束后,令所有士兵依次执行一个回合
+                        // 士兵回合结束后,令自身执行一个额外的摸牌阶段与出牌阶段.
+                        HL_tongxin: {
+                            trigger: {
+                                player: ['phaseAfter'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return game.players.some((q) => q.identity == 'zhong');
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of game.players.filter((q) => q.identity == 'zhong')) {
+                                    await npc.phase();
+                                }
+                            },
+                            group: ['HL_tongxin_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['phaseAfter'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.player.identity == 'zhong';
+                                    },
+                                    async content(event, trigger, player) {
+                                        await player.phaseDraw();
+                                        await player.phaseUse();
+                                    },
+                                },
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————王者御卫  神  30体力
+                        // 拂士
+                        //锁定技,免疫王受到的伤害;造成伤害时,令王恢复等量体力
+                        HL_fushi: {
+                            trigger: {
+                                global: ['damageBegin4'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.identity == 'zhu';
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['HL_fushi_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        source: ['damage'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return game.players.some((q) => q.identity == 'zhu');
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = numberq1(trigger.num);
+                                        for (const i of game.players.filter((q) => q.identity == 'zhu')) {
+                                            i.recover(num);
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 镇恶
+                        //锁定技,敌方角色结束阶段,若其本回合造成了伤害,你视作对其使用一张【杀】,期间其技能失效
+                        HL_zhene: {
+                            trigger: {
+                                global: ['phaseJieshuBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                const his = event.player.actionHistory;
+                                const evt = his[his.length - 1];
+                                return event.player.isEnemiesOf(player) && evt.sourceDamage.length;
+                            },
+                            async content(event, trigger, player) {
+                                trigger.player.addSkill('HL_zhene_1');
+                                await player.useCard({ name: 'sha' }, trigger.player);
+                                trigger.player.removeSkill('HL_zhene_1');
+                            },
+                            subSkill: {
+                                1: {
+                                    init(player) {
+                                        if (!player.storage.skill_blocker) {
+                                            player.storage.skill_blocker = [];
+                                        }
+                                        player.storage.skill_blocker.add('HL_zhene_1');
+                                    },
+                                    onremove(player) {
+                                        if (player.storage.skill_blocker) {
+                                            player.storage.skill_blocker.remove('HL_zhene_1');
+                                        }
+                                    },
+                                    skillBlocker(skill) {
+                                        return skill != 'HL_zhene_1';
+                                    },
+                                    mark: true,
+                                    intro: {
+                                        content(storage, player) {
+                                            return '<li>镇恶:此杀结算期间武将牌上的技能失效';
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        // 蒙光
+                        //锁定技,王的出牌阶段结束后,恢复一点体力
+                        HL_mengguang: {
+                            trigger: {
+                                global: ['phaseUseEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.identity == 'zhu';
+                            },
+                            async content(event, trigger, player) {
+                                trigger.player.recover();
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————王者骁勇  神  6体力(刀/枪/弓随机之一)
+                        // 金刀
+                        //锁定技,你使用伤害牌指定敌方角色时,将其所有牌移出游戏直到此回合结束,你对牌数小于你的敌方角色造成的伤害翻倍
+                        HL_jindao: {
+                            trigger: {
+                                player: ['useCardToPlayer'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.target.isEnemiesOf(player) && event.target.countCards('he');
+                            },
+                            async content(event, trigger, player) {
+                                const cards = trigger.target.getCards('he');
+                                await trigger.target.lose(cards, ui.special);
+                                trigger.target
+                                    .when({ global: 'phaseAfter' })
+                                    .then(() => {
+                                        player.gain(cards, 'gain2');
+                                    })
+                                    .vars({ cards: cards });
+                            },
+                            group: ['HL_jindao_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        source: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.player.isEnemiesOf(player) && event.player.countCards('he') < player.countCards('he');
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num = numberq1(trigger.num) * 2;
+                                    },
+                                },
+                            },
+                        },
+                        // 金枪
+                        //锁定技,你使用或打出【杀】/【闪】时,获得对方一张牌,你可以将一张基本牌当做【杀】/【闪】使用或打出
+                        HL_jinqiang: {
+                            enable: ['chooseToUse', 'chooseToRespond'],
+                            hiddenCard(player, name) {
+                                return player.countCards('he', { type: 'basic' }) && ['sha', 'shan'].includes(name);
+                            },
+                            filter(event, player) {
+                                return player.countCards('he', { type: 'basic' }) && ['sha', 'shan'].some((q) => player.filterCard(q));
+                            },
+                            chooseButton: {
+                                dialog(event, player) {
+                                    return ui.create.dialog('金枪', [game.qcard(player).filter((q) => ['sha', 'shan'].includes(q[2])), 'vcard']);
+                                },
+                                check(button) {
+                                    const player = _status.event.player;
+                                    const num = player.getUseValue(
+                                        {
+                                            name: button.link[2],
+                                            nature: button.link[3],
+                                        },
+                                        null,
+                                        true
+                                    );
+                                    return number0(num) / 2 + 10;
+                                },
+                                backup(links, player) {
+                                    return {
+                                        filterCard(c) {
+                                            return get.type(c) == 'basic';
+                                        },
+                                        selectCard: 1,
+                                        position: 'he',
+                                        check: (card) => 12 - get.value(card),
+                                        viewAs: {
+                                            name: links[0][2],
+                                            nature: links[0][3],
+                                            suit: links[0][0],
+                                            number: links[0][1],
+                                        },
+                                    };
+                                },
+                                prompt(links, player) {
+                                    return '将一张牌当做' + (get.translation(links[0][3]) || '') + get.translation(links[0][2]) + '使用';
+                                },
+                            },
+                            ai: {
+                                fireAttack: true,
+                                respondSha: true,
+                                respondShan: true,
+                                order: 10,
+                                result: {
+                                    player: 1,
+                                },
+                            },
+                            group: ['HL_jinqiang_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: { player: ['useCard', 'respond'] },
+                                    filter(event, player) {
+                                        return ['sha', 'shan'].includes(event.card.name) && lib.skill.HL_jinqiang_1.logTarget(event, player)?.countCards('he');
+                                    },
+                                    forced: true,
+                                    logTarget(event, player) {
+                                        if (event.name == 'respond') return event.source;
+                                        if (event.card.name == 'sha') return event.targets[0];
+                                        return event.respondTo[0];
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.gainPlayerCard(lib.skill.HL_jinqiang_1.logTarget(trigger, player), 'he');
+                                    },
+                                },
+                            },
+                        },
+                        // 金弓
+                        //锁定技,你使用【杀】指定敌方角色时,你本回合每使用过一个花色的牌,此【杀】伤害+1.
+                        HL_jingong: {
+                            trigger: {
+                                player: ['shaBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.target?.isEnemiesOf(player);
+                            },
+                            async content(event, trigger, player) {
+                                const his = player.actionHistory;
+                                const evt = his[his.length - 1];
+                                const num = evt.useCard.map((e) => e.card?.suit).unique().length;
+                                trigger.baseDamage = 1 + num;
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————铁骨铮臣  神  24体力
+                        // 铮骨
+                        //锁定技,受到伤害/体力流失/体力调整时,改为失去一点体力
+                        HL_zhenggu: {
+                            trigger: {
+                                player: ['loseHpBegin', 'damageBegin4', 'changeHpBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                if (event.name == 'changeHp' && event.num > 0) {
+                                    return false;
+                                }
+                                return !event.getParent('HL_zhenggu', true);
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                                player.loseHp();
+                            },
+                        },
+                        // 切言
+                        //锁定技,准备阶段,你随机展示三张普通锦囊牌,并令王选择其中一张使用之;若王拒绝使用,你失去一点体力
+                        HL_qieyan: {
+                            trigger: {
+                                player: ['phaseZhunbeiBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return game.players.some((q) => q.identity == 'zhu');
+                            },
+                            async content(event, trigger, player) {
+                                const cards = Array.from(ui.cardPile.childNodes).filter((c) => get.type(c) == 'trick').randomGets(3);
+                                if (cards.length) {
+                                    game.cardsGotoOrdering(cards);
+                                    player.showCards(cards);
+                                    const boss = game.players.find((q) => q.identity == 'zhu');
+                                    const {
+                                        result: { links },
+                                    } = await boss.chooseButton(['选择其中一张使用之', cards])
+                                        .set('ai', (button) => get.value(button.link));
+                                    if (links && links[0]) {
+                                        boss.chooseUseTarget(links[0], true, false, 'nodistance');
+                                    }
+                                    else {
+                                        player.loseHp();
+                                    }
+                                }
+                            },
+                        },
+                        // 祛暗
+                        //锁定技,王的回合结束时,你弃置所有敌方角色各一张牌
+                        HL_quan: {
+                            trigger: {
+                                global: ['phaseEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.identity == 'zhu';
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of player.getEnemies()) {
+                                    await player.discardPlayerCard(npc, 'he', true);
+                                }
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————兴国志士  神  4体力
+                        // 图兴
+                        // 锁定技,每回合限一次,你使用锦囊牌时,所有友方角色各摸一张牌
+                        HL_tuxing: {
+                            trigger: {
+                                player: ['useCard'],
+                            },
+                            forced: true,
+                            usable: 1,
+                            filter(event, player) {
+                                return get.type(event.card) == 'trick';
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of player.getFriends(true)) {
+                                    npc.draw();
+                                }
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————国之柱石  神  200体力
+                        // 镇国
+                        // 锁定技,王对敌方角色造成伤害时,此伤害翻倍
+                        HL_zhenguo: {
+                            trigger: {
+                                global: ['damageBefore'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.source?.identity == 'zhu' && event.player.isEnemiesOf(player);
+                            },
+                            async content(event, trigger, player) {
+                                trigger.num = numberq1(trigger.num) * 2;
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————凡人之愿  群  3体力
+                        // 凡愿
+                        // 锁定技,体力减少时,进行一次判定;若不为♥️,防止之
+                        HL_fanyuan: {
+                            trigger: {
+                                player: ['changeHpBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.num < 0;
+                            },
+                            async content(event, trigger, player) {
+                                const { result: { suit } } = await player.judge('凡愿', (card) => (card.suit == 'heart' ? -2 : 2));
+                                if (suit != 'heart') {
+                                    trigger.cancel();
+                                }
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————丰乐亭侯  神  120体力
+                        // 破竹
+                        // 每阶段每种牌名限一次,你可以将一张牌当做任意牌使用,然后摸一张牌
+                        HL_pozhu: {
+                            init(player) {
+                                player.storage.HL_pozhu = [];
+                            },
+                            enable: ['chooseToUse', 'chooseToRespond'],
+                            hiddenCard(player, name) {
+                                return player.countCards('hes') && !player.storage.HL_pozhu.includes(name);
+                            },
+                            filter: (event, player) => player.countCards('hes') && game.qcard(player).some((q) => !player.storage.HL_pozhu.includes(q[2])),
+                            chooseButton: {
+                                dialog(event, player) {
+                                    return ui.create.dialog('破竹', [game.qcard(player).filter((q) => !player.storage.HL_pozhu.includes(q[2])), 'vcard']);
+                                },
+                                check(button) {
+                                    const player = _status.event.player;
+                                    const num = player.getUseValue(
+                                        {
+                                            name: button.link[2],
+                                            nature: button.link[3],
+                                        },
+                                        null,
+                                        true
+                                    );
+                                    return number0(num) / 2 + 10;
+                                },
+                                backup(links, player) {
+                                    return {
+                                        filterCard: true,
+                                        selectCard: 1,
+                                        popname: true,
+                                        position: 'hes',
+                                        check: (card) => 12 - get.value(card),
+                                        viewAs: {
+                                            name: links[0][2],
+                                            nature: links[0][3],
+                                            suit: links[0][0],
+                                            number: links[0][1],
+                                        },
+                                        async precontent(event, trigger, player) {
+                                            player.storage.HL_pozhu.add(event.result.card.name);
+                                            player.draw();
+                                        },
+                                    };
+                                },
+                                prompt(links, player) {
+                                    return '将一张牌当做' + (get.translation(links[0][3]) || '') + get.translation(links[0][2]) + '使用';
+                                },
+                            },
+                            ai: {
+                                fireAttack: true,
+                                save: true,
+                                respondTao: true,
+                                respondwuxie: true,
+                                respondSha: true,
+                                respondShan: true,
+                                order: 10,
+                                result: {
+                                    player(player) {
+                                        if (_status.event.dying) {
+                                            return get.attitude(player, _status.event.dying);
+                                        }
+                                        return 1;
+                                    },
+                                },
+                            },
+                            group: ['bosshp', 'bossfinish', 'HL_pozhu_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['phaseEnd', 'phaseZhunbeiEnd', 'phaseJudgeEnd', 'phaseDrawEnd', 'phaseUseEnd', 'phaseDiscardEnd', 'phaseJieshuEnd'],
+                                    },
+                                    silent: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.HL_pozhu = [];
+                                    },
+                                },
+                            },
+                        },
+                        // 精械
+                        // 准备阶段,你随机使用每种类型强化装备各一张;从牌堆/弃牌堆中随机获得2基本3锦囊
+                        HL_jingxie: {
+                            trigger: {
+                                player: ['phaseZhunbeiBegin'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                let num = 6;
+                                while (num-- > 1) {
+                                    const card1 = get.cardPile((c) => get.subtype(c) == `equip${num}`, 'field');
+                                    if (card1) {
+                                        await game.cardsGotoOrdering(card1);
+                                        const card2 = get.cardPile((c) => get.subtype(c) == `equip${num}`, 'field');
+                                        if (card2) {
+                                            await game.cardsGotoOrdering(card2);
+                                            const name1 = card1.name;
+                                            const name2 = card2.name;
+                                            const info2 = lib.card[name2];
+                                            const namex = name1 + name2;
+                                            lib.card[namex] = deepClone(lib.card[name1]);
+                                            const infox = lib.card[namex];
+                                            if (info2.skills) {
+                                                if (!infox.skills) {
+                                                    infox.skills = [];
+                                                }
+                                                infox.skills.addArray(info2.skills);
+                                            }
+                                            if (info2.distance) {
+                                                if (!infox.distance) {
+                                                    infox.distance = {};
+                                                }
+                                                for (const i in info2.distance) {
+                                                    if (infox.distance[i]) {
+                                                        infox.distance[i] = infox.distance[i] + info2.distance[i];
+                                                    }
+                                                    else {
+                                                        infox.distance[i] = info2.distance[i];
+                                                    }
+                                                }
+                                            }
+                                            lib.translate[namex] = lib.translate[name1] + lib.translate[name2];
+                                            lib.translate[`${namex}_info`] = lib.translate[`${name1}_info`] + lib.translate[`${name2}_info`];
+                                            await player.equip(game.createCard(namex));
+                                        }
+                                    }
+                                }
+                                const cards = [];
+                                let num1 = 3;
+                                while (num1-- > 0) {
+                                    const card = get.cardPile((c) => get.type(c) == 'basic', 'field');
+                                    if (card) {
+                                        cards.push(card);
+                                    }
+                                }
+                                let num2 = 2;
+                                while (num2-- > 0) {
+                                    const card = get.cardPile((c) => get.type(c) == 'trick', 'field');
+                                    if (card) {
+                                        cards.push(card);
+                                    }
+                                }
+                                player.gain(cards, 'gain2');
+                            },
+                        },
+                        // 谦逊
+                        // 锁定技,其他角色使用的锦囊牌对你无效,你每回合首次受到伤害时,防止之,然后摸两张牌
+                        HL_qianxun: {
+                            trigger: {
+                                target: ['useCardToPlayer'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player != player && get.type(event.card) == 'trick';
+                            },
+                            async content(event, trigger, player) {
+                                trigger.parent.excluded.add(player);
+                            },
+                            group: ['HL_qianxun_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['damageBegin4'],
+                                    },
+                                    usable: 1,
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                        player.draw(2);
+                                    },
+                                },
+                            },
+                        },
+                        // 定历
+                        // 锁定技,每名角色准备阶段,你卜算x(x为该角色座次数);免疫王受到的伤害;你退场后,王召唤的士兵生命值翻倍,对敌方角色造成的伤害翻倍
+                        HL_dingli: {
+                            trigger: {
+                                global: ['damageBegin4'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.identity == 'zhu';
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['HL_dingli_1', 'HL_dingli_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['phaseZhunbeiBegin'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.chooseToGuanxing(trigger.player.seatNum);
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['die'],
+                                    },
+                                    forced: true,
+                                    forceDie: true,
+                                    filter(event, player) {
+                                        return game.players.some((q) => q.identity == 'zhu');
+                                    },
+                                    async content(event, trigger, player) {
+                                        const boss = game.players.find((q) => q.identity == 'zhu');
+                                        boss.addSkill('HL_dingli_3');
+                                        for (const i of ['HL_fanren', 'HL_zhushi', 'HL_zhishi', 'HL_zhengchen', 'HL_xiaoyong1', 'HL_xiaoyong2', 'HL_xiaoyong3', 'HL_yuwei']) {
+                                            const info = lib.character[i];
+                                            info.maxHp = info.maxHp * 2;
+                                            info.hp = info.hp * 2;
+                                        }
+                                    },
+                                },
+                                3: {
+                                    trigger: {
+                                        global: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.source?.identity == 'zhong' && event.player.isEnemiesOf(player);
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num = numberq1(trigger.num) * 2;
+                                    },
+                                },
                             },
                         },
                     },
@@ -3752,7 +4486,63 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
-                        //————————————————————————————————————————————博卓卡斯替·圣卫铳骑 
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————丰乐亭侯  神  120体力
+                        HL_fengletinghou: '丰乐亭侯',
+                        HL_pozhu: '破竹',
+                        HL_pozhu_info: '每阶段每种牌名限一次,你可以将一张牌当做任意牌使用,然后摸一张牌',
+                        HL_jingxie: '精械',
+                        HL_jingxie_info: '准备阶段,你随机使用每种类型强化装备各一张;从牌堆/弃牌堆中随机获得2基本3锦囊',
+                        HL_qianxun: '谦逊',
+                        HL_qianxun_info: '锁定技,其他角色使用的锦囊牌对你无效,你每回合首次受到伤害时,防止之,然后摸两张牌',
+                        HL_dingli: '定历',
+                        HL_dingli_info: '锁定技,每名角色准备阶段,你卜算x(x为该角色座次数);免疫王受到的伤害;你退场后,王召唤的士兵生命值翻倍,对敌方角色造成的伤害翻倍',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————凡人之愿  群  3体力
+                        HL_fanren: '凡人之愿',
+                        HL_fanyuan: '凡愿',
+                        HL_fanyuan_info: '锁定技,体力减少时,进行一次判定;若不为♥️,防止之',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————国之柱石  神  200体力
+                        HL_zhushi: '国之柱石',
+                        HL_zhenguo: '镇国',
+                        HL_zhenguo_info: '锁定技,王对敌方角色造成伤害时,此伤害翻倍',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————兴国志士  神  4体力
+                        HL_zhishi: '兴国志士',
+                        HL_tuxing: '图兴',
+                        HL_tuxing_info: '锁定技,每回合限一次,你使用锦囊牌时,所有友方角色各摸一张牌',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————铁骨铮臣  神  24体力
+                        HL_zhengchen: '铁骨铮臣',
+                        HL_zhenggu: '铮骨',
+                        HL_zhenggu_info: '锁定技,受到伤害/体力流失/体力调整时,改为失去一点体力',
+                        HL_qieyan: '切言',
+                        HL_qieyan_info: '锁定技,准备阶段,你随机展示三张普通锦囊牌,并令王选择其中一张使用之;若王拒绝使用,你失去一点体力',
+                        HL_quan: '祛暗',
+                        HL_quan_info: '锁定技,王的回合结束时,你弃置所有敌方角色各一张牌',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————王者骁勇  神  6体力(刀/枪/弓随机之一)
+                        HL_xiaoyong1: '王者骁勇',
+                        HL_xiaoyong2: '王者骁勇',
+                        HL_xiaoyong3: '王者骁勇',
+                        HL_jindao: '金刀',
+                        HL_jindao_info: '锁定技,你使用伤害牌指定敌方角色时,将其所有牌移出游戏直到此回合结束,你对牌数小于你的敌方角色造成的伤害翻倍',
+                        HL_jinqiang: '金枪',
+                        HL_jinqiang_info: '锁定技,你使用或打出【杀】/【闪】时,获得对方一张牌,你可以将一张基本牌当做【杀】/【闪】使用或打出',
+                        HL_jingong: '金弓',
+                        HL_jingong_info: '锁定技,你使用【杀】指定敌方角色时,你本回合每使用过一个花色的牌,此【杀】伤害+1',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————王者御卫  神  30体力
+                        HL_yuwei: '王者御卫',
+                        HL_fushi: '拂士',
+                        HL_fushi_info: '锁定技,免疫王受到的伤害;造成伤害时,令王恢复等量体力',
+                        HL_zhene: '镇恶',
+                        HL_zhene_info: '锁定技,敌方角色结束阶段,若其本回合造成了伤害,你视作对其使用一张【杀】,期间其技能失效',
+                        HL_mengguang: '蒙光',
+                        HL_mengguang_info: '锁定技,王的出牌阶段结束后,恢复一点体力',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————封印之王座  神  500.0体力
+                        HL_wangzuo: '封印之王座',
+                        HL_shengzhe: '圣者荣光',
+                        HL_shengzhe_info: '锁定技,你拥有90%减伤和50限伤;体力值低于10%时,你召唤丰乐亭侯',
+                        HL_wangdao: '王道权御',
+                        HL_wangdao_info: '每轮开始时,若场上没有士兵,随机召唤一批次士兵<br>若场上有士兵,令所有士兵自爆<br>每自爆一个士兵的一点体力,对随机敌方单位造成1点伤害<br>批次1<br>王左右出现王者御卫,玩家两侧出现王者骁勇<br>批次2<br>王左右出现铁骨铮臣,玩家两侧出现兴国志士<br>批次3<br>王左右出现国之柱石<br>批次4<br>玩家两侧出现两个凡人之愿',
+                        HL_tongxin: '勠力同心',
+                        HL_tongxin_info: '锁定技,自身回合结束后,令所有士兵依次执行一个回合<br>士兵回合结束后,令自身执行一个额外的摸牌阶段与出牌阶段',
+                        //————————————————————————————————————————————博卓卡斯替·圣卫铳骑
                         HL_shengwei: '博卓卡斯替·圣卫铳骑',
                         HL_quanyu: '劝谕',
                         HL_quanyu_info: '<span class="Qmenu">锁定技,</span>敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌',
@@ -3794,14 +4584,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_李白: '李白',
                         醉诗: '醉诗',
                         醉诗_info: '每回合限两次,每轮开始时、体力值变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌',
-                        醉诗_1: '醉诗',
-                        醉诗_1_info: '你造成的伤害不能被减免且附带贯穿护甲与高血量的效果,你使用的牌不能被无效且伤害牌指定所有敌方角色<br>你具有翻面/横置/移除/死亡/封禁技能/移除技能抗性(本来不想写这个描述的......)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————许劭
                         HL_许劭: '许劭',
                         评鉴: '评鉴',
                         评鉴_info: '在很多时机,你都可以尝试运行一个对应时机技能的content',
-                        评鉴_1: '评鉴',
-                        评鉴_1_info: '你的体力上限不会减少,你放置武将牌上的牌改为摸牌,你的阶段与回合不会被跳过,你摸牌阶段摸的牌不会减少,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色<br>你具有翻面/横置/移除/死亡/封禁技能/移除技能抗性(本来不想写这个描述的......)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————神之無雙
                         HL_BOSS: '神之無雙',
                         HL_BOSS_info: '神之無雙挑战模式<br>1.此模式有四个boss(無雙飞将/镇关魔将/焚城魔士/乱武毒士),每阶段抽取阶段数的boss登场,且boss按阶段解锁技能<br>2.boss体力值大于0时拒绝死亡,免疫除受伤害外扣减体力值,免疫翻面横置与移除,免疫扣减体力上限',
@@ -3814,7 +4600,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jiwu: '极武',
                         HL_jiwu_info: '三阶段解锁,锁定技,你使用伤害牌指定目标后,令这些角色各失去一点体力',
                         HL_liyu: '利驭',
-                        HL_liyu_info: '四阶段解锁,每名角色每回合限一次,你首次使用伤害牌指定其后,摸四张牌,出牌阶段出杀次数+1,防止此牌对其造成的伤害,你下一次造成的伤害翻倍',
+                        HL_liyu_info: '四阶段解锁,每名角色回合限一次,你使用伤害牌指定其后,摸四张牌,出牌阶段出杀次数+1,防止此牌对其造成的伤害,你下一次造成的伤害翻倍',
                         HL_shenwei: '神威',
                         HL_shenwei_info: '炼狱模式解锁,锁定技,其他角色准备阶段,你可以使用一张【杀】',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————镇关魔将
@@ -3836,7 +4622,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         HL_liru: '焚城魔士',
                         HL_fencheng: '焚城',
-                        HL_fencheng_info: '登场时,对所有敌方角色各造成三点火焰伤害.锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️牌数点火焰伤害',
+                        HL_fencheng_info: '登场时,对所有敌方角色各造成三点火焰伤害.锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️牌数点火焰伤害',
                         HL_juece: '绝策',
                         HL_juece_info: '二阶段解锁,锁定技,每名角色结束阶段,你令所有此回合失去过牌的角色各失去一点体力',
                         HL_mieji: '灭计',
@@ -3844,19 +4630,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_zhendi: '鸩帝',
                         HL_zhendi_info: '四阶段解锁,锁定技,其他角色准备阶段,你将一张【毒】从游戏外加入于其手牌中,有【毒】进入弃牌堆时,你下一次造成的伤害+1',
                         HL_dujiu: '毒酒',
-                        HL_dujiu_info: '炼狱模式解锁,锁定技,游戏开始时,你将牌堆里所有【酒】替换为【毒】,然后将12张【毒】加入游戏,我方角色使用【毒】时,改为恢复两点体力',
+                        HL_dujiu_info: '炼狱模式解锁,锁定技,游戏开始时,你将牌堆里所有【酒】替换为【毒】,然后将12张【毒】加入游戏,我方角色使用【毒】时,改为回复两点体力',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乱武毒士
                         HL_jianxu: '乱武毒士',
                         HL_luanwu: '乱武',
-                        HL_luanwu_info: '登场时,为所有敌方角色附加三层<重伤>效果(重伤:恢复体力时,将恢复值设定为0并移除一层<重伤>)<br>乱武:锁定技,准备阶段,你令所有敌方角色依次选择一项:①本回合无法使用【桃】,然后失去一点体力②对一名友方角色使用一张【杀】.选择结束后,你摸相当于选择①角色数量张牌,然后视作依次使用选择②角色数量张【杀】',
+                        HL_luanwu_info: '登场时,为所有敌方角色附加三层<重伤>效果(重伤:回复体力时,将回复值设定为0并移除一层<重伤>)<br>乱武:锁定技,准备阶段,你令所有敌方角色依次选择一项:①本回合无法使用【桃】,然后失去一点体力②对一名友方角色使用一张【杀】.选择结束后,你摸相当于选择①角色数量张牌,然后视作依次使用选择②角色数量张【杀】',
                         HL_wansha: '完杀',
-                        HL_wansha_info: '二阶段解锁,锁定技,你的回合内,敌方角色恢复体力后,若其不处于濒死状态,你令其失去一点体力,若其仍处于濒死状态,你令其获得一层<重伤>',
+                        HL_wansha_info: '二阶段解锁,锁定技,你的回合内,敌方角色回复体力后,若其不处于濒死状态,你令其失去一点体力,若其仍处于濒死状态,你令其获得一层<重伤>',
                         HL_weimu: '帷幕',
                         HL_weimu_info: '三阶段解锁,锁定技,我方角色受到的伤害至多为1,且每回合至多受到5次伤害',
                         HL_chengxiong: '惩雄',
                         HL_chengxiong_info: '四阶段解锁,锁定技,敌方角色使用于其摸牌阶段外获得的牌时,失去一点体力',
                         HL_duji: '毒计',
-                        HL_duji_info: '炼狱模式解锁,锁定技,一名角色使用普通锦囊牌时,你进行一次判定,若为黑色,其失去一点体力,若为红色,你令一名角色恢复一点体力',
+                        HL_duji_info: '炼狱模式解锁,锁定技,任意角色使用普通锦囊牌时,你进行一次判定,若为黑色,其失去一点体力,若为红色,你令一名角色回复一点体力',
                     },
                 };
                 for (const i in QQQ.character) {
@@ -3926,8 +4712,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     return list;
                 }; //BOSS选将
                 Reflect.defineProperty(ui.create, 'characterDialog', {
-                    get: () =>
-                        function () {
+                    get() {
+                        return function () {
                             var filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
                             for (var i = 0; i < arguments.length; i++) {
                                 if (arguments[i] === 'thisiscard') {
@@ -4531,7 +5317,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             Searcher.appendChild(find);
                             container.prepend(Searcher);
                             return dialog;
-                        },
+                        };
+                    },
                     set() { },
                 }); //选将列表修改
             } //武将全部可选
@@ -4539,7 +5326,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
         content(config, pack) {
             lib.skill.bosshp = {
                 init(player) {
-                    let maxhp = lib.character[player.name].maxHp;
+                    const info = lib.character[player.name];
+                    let maxhp = info.maxHp;
                     Reflect.defineProperty(player, 'maxHp', {
                         get() {
                             return maxhp;
@@ -4550,7 +5338,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             }
                         },
                     }); //扣减体力上限抗性
-                    let qhp = lib.character[player.name].hp;
+                    let qhp = info.hp;
                     Reflect.defineProperty(player, 'hp', {
                         get() {
                             return qhp;
@@ -4558,19 +5346,29 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         set(value) {
                             if (value > qhp) {
                                 qhp = value;
-                            }
-                            else {
+                            } else {
                                 if (player.success) {
                                     qhp = value;
                                 }
                             }
                         },
                     });
+                    Reflect.defineProperty(player, 'skipList', {
+                        get() {
+                            return [];
+                        },
+                        set() { },
+                    });
                 },
                 trigger: {
                     player: ['damageEnd'],
                 },
+                popup: false,
+                firstDo: true,
                 forced: true,
+                filter(event, player) {
+                    return event.num > 0;
+                },
                 async content(event, trigger, player) {
                     player.success = true;
                     player.hp = player.hp - trigger.num;
@@ -4578,6 +5376,90 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     player.success = false;
                 },
             };
+            lib.skill.bossfinish = {
+                trigger: {
+                    source: ['damageBefore'],
+                    player: ['useCardBefore', 'phaseBefore', 'phaseDrawBefore', 'phaseUseBefore'],
+                },
+                popup: false,
+                firstDo: true,
+                forced: true,
+                async content(event, trigger, player) {
+                    if (['phaseUse', 'damage'].includes(trigger.name)) {
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 5;
+                            },
+                            set() { },
+                        });
+                    }
+                    if (trigger.name == 'useCard') {
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 16;
+                            },
+                            set() { },
+                        });
+                        Reflect.defineProperty(trigger, 'excluded', {
+                            get() {
+                                return [];
+                            },
+                            set() { },
+                        });
+                        Reflect.defineProperty(trigger, 'all_excluded', {
+                            get() {
+                                return false;
+                            },
+                            set() { },
+                        });
+                        if (get.tag(trigger.card, 'damage')) {
+                            Reflect.defineProperty(trigger, 'targets', {
+                                get() {
+                                    return player.getEnemies();
+                                },
+                                set() { },
+                            });
+                        } //用牌击穿
+                    }
+                    if (trigger.name == 'phase') {
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 12;
+                            },
+                            set() { },
+                        });
+                        Reflect.defineProperty(trigger, 'player', {
+                            get() {
+                                return player;
+                            },
+                            set() { },
+                        });
+                    }
+                    if (trigger.name == 'phaseDraw') {
+                        var DRAW = 2;
+                        Reflect.defineProperty(trigger, 'num', {
+                            get() {
+                                return DRAW;
+                            },
+                            set(value) {
+                                game.log(`摸牌数由${DRAW}变为${value}`);
+                                if (value > DRAW) DRAW = value;
+                                if (isNaN(value)) DRAW++;
+                            },
+                        });
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 2;
+                            },
+                            set() { },
+                        });
+                    }
+                },
+            };
+            lib.translate.bosshp = 'boss抗性';
+            lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流,你具有翻面/横置/移除/死亡/封禁技能/移除技能抗性';
+            lib.translate.bossfinish = 'boss抗性';
+            lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你摸牌阶段摸的牌不会减少,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
             lib.skill._HL_BOSS = {
                 trigger: {
                     player: 'dieEnd',
@@ -4598,8 +5480,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (!first) {
                             first = true;
                             bossx = game.changeBossQ(name);
-                        }
-                        else {
+                        } else {
                             bossx = game.addFellowQ(name);
                         }
                         _status.HL_BOSS.boss.add(bossx);
@@ -4628,7 +5509,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         await game.HL_VIDEO('HL_李白');
                     } //李白动画
                 },
-            };//只触发一次
+            }; //只触发一次
             if (lib.boss) {
                 lib.boss.HL_BOSS = {
                     chongzheng: false,
@@ -4637,8 +5518,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             if (player == game.boss) {
                                 return false;
                             }
-                        }
-                        else {
+                        } else {
                             game.checkResult();
                         }
                     },
@@ -4660,7 +5540,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     },
                 };
                 lib.boss.HL_amiya = {
-                    chongzheng: false,//所有人死后几轮复活,填0不会复活//boss不会自动添加重整
+                    chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
+                    checkResult(player) {
+                        if (player == game.boss) {
+                            return false;
+                        }
+                    },
+                    init() {
+                        game.kangxing(game.boss);
+                        game.$kangxing(game.boss);
+                    },
+                };
+                lib.boss.HL_wangzuo = {
+                    chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
                     checkResult(player) {
                         if (player == game.boss) {
                             return false;
@@ -4690,7 +5582,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             },
         },
         package: {
-            intro: '一键给你心仪的武将或角色添加(死亡/封禁技能/移除技能/翻面/横置/移出游戏)抗性,为你的爱将保驾护航<br>致谢名单:<br>感谢咪咪狗提供构造函数修改思路<br>感谢云念与苏见笑进行bug测试<br>感谢诗笺指出不足<br>感谢u提供扩展名字<br>感谢不能提及名字的某人不能提及内容的帮助',
+            intro: '一键给角色添加(死亡/封禁技能/移除技能/翻面/横置/移出游戏)抗性<br><br>本扩展自带抗性角色:李白/许劭/抗性测试,感兴趣的朋友可以挑战一下<br><br>致谢名单:<br>感谢咪咪狗提供构造函数修改思路<br>感谢云念与苏见笑进行bug测试<br>感谢诗笺指出不足<br>感谢u提供扩展名字<br>感谢不能提及名字的某人不能提及内容的帮助',
             author: '潜在水里的火&&Iking',
             version: Infinity,
         },
