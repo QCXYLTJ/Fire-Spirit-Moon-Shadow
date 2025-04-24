@@ -67,6 +67,7 @@ const kangxing = function () {
     if (!lib.config.kangxing) {
         game.saveConfig('kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
     }
+    const qinit = lib.element.player.init;
     const oplayer = ui.create.player;
     Reflect.defineProperty(ui.create, 'player', {
         get() {
@@ -123,12 +124,16 @@ const kangxing = function () {
         set() { },
         configurable: false,
     });
+    const allplayers = [];
     const _players = [];
     let qplayers = [];
     const obj = {
         get players() {
+            if (!_status.gameStarted && lib.config.mode != 'boss') {
+                return allplayers;
+            } //防止没载入名字击杀
             return _players.filter((q) => {
-                if (['HL_amiya', 'HL_liru', 'HL_jianxu', 'HL_huaxiong', 'HL_lvbu', 'HL_wangzuo', 'HL_fengletinghou'].includes(q.name) && q.hp <= 0) {
+                if (['HL_amiya', 'HL_liru', 'HL_jiaxu', 'HL_huaxiong', 'HL_lvbu', 'HL_wangzuo', 'HL_fengletinghou'].includes(q.name) && q.hp <= 0) {
                     return false;
                 }
                 return true;
@@ -193,20 +198,20 @@ const kangxing = function () {
              */
             // @ts-ignore
             const player = ui.create.div('.player', position);
+            allplayers.push(player);
             let qname;
             Reflect.defineProperty(player, 'name', {
                 get() {
                     const real = _name.get(player);
                     if (real) {
                         return real;
-                    }
+                    } //这里不能调用obj.players会爆栈
                     return qname;
                 },
                 set(v) {
                     if (lib.config.kangxing.concat(['HL_李白', 'HL_许劭', 'HL_kangxing']).includes(v)) {
-                        _name.set(player, v);
+                        game.$kangxing(player, v); //先改名
                         game.kangxing(player);
-                        game.$kangxing(player);
                     }
                     qname = v;
                 },
@@ -333,6 +338,11 @@ const kangxing = function () {
                                 }
                             },
                             contains(q) {
+                                player.node.hp.classList.remove('hidden');
+                                player.node.avatar.style.transform = '';
+                                player.node.avatar.style.filter = '';
+                                player.style.transform = '';
+                                player.style.filter = '';
                                 const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                                 for (const style of classq) {
                                     if (!list.includes(style)) {
@@ -348,6 +358,13 @@ const kangxing = function () {
                 set(v) {
                     classlist = v;
                 },
+                configurable: false,
+            });
+            Reflect.defineProperty(player, 'init', {
+                get() {
+                    return qinit;
+                },
+                set() { },
                 configurable: false,
             });
             Reflect.defineProperty(player, 'uninit', {
@@ -429,97 +446,6 @@ const kangxing = function () {
                 set() { },
                 configurable: false,
             });
-            Reflect.defineProperty(player, 'buildNode', {
-                get() {
-                    return function () {
-                        /** @type { SMap<HTMLDivElement> } */
-                        const node = (player.node = {
-                            avatar: ui.create.div('.avatar', player, ui.click.avatar).hide(),
-                            avatar2: ui.create.div('.avatar2', player, ui.click.avatar2).hide(),
-                            turnedover: ui.create.div('.turned', '<div>翻面<div>', player),
-                            framebg: ui.create.div('.framebg', player),
-                            intro: ui.create.div('.intro', player),
-                            identity: ui.create.div('.identity', player),
-                            hp: ui.create.div('.hp', player),
-                            name: ui.create.div('.name', player),
-                            name2: ui.create.div('.name.name2', player),
-                            nameol: ui.create.div('.nameol', player),
-                            count: ui.create.div('.count', player).hide(),
-                            equips: ui.create.div('.equips', player).hide(),
-                            judges: ui.create.div('.judges', player),
-                            marks: ui.create.div('.marks', player),
-                            chain: ui.create.div('.chain', '<div></div>', player),
-                            handcards1: ui.create.div('.handcards'),
-                            handcards2: ui.create.div('.handcards'),
-                            expansions: ui.create.div('.expansions'),
-                        });
-                        player.node.gainSkill = {
-                            player: player,
-                            gain(skill) {
-                                var sender = this;
-                                if (!sender.skills) sender.skills = [];
-                                if (!sender.skills.includes(skill) && lib.translate[skill]) {
-                                    sender.skills.push(skill);
-                                    var html = '';
-                                    for (var i = 0; i < sender.skills.length; i++) {
-                                        html += '[' + lib.translate[sender.skills[i]] + ']';
-                                        sender.innerHTML = html;
-                                    }
-                                }
-                            },
-                            lose(skill) {
-                                var sender = this;
-                                var index = sender.skills.indexOf(skill);
-                                if (index >= 0) {
-                                    sender.skills.splice(index, 1);
-                                    var html = '';
-                                    for (var i = 0; i < sender.skills.length; i++) {
-                                        html += '[' + lib.translate[sender.skills[i]] + ']';
-                                    }
-                                    sender.innerHTML = html;
-                                }
-                            },
-                        };
-                        player.node.campWrap = ui.create.div('camp-wrap', player);
-                        player.node.campWrap.node = {
-                            back: ui.create.div('camp-back', player.node.campWrap),
-                            border: ui.create.div('camp-border', player.node.campWrap),
-                            campName: ui.create.div('camp-name', player.node.campWrap),
-                            avatarName: player.node.name,
-                            avatarDefaultName: ui.create.div('avatar-name-default', player.node.campWrap),
-                        };
-                        player.node.hpWrap = ui.create.div('hp-wrap', player); //QQQ
-                        if (lib.config.equip_span) {
-                            let observer = new MutationObserver((mutationsList) => {
-                                for (let mutation of mutationsList) {
-                                    if (mutation.type === 'childList') {
-                                        const addedNodes = Array.from(mutation.addedNodes);
-                                        const removedNodes = Array.from(mutation.removedNodes);
-                                        // @ts-ignore
-                                        if (
-                                            addedNodes.some((card) => !card.classList.contains('emptyequip')) ||
-                                            // @ts-ignore
-                                            removedNodes.some((card) => !card.classList.contains('emptyequip'))
-                                        ) {
-                                            player.$handleEquipChange();
-                                        }
-                                    }
-                                }
-                            });
-                            const config = { childList: true };
-                            observer.observe(node.equips, config);
-                        }
-                        node.expansions.style.display = 'none';
-                        const chainLength = game.layout == 'default' ? 64 : 40;
-                        for (let repetition = 0; repetition < chainLength; repetition++) {
-                            ui.create.div(node.chain.firstChild, '.cardbg').style.transform = `translateX(${repetition * 5 - 5}px)`;
-                        }
-                        node.action = ui.create.div('.action', node.avatar);
-                    };
-                },
-                set() { },
-                configurable: false,
-            }); //十周年兼容？？？
             Object.setPrototypeOf(player, (qplayer || lib.element.Player).prototype);
             // @ts-ignore
             player._args = [position];
@@ -640,27 +566,21 @@ const kangxing = function () {
     });
     Reflect.defineProperty(game, '$kangxing', {
         get() {
-            return function (player) {
+            return function (player, name) {
                 if (player.playerid) {
+                    if (!name) {
+                        name = player.name;
+                    }
                     _players.add(player);
-                    _name.set(player, player.name);
+                    _name.set(player, name);
                     new MutationObserver(function () {
-                        if (qcontains.call(ui.arena, player)) return;
-                        console.log('还原角色被删除的武将牌');
-                        qappend.call(ui.arena, player);
+                        if (obj.players.includes(player)) {
+                            if (qcontains.call(ui.arena, player)) return;
+                            console.log('还原角色被删除的武将牌');
+                            qappend.call(ui.arena, player);
+                        }
                     }).observe(ui.arena, {
                         childList: true,
-                    });
-                    new MutationObserver(function () {
-                        const classq = qgetstyle.call(player.node.hp, 'class').split(/\s+/g);
-                        for (const style of classq) {
-                            if (style == 'hidden') {
-                                player.node.hp.classList.remove(style);
-                            }
-                        }
-                    }).observe(player.node.hp, {
-                        attributes: true,
-                        attributeFilter: ['class'],
                     });
                     const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
                     new MutationObserver(function () {
@@ -676,14 +596,6 @@ const kangxing = function () {
                         attributes: true,
                         attributeFilter: ['class'],
                     });
-                    new MutationObserver(function () {
-                        if (player.style.transform !== '') {
-                            player.style.transform = '';
-                        }
-                    }).observe(player, {
-                        attributes: true,
-                        attributeFilter: ['style'],
-                    });//死亡翻转
                 }
             };
         },
@@ -871,6 +783,7 @@ const kangxingq = function () {
                     '测试',
                 ],
                 forced: true,
+                popup: false,
                 async content(event, trigger, player) {
                     const skill = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
@@ -1101,6 +1014,7 @@ const kangxingq = function () {
                     };
                 },
                 forced: true,
+                popup: false,
                 async content(event, trigger, player) {
                     const skill = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
@@ -1330,6 +1244,7 @@ const kangxingq = function () {
                     };
                 },
                 forced: true,
+                popup: false,
                 async content(event, trigger, player) {
                     const skill = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
@@ -1559,6 +1474,7 @@ const kangxingq = function () {
                     };
                 },
                 forced: true,
+                popup: false,
                 async content(event, trigger, player) {
                     const skill = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
@@ -2062,8 +1978,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (typeof info == 'object') {
                             if (Array.isArray(info)) {
                                 clone[key] = info.slice();
-                            }
-                            else {
+                            } else {
                                 clone[key] = window.deepClone(info);
                             }
                         } else {
@@ -2072,7 +1987,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                 }
                 return clone;
-            };//深拷贝对象
+            }; //深拷贝对象
             lib.init.css(lib.assetURL + 'extension/火灵月影/QQQ.css');
             game.src = function (name) {
                 let extimage = null,
@@ -2433,7 +2348,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             maxHp: 60,
                             skills: ['HL_fencheng', 'HL_juece', 'HL_mieji', 'HL_zhendi', 'HL_dujiu'],
                         },
-                        HL_jianxu: {
+                        HL_jiaxu: {
                             sex: 'male',
                             hp: 60,
                             maxHp: 60,
@@ -2501,8 +2416,26 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                     },
                     characterIntro: {
-                        HL_李白: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)<br>在登临至高的路上,与我相伴的,只有一柄剑,一壶酒.我既是酒神,也是剑仙',
                         HL_amiya: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>存在于每个故事尽头,带走每位角色,封闭每种可能,停止每段讲述.它是对终结的想象,亦是所有想象的终结,它是一切,唯独不是你熟悉的人',
+                        HL_shengwei: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)',
+                        HL_kuilong: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)',
+                        HL_heiguanzunzhu: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)',
+                        HL_manfuleide: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)',
+                        HL_李白: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)<br>在登临至高的路上,与我相伴的,只有一柄剑,一壶酒.我既是酒神,也是剑仙',
+                        HL_liru: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_jiaxu: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_huaxiong: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_lvbu: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_wangzuo: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_fengletinghou: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_yuwei: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_xiaoyong1: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_xiaoyong2: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_xiaoyong3: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_zhengchen: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_zhishi: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_zhushi: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
+                        HL_fanren: '设计者:秋(1138146139)<br>编写者:潜在水里的火(1476811518)',
                     },
                     characterTitle: {
                         HL_李白: `<b style='color: #00FFFF; font-size: 25px;'>醉酒狂詩  青蓮劍仙</b>`,
@@ -3803,8 +3736,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.storage.HL_shengzhe_1 = true;
                                         const boss = game.addFellowQ('HL_fengletinghou');
                                         boss.identity = 'zhu';
+                                        game.$kangxing(boss, 'HL_fengletinghou');
                                         game.kangxing(boss);
-                                        game.$kangxing(boss);
                                     },
                                 },
                             },
@@ -4158,19 +4091,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return game.players.some((q) => q.identity == 'zhu');
                             },
                             async content(event, trigger, player) {
-                                const cards = Array.from(ui.cardPile.childNodes).filter((c) => get.type(c) == 'trick').randomGets(3);
+                                const cards = Array.from(ui.cardPile.childNodes)
+                                    .filter((c) => get.type(c) == 'trick')
+                                    .randomGets(3);
                                 if (cards.length) {
                                     game.cardsGotoOrdering(cards);
                                     player.showCards(cards);
                                     const boss = game.players.find((q) => q.identity == 'zhu');
                                     const {
                                         result: { links },
-                                    } = await boss.chooseButton(['选择其中一张使用之', cards])
-                                        .set('ai', (button) => get.value(button.link));
+                                    } = await boss.chooseButton(['选择其中一张使用之', cards]).set('ai', (button) => get.value(button.link));
                                     if (links && links[0]) {
                                         boss.chooseUseTarget(links[0], true, false, 'nodistance');
-                                    }
-                                    else {
+                                    } else {
                                         player.loseHp();
                                     }
                                 }
@@ -4237,7 +4170,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.num < 0;
                             },
                             async content(event, trigger, player) {
-                                const { result: { suit } } = await player.judge('凡愿', (card) => (card.suit == 'heart' ? -2 : 2));
+                                const {
+                                    result: { suit },
+                                } = await player.judge('凡愿', (card) => (card.suit == 'heart' ? -2 : 2));
                                 if (suit != 'heart') {
                                     trigger.cancel();
                                 }
@@ -4359,8 +4294,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 for (const i in info2.distance) {
                                                     if (infox.distance[i]) {
                                                         infox.distance[i] = infox.distance[i] + info2.distance[i];
-                                                    }
-                                                    else {
+                                                    } else {
                                                         infox.distance[i] = info2.distance[i];
                                                     }
                                                 }
@@ -4563,7 +4497,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
                         HL_amiya: '阿米娅·炉芯终曲',
                         HL_buyingcunzai: '不应存在之人',
-                        HL_buyingcunzai_info: '<span class="Qmenu">锁定技,</span>①所有技能不可失去与被动失效,免疫即死/体力上限减少与体力值调整,受到的伤害与失去的体力值减少50%【至少为1】<br>②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束',
+                        HL_buyingcunzai_info: '<span class="Qmenu">锁定技,</span>①免疫体力上限减少与体力值调整,拥有50%减伤<br>②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束',
                         HL_chuangyi: '仅剩的创意',
                         HL_chuangyi_info: '<span class="Qmenu">锁定技,</span>①游戏开始时你获得3枚<仅剩的创意>,将场上所有角色势力锁定为<神>,并令敌方角色获得<束缚>状态,直到你造成伤害<br>②每轮开始时或造成伤害/体力变化后,你获得等量的<仅剩的创意>并摸等量的牌<br>③你的手牌上限等于<仅剩的创意>数<br>④准备阶段,你消耗3枚<仅剩的创意>对敌方角色各造成1点伤害',
                         HL_jintouchongxian: '尽头重现',
@@ -4632,7 +4566,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_dujiu: '毒酒',
                         HL_dujiu_info: '炼狱模式解锁,锁定技,游戏开始时,你将牌堆里所有【酒】替换为【毒】,然后将12张【毒】加入游戏,我方角色使用【毒】时,改为回复两点体力',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乱武毒士
-                        HL_jianxu: '乱武毒士',
+                        HL_jiaxu: '乱武毒士',
                         HL_luanwu: '乱武',
                         HL_luanwu_info: '登场时,为所有敌方角色附加三层<重伤>效果(重伤:回复体力时,将回复值设定为0并移除一层<重伤>)<br>乱武:锁定技,准备阶段,你令所有敌方角色依次选择一项:①本回合无法使用【桃】,然后失去一点体力②对一名友方角色使用一张【杀】.选择结束后,你摸相当于选择①角色数量张牌,然后视作依次使用选择②角色数量张【杀】',
                         HL_wansha: '完杀',
@@ -5489,8 +5423,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (lib.config.extension_火灵月影_lianyu) {
                             skills.add(lib.character[name].skills.slice(-1));
                         }
+                        game.$kangxing(bossx, name);
                         game.kangxing(bossx, skills);
-                        game.$kangxing(bossx);
                     }
                 },
             };
@@ -5525,7 +5459,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     init() {
                         _status.HL_BOSS = {
                             num: 1,
-                            name: ['HL_liru', 'HL_jianxu', 'HL_huaxiong', 'HL_lvbu'],
+                            name: ['HL_liru', 'HL_jiaxu', 'HL_huaxiong', 'HL_lvbu'],
                             boss: [game.boss],
                         };
                         const name = _status.HL_BOSS.name.randomGet();
@@ -5535,8 +5469,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (lib.config.extension_火灵月影_lianyu) {
                             skills.add(lib.character[name].skills.slice(-1));
                         }
+                        game.$kangxing(game.boss, name);
                         game.kangxing(game.boss, skills);
-                        game.$kangxing(game.boss);
                     },
                 };
                 lib.boss.HL_amiya = {
@@ -5547,8 +5481,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     },
                     init() {
+                        game.$kangxing(game.boss, 'HL_amiya');
                         game.kangxing(game.boss);
-                        game.$kangxing(game.boss);
                     },
                 };
                 lib.boss.HL_wangzuo = {
@@ -5559,10 +5493,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     },
                     init() {
+                        game.$kangxing(game.boss, 'HL_wangzuo');
                         game.kangxing(game.boss);
-                        game.$kangxing(game.boss);
                     },
                 };
+            }
+            if (lib.config.extension_火灵月影_关闭本体BOSS) {
+                for (const i of ['boss_hundun', 'boss_qiongqi', 'boss_taotie', 'boss_taowu', 'boss_zhuyin', 'boss_xiangliu', 'boss_zhuyan', 'boss_bifang', 'boss_yingzhao', 'boss_qingmushilian', 'boss_qinglong', 'boss_mushengoumang', 'boss_shujing', 'boss_taihao', 'boss_chiyanshilian', 'boss_zhuque', 'boss_huoshenzhurong', 'boss_yanling', 'boss_yandi', 'boss_baimangshilian', 'boss_baihu', 'boss_jinshenrushou', 'boss_mingxingzhu', 'boss_shaohao', 'boss_xuanlinshilian', 'boss_xuanwu', 'boss_shuishengonggong', 'boss_shuishenxuanming', 'boss_zhuanxu', 'boss_zhuoguiquxie', 'boss_nianshou_heti', 'boss_nianshou_jingjue', 'boss_nianshou_renxing', 'boss_nianshou_ruizhi', 'boss_nianshou_baonu', 'boss_baiwuchang', 'boss_heiwuchang', 'boss_luocha', 'boss_yecha', 'boss_niutou', 'boss_mamian', 'boss_chi', 'boss_mo', 'boss_wang', 'boss_liang', 'boss_qinguangwang', 'boss_chujiangwang', 'boss_songdiwang', 'boss_wuguanwang', 'boss_yanluowang', 'boss_bianchengwang', 'boss_taishanwang', 'boss_dushiwang', 'boss_pingdengwang', 'boss_zhuanlunwang', 'boss_mengpo', 'boss_dizangwang', 'boss_lvbu1', 'boss_lvbu2', 'boss_lvbu3', 'boss_caocao', 'boss_guojia', 'boss_zhangchunhua', 'boss_zhenji', 'boss_liubei', 'boss_zhugeliang', 'boss_huangyueying', 'boss_pangtong', 'boss_zhouyu', 'boss_caiwenji', 'boss_zhangjiao', 'boss_zuoci', 'boss_diaochan', 'boss_huatuo', 'boss_dongzhuo', 'boss_sunce']) {
+                    lib.config.mode_config.boss[`${i}_boss_config`] = false;
+                };
+                game.saveConfig(`mode_config`, lib.config.mode_config);
             }
         },
         config: {
@@ -5573,6 +5513,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             lianyu: {
                 name: '<span class="Qmenu">挑战炼狱模式</span>',
                 intro: '开启后,神之無雙增加技能',
+                init: true,
+            },
+            关闭本体BOSS: {
+                name: '<span class="Qmenu">关闭本体BOSS</span>',
+                intro: '一键关闭本体BOSS',
                 init: true,
             },
             武将全部可选: {
