@@ -133,6 +133,9 @@ const kangxing = function () {
                 return allplayers;
             } //防止没载入名字击杀
             return _players.filter((q) => {
+                if (!q) {
+                    return false;
+                }
                 if (['HL_amiya', 'HL_liru', 'HL_jiaxu', 'HL_huaxiong', 'HL_lvbu', 'HL_wangzuo', 'HL_fengletinghou'].includes(q.name) && q.hp <= 0) {
                     return false;
                 }
@@ -145,12 +148,11 @@ const kangxing = function () {
             qplayers = [...new Set([...qplayers, ...obj.players])]; //防代理,但是不防前面的代理,如果放第一位,那么前面添加player就不会被set方法检测到
             return new Proxy(qplayers, {
                 set(target, property, value) {
-                    const result = Reflect.set(target, property, value);
+                    const result = Reflect.set(target, property, value);//先执行移除,不然里面有个undefined元素
                     if (property === 'length') {
-                        target = [...new Set([...target, ...obj.players])];
-                        game.sort(target);
+                        game.sort();
                     }
-                    return result;
+                    return result;//不能与上面合并
                 },
             }); //直接赋值不会触发set方法
         },
@@ -165,21 +167,13 @@ const kangxing = function () {
             _dead = [...new Set(_dead.filter((player) => !obj.players.includes(player)))];
             return new Proxy(_dead, {
                 set(target, property, value) {
-                    const result = Reflect.set(target, property, value);
+                    const result = Reflect.set(target, property, value);//先执行移除,不然里面有个undefined元素
                     if (property === 'length') {
-                        target = [...new Set(target.filter((player) => !obj.players.includes(player)))];
-                        target.forEach((player) => {
-                            player.classList.add('removing');
-                            player.classList.add('hidden');
-                        });
-                        target.concat(game.players).forEach((player, index, array) => {
-                            player.previousSeat = array[index === 0 ? array.length - 1 : index - 1];
-                            player.nextSeat = array[index === array.length - 1 ? 0 : index + 1];
-                        });
+                        game.sort();
                     }
-                    return result;
+                    return result;//不能与上面合并
                 },
-            });
+            }); //直接赋值不会触发set方法
         },
         configurable: false,
         set(value) {
@@ -1677,33 +1671,47 @@ const boss = function () {
         set(v) {
             _me = v;
             if (game.players.includes(v) && game.players[0] != v) {
-                //这样挑战模式不管选什么挑战李白都会变成game.me是李白,因为李白最先进入players
-                game.nosort = true;
-                while (game.players[0] != v) {
-                    const start = game.players.shift();
-                    game.players.push(start);
-                }
-                game.nosort = false;
-                game.sort();
+                game.sort();//因为李白最先进入players,挑战模式不管选什么挑战李白,都会变成game.me是李白
             } //如果数组target[meIndex]是李白,那么替换掉的一瞬间,接下来调用就会再添加一个李白,导致数组两个李白
         }, //更换game.me之后第一时间排序
     });
-    game.sort = function (players) {
-        if (game.nosort) return false;
-        if (!players) players = game.players;
-        ui.arena.setNumber(players.length);
-        game.dead.forEach((player) => {
-            player.classList.add('removing');
-            player.classList.add('hidden');
-        });
-        if (players.includes(game.me) && players[0] != game.me) {
-            game.nosort = true;
-            while (players[0] != game.me) {
-                const start = players.shift();
-                players.push(start);
+    game.sort = function () {
+        const players = game.players.filter(Boolean);
+        const deads = game.dead.filter(Boolean);
+        const bool = lib.config.extension_火灵月影_死亡移除;
+        const allPlayers = bool ? players : players.concat(deads);
+        ui.arena.setNumber(allPlayers.length);
+        if (bool) {
+            deads.forEach((player) => {
+                player.classList.add('removing', 'hidden');
+            });
+        }
+        allPlayers.sort((a, b) => a.dataset.position - b.dataset.position);
+        if (allPlayers.includes(game.me) && allPlayers[0] != game.me) {
+            while (allPlayers[0] != game.me) {
+                const start = allPlayers.shift();
+                allPlayers.push(start);
             }
-            game.nosort = false;
-        } //后面复活也要排序
+        }
+        allPlayers.forEach((player, index, array) => {
+            if (bool) {
+                player.classList.remove('removing', 'hidden');
+            }
+            player.dataset.position = index;
+            const zhu = _status.roundStart || game.zhu || game.boss || array.find((p) => p.seatNum == 1) || array[0];
+            const zhuPos = zhu.dataset?.position;
+            if (typeof zhuPos == 'number') {
+                const num = index - zhuPos + 1;
+                if (index < zhuPos) {
+                    player.seatNum = players.length - num;
+                } else {
+                    player.seatNum = num;
+                }
+            }
+            player.previousSeat = array[index === 0 ? array.length - 1 : index - 1];
+            player.nextSeat = array[index === array.length - 1 ? 0 : index + 1];
+        });
+        players.sort((a, b) => a.dataset.position - b.dataset.position);
         players.forEach((player, index, array) => {
             if (index == 0) {
                 if (ui.handcards1Container && ui.handcards1Container.firstChild != player.node.handcards1) {
@@ -1716,24 +1724,10 @@ const boss = function () {
                     ui.updatehl();
                 }
             }
-            player.classList.remove('removing');
-            player.classList.remove('hidden');
-            player.dataset.position = index;
-            const zhu = _status.roundStart || game.zhu || array.find((p) => p.seatNum == 1) || game.boss || array[0];
-            if (zhu) {
-                if (index < (zhu.dataset && zhu.dataset.position) || 0) {
-                    player.seatNum = players.length - (zhu.dataset && zhu.dataset.position) + index + 1;
-                } else {
-                    player.seatNum = index - (zhu.dataset && zhu.dataset.position) + 1;
-                }
-            }
             player.previous = array[index === 0 ? array.length - 1 : index - 1];
             player.next = array[index === array.length - 1 ? 0 : index + 1];
         });
-        players.concat(game.dead).forEach((player, index, array) => {
-            player.previousSeat = array[index === 0 ? array.length - 1 : index - 1];
-            player.nextSeat = array[index === array.length - 1 ? 0 : index + 1];
-        });
+        game.players.sort((a, b) => a.dataset.position - b.dataset.position);
         return true;
     };
     game.players = new Proxy([], {
@@ -2095,7 +2089,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 const skill = _status.event.skill;
                 if (info.contentBefore) {
                     const next = game.createEvent(name + 'ContentBefore', false);
-                    next.parent.stocktargets = targets;
+                    if (next.parent) {
+                        next.parent.stocktargets = targets;
+                    }
                     next.targets = targets;
                     next.card = card;
                     next.cards = cards;
@@ -2110,7 +2106,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (target && target.isDead()) return;
                         if (info.notarget) return;
                         const next = game.createEvent(name, false);
-                        next.parent.directHit = [];
+                        if (next.parent) {
+                            next.parent.directHit = [];
+                        }
                         next.targets = targets;
                         next.target = target;
                         next.card = card;
@@ -2132,7 +2130,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 } else {
                     if (info.notarget) return;
                     const next = game.createEvent(name, false);
-                    next.parent.directHit = [];
+                    if (next.parent) {
+                        next.parent.directHit = [];
+                    }
                     next.targets = targets;
                     next.target = targets[0];
                     next.card = card;
@@ -2832,7 +2832,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 当你使用负收益牌指定敌方角色时,该牌额外结算四次
                         HL_chengjie: {
                             trigger: {
-                                player: 'useCard',
+                                player: ['useCard'],
                             },
                             filter(event, player) {
                                 return event.card && !['equip', 'delay'].includes(get.type(event.card)) && event.targets?.some((target) => get.effect(target, event.card, player, target) < 0 && target.isEnemiesOf(player));
@@ -3733,9 +3733,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     juexingji: true,
                                     async content(event, trigger, player) {
+                                        player.hp = 50;
                                         player.storage.HL_shengzhe_1 = true;
                                         const boss = game.addFellowQ('HL_fengletinghou');
-                                        boss.identity = 'zhu';
                                         game.$kangxing(boss, 'HL_fengletinghou');
                                         game.kangxing(boss);
                                     },
@@ -3763,13 +3763,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const shibing = game.players.filter((q) => q.identity == 'zhong');
                                 let numx = player.getEnemies().length;
                                 if (shibing.length) {
+                                    let num = 0;
                                     for (const i of shibing) {
-                                        let num = i.hp;
-                                        while (num-- > 0) {
-                                            await i.loseHp();
-                                            if (numx) {
-                                                await player.getEnemies().randomGet().damage();
-                                            }
+                                        num += numberq1(i.hp);
+                                        await i.die();
+                                    }
+                                    if (numx) {
+                                        while (num > 0) {
+                                            const num1 = Math.floor(5 * Math.random());
+                                            num -= num1;
+                                            await player.getEnemies().randomGet().damage(num1);
                                         }
                                     }
                                 } else {
@@ -3994,7 +3997,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         null,
                                         true
                                     );
-                                    return number0(num) / 2 + 10;
+                                    return number0(num) + 10;
                                 },
                                 backup(links, player) {
                                     return {
@@ -4204,7 +4207,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         null,
                                         true
                                     );
-                                    return number0(num) / 2 + 10;
+                                    return number0(num) + 10;
                                 },
                                 backup(links, player) {
                                     return {
@@ -5326,6 +5329,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             set() { },
                         });
+                        let DRAW = 1;
+                        Reflect.defineProperty(trigger, 'num', {
+                            get() {
+                                return DRAW;
+                            },
+                            set(value) {
+                                if (value > DRAW) {
+                                    DRAW = value;
+                                }
+                            },
+                        });
                     }
                     if (trigger.name == 'useCard') {
                         Reflect.defineProperty(trigger, 'finished', {
@@ -5370,15 +5384,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         });
                     }
                     if (trigger.name == 'phaseDraw') {
-                        var DRAW = 2;
+                        let DRAW = 2;
                         Reflect.defineProperty(trigger, 'num', {
                             get() {
                                 return DRAW;
                             },
                             set(value) {
                                 game.log(`摸牌数由${DRAW}变为${value}`);
-                                if (value > DRAW) DRAW = value;
-                                if (isNaN(value)) DRAW++;
+                                if (value > DRAW) {
+                                    DRAW = value;
+                                }
                             },
                         });
                         Reflect.defineProperty(trigger, 'finished', {
@@ -5488,7 +5503,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 lib.boss.HL_wangzuo = {
                     chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
                     checkResult(player) {
-                        if (player == game.boss) {
+                        if (player == game.boss && player.hp > 0) {
                             return false;
                         }
                     },
@@ -5513,6 +5528,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             lianyu: {
                 name: '<span class="Qmenu">挑战炼狱模式</span>',
                 intro: '开启后,神之無雙增加技能',
+                init: true,
+            },
+            死亡移除: {
+                name: '<span class="Qmenu">死亡移除</span>',
+                intro: '死亡后移出游戏',
                 init: true,
             },
             关闭本体BOSS: {
