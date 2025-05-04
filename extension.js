@@ -1852,8 +1852,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     OK.innerHTML = '确定';
                     OK.onclick = function () {
                         if (div.log) {
-                            lib.config.kangxing.add(div.log.link);
+                            const name = div.log.link;
+                            lib.config.kangxing.add(name);
                             game.saveConfig('kangxing', lib.config.kangxing);
+                            const npc = game.players.find((q) => q.name == name);
+                            if (npc) {
+                                game.kangxing(npc);
+                                game.$kangxing(npc, name);
+                            }
                         }
                         for (const i of remove) {
                             i.remove();
