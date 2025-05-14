@@ -294,9 +294,7 @@ const kangxing = function () {
             Reflect.defineProperty(player, 'dieAfter', {
                 get() {
                     if (obj.players.includes(player)) {
-                        return function () {
-                            return game.kong;
-                        };
+                        return game.kongfunc;
                     }
                     return lib.element.player.dieAfter;
                 },
@@ -551,7 +549,7 @@ const kangxing = function () {
                         },
                         set() { },
                         configurable: false,
-                    });
+                    });//只加了技能和hook,但是没init
                 }
             };
         },
@@ -655,6 +653,72 @@ const kangxingq = function () {
         get() {
             return {
                 init(player) {
+                    player.pingjianban = [
+                        //卡死
+                        'ywuhun',
+                        'lsns_wuliang',
+                        //发动频率过高
+                        'xinfu_pdgyingshi',
+                        'clanguixiang',
+                        'qiaobian',
+                        'sbqiaobian',
+                        'rgxkuangcao',
+                        'Grand_chuanqi',
+                        'sksn_dieying',
+                        'white_gqliangyi',
+                        'xinzhizheng',
+                        //没标记或不满足条件
+                        'xingwu',
+                        'sbjieyin',
+                        'sbenyuan',
+                        'tiandan',
+                        'jsrgwuchang',
+                        'rehuashen',
+                        'huashen',
+                        'dccuixin',
+                        'jsrgzhengyi',
+                        'yijin',
+                        'tgtt_junzhu',
+                        'jiebing',
+                        'nzry_zhizheng',
+                        'dcjichou',
+                        'sksn_yinxian',
+                        'funie_chuli',
+                        'llbz_huanmeng',
+                        'llbz_huanhua',
+                        'llbz_enyuan',
+                        'North_dc_ziman',
+                        'sksn_jinian',
+                        'xx_zhipei',
+                        'wufei',
+                        'dczixi',
+                        'yjyongquan',
+                        'mbbojian',
+                        'leiyu',
+                        'dqzw_fuzhou',
+                        //负面技能
+                        'misuzu_hengzhou',
+                        'iwasawa_mysong',
+                        'yxs_menshen',
+                        'chengmou',
+                        'twbaobian',
+                        'boss_hunyou',
+                        'Grand_LausSaintClaudius',
+                        'sksn_jianyu',
+                        'sksn_wenshi',
+                        'DIY_chaoxi',
+                        'chuli_fuze_gain',
+                        'North_yhy_cihua',
+                        'haoshi',
+                        'olhaoshi',
+                        'sksn_yunjing',
+                        //火灵月影
+                        '评鉴',
+                        '阵亡',
+                        '贵相',
+                        '醉诗',
+                        '测试',
+                    ];
                     player.node.avatar.HL_BG('HL_许劭');
                     player.getExpansions = function () {
                         return get.cards(3);
@@ -710,85 +774,37 @@ const kangxingq = function () {
                         player: game.triggerx.player,
                     };
                 },
-                BL: [
-                    //卡死
-                    'ywuhun',
-                    'lsns_wuliang',
-                    //发动频率过高
-                    'xinfu_pdgyingshi',
-                    'clanguixiang',
-                    'qiaobian',
-                    'sbqiaobian',
-                    'rgxkuangcao',
-                    'Grand_chuanqi',
-                    'sksn_dieying',
-                    'white_gqliangyi',
-                    'xinzhizheng',
-                    //没标记或不满足条件
-                    'xingwu',
-                    'sbjieyin',
-                    'sbenyuan',
-                    'tiandan',
-                    'jsrgwuchang',
-                    'rehuashen',
-                    'huashen',
-                    'dccuixin',
-                    'jsrgzhengyi',
-                    'yijin',
-                    'tgtt_junzhu',
-                    'jiebing',
-                    'nzry_zhizheng',
-                    'dcjichou',
-                    'sksn_yinxian',
-                    'funie_chuli',
-                    'llbz_huanmeng',
-                    'llbz_huanhua',
-                    'llbz_enyuan',
-                    'North_dc_ziman',
-                    'sksn_jinian',
-                    'xx_zhipei',
-                    'wufei',
-                    'dczixi',
-                    'yjyongquan',
-                    'mbbojian',
-                    'leiyu',
-                    'dqzw_fuzhou',
-                    //负面技能
-                    'misuzu_hengzhou',
-                    'iwasawa_mysong',
-                    'yxs_menshen',
-                    'chengmou',
-                    'twbaobian',
-                    'boss_hunyou',
-                    'Grand_LausSaintClaudius',
-                    'sksn_jianyu',
-                    'sksn_wenshi',
-                    'DIY_chaoxi',
-                    'chuli_fuze_gain',
-                    'North_yhy_cihua',
-                    'haoshi',
-                    'olhaoshi',
-                    'sksn_yunjing',
-                    //火灵月影
-                    '评鉴',
-                    '阵亡',
-                    '贵相',
-                    '醉诗',
-                    '测试',
-                ],
                 forced: true,
                 popup: false,
-                async content(event, trigger, player) {
-                    const skill = Object.keys(lib.skill).filter((i) => {
+                filter(event, player, name) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
-                        if (!infox || !lib.translate[`${i}_info`] || !infox.trigger || !infox.trigger.player || lib.skill.评鉴.BL.includes(i)) {
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
                             return false;
                         }
-                        return infox.trigger.player == event.triggername || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes(event.triggername));
+                        const triggerx = infox?.trigger?.player;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(name);
+                        }
+                        return triggerx == name;
+                    });
+                    return skills.length;
+                },
+                async content(event, trigger, player) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
+                        const infox = lib.skill[i];
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
+                            return false;
+                        }
+                        const triggerx = infox?.trigger?.player;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(event.triggername);
+                        }
+                        return triggerx == event.triggername;
                     });
                     game.log('player', event.triggername);
-                    if (skill.length > 4) {
-                        const list = skill.randomGets(3);
+                    if (skills.length) {
+                        const list = skills.randomGets(3);
                         const {
                             result: { control },
                         } = await player
@@ -801,11 +817,12 @@ const kangxingq = function () {
                             )
                             .set('displayIndex', false)
                             .set('prompt', '评鉴:请选择发动的技能');
+                        player.pingjianban.push(control);
                         const info = lib.skill[control];
+                        console.log(control, '评鉴');
                         game.log(control);
                         player.say(control);
-                        //control = 'huanjue';
-                        await game.asyncDelayx(2);
+                        await game.delay(2);
                         if (info.init) {
                             info.init(player, control);
                         }
@@ -1009,17 +1026,35 @@ const kangxingq = function () {
                 },
                 forced: true,
                 popup: false,
-                async content(event, trigger, player) {
-                    const skill = Object.keys(lib.skill).filter((i) => {
+                filter(event, player, name) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
-                        if (!infox || !lib.translate[`${i}_info`] || !infox.trigger || !infox.trigger.target || lib.skill.评鉴.BL.includes(i)) {
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
                             return false;
                         }
-                        return infox.trigger.target == event.triggername || (Array.isArray(infox.trigger.target) && infox.trigger.target.includes(event.triggername));
+                        const triggerx = infox?.trigger?.target;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(name);
+                        }
+                        return triggerx == name;
+                    });
+                    return skills.length;
+                },
+                async content(event, trigger, player) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
+                        const infox = lib.skill[i];
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
+                            return false;
+                        }
+                        const triggerx = infox?.trigger?.target;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(event.triggername);
+                        }
+                        return triggerx == event.triggername;
                     });
                     game.log('target', event.triggername);
-                    if (skill.length > 4) {
-                        const list = skill.randomGets(3);
+                    if (skills.length) {
+                        const list = skills.randomGets(3);
                         const {
                             result: { control },
                         } = await player
@@ -1032,11 +1067,12 @@ const kangxingq = function () {
                             )
                             .set('displayIndex', false)
                             .set('prompt', '评鉴:请选择发动的技能');
+                        player.pingjianban.push(control);
                         const info = lib.skill[control];
+                        console.log(control, '评鉴');
                         game.log(control);
                         player.say(control);
-                        //control = 'huanjue';
-                        await game.asyncDelayx(2);
+                        await game.delay(2);
                         if (info.init) {
                             info.init(player, control);
                         }
@@ -1239,17 +1275,35 @@ const kangxingq = function () {
                 },
                 forced: true,
                 popup: false,
-                async content(event, trigger, player) {
-                    const skill = Object.keys(lib.skill).filter((i) => {
+                filter(event, player, name) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
-                        if (!infox || !lib.translate[`${i}_info`] || !infox.trigger || !infox.trigger.global || lib.skill.评鉴.BL.includes(i)) {
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
                             return false;
                         }
-                        return infox.trigger.global == event.triggername || (Array.isArray(infox.trigger.global) && infox.trigger.global.includes(event.triggername));
+                        const triggerx = infox?.trigger?.global;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(name);
+                        }
+                        return triggerx == name;
+                    });
+                    return skills.length;
+                },
+                async content(event, trigger, player) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
+                        const infox = lib.skill[i];
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
+                            return false;
+                        }
+                        const triggerx = infox?.trigger?.global;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(event.triggername);
+                        }
+                        return triggerx == event.triggername;
                     });
                     game.log('global', event.triggername);
-                    if (skill.length > 4) {
-                        const list = skill.randomGets(3);
+                    if (skills.length) {
+                        const list = skills.randomGets(3);
                         const {
                             result: { control },
                         } = await player
@@ -1262,11 +1316,12 @@ const kangxingq = function () {
                             )
                             .set('displayIndex', false)
                             .set('prompt', '评鉴:请选择发动的技能');
+                        player.pingjianban.push(control);
                         const info = lib.skill[control];
+                        console.log(control, '评鉴');
                         game.log(control);
                         player.say(control);
-                        //control = 'huanjue';
-                        await game.asyncDelayx(2);
+                        await game.delay(2);
                         if (info.init) {
                             info.init(player, control);
                         }
@@ -1469,17 +1524,35 @@ const kangxingq = function () {
                 },
                 forced: true,
                 popup: false,
-                async content(event, trigger, player) {
-                    const skill = Object.keys(lib.skill).filter((i) => {
+                filter(event, player, name) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
                         const infox = lib.skill[i];
-                        if (!infox || !lib.translate[`${i}_info`] || !infox.trigger || !infox.trigger.source || lib.skill.评鉴.BL.includes(i)) {
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
                             return false;
                         }
-                        return infox.trigger.source == event.triggername || (Array.isArray(infox.trigger.source) && infox.trigger.source.includes(event.triggername));
+                        const triggerx = infox?.trigger?.source;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(name);
+                        }
+                        return triggerx == name;
+                    });
+                    return skills.length;
+                },
+                async content(event, trigger, player) {
+                    const skills = Object.keys(lib.skill).filter((i) => {
+                        const infox = lib.skill[i];
+                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
+                            return false;
+                        }
+                        const triggerx = infox?.trigger?.source;
+                        if (Array.isArray(triggerx)) {
+                            return triggerx.includes(event.triggername);
+                        }
+                        return triggerx == event.triggername;
                     });
                     game.log('source', event.triggername);
-                    if (skill.length > 4) {
-                        const list = skill.randomGets(3);
+                    if (skills.length) {
+                        const list = skills.randomGets(3);
                         const {
                             result: { control },
                         } = await player
@@ -1492,11 +1565,12 @@ const kangxingq = function () {
                             )
                             .set('displayIndex', false)
                             .set('prompt', '评鉴:请选择发动的技能');
+                        player.pingjianban.push(control);
                         const info = lib.skill[control];
+                        console.log(control, '评鉴');
                         game.log(control);
                         player.say(control);
-                        //control = 'huanjue';
-                        await game.asyncDelayx(2);
+                        await game.delay(2);
                         if (info.init) {
                             info.init(player, control);
                         }
@@ -1752,6 +1826,9 @@ const boss = function () {
             return result;
         },
     });
+    game.kongfunc = function () {
+        return game.kong;
+    };
     game.kong = {
         set() {
             return this;
@@ -1826,6 +1903,7 @@ const boss = function () {
     }; //令一名角色服从你
 };
 boss();
+const extensionInfo = await lib.init.promises.json(`extension/火灵月影/info.json`);
 game.import('extension', function (lib, game, ui, get, ai, _status) {
     return {
         name: '火灵月影',
@@ -1942,26 +2020,53 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 color: '#28e3ce',
                 image: 'ext:火灵月影/other/xian.png',
             });
-            window.sgn = function (bool) {
-                if (bool) return 1;
-                return -1;
-            }; //true转为1,false转为-1
-            window.numberq0 = function (num) {
-                if (isNaN(Number(num))) return 0;
-                return Math.abs(Number(num));
-            }; //始终返回正数(取绝对值)
-            window.numberq1 = function (num) {
-                if (isNaN(Number(num))) return 1;
-                return Math.max(Math.abs(Number(num)), 1);
-            }; //始终返回正数且至少为1(取绝对值)
-            window.number0 = function (num) {
-                if (isNaN(Number(num))) return 0;
-                return Math.max(Number(num), 0);
-            }; //始终返回正数
-            window.number1 = function (num) {
-                if (isNaN(Number(num))) return 1;
-                return Math.max(Number(num), 1);
-            }; //始终返回正数且至少为1
+            const numfunc = function () {
+                if (!lib.number) {
+                    lib.number = [];
+                    for (var i = 1; i < 14; i++) {
+                        lib.number.add(i);
+                    }
+                } //添加lib.number
+                window.sgn = function (bool) {
+                    if (bool) return 1;
+                    return -1;
+                };//true转为1,false转为-1
+                window.numberq0 = function (num) {
+                    if (isNaN(Number(num))) return 0;
+                    return Math.abs(Number(num));
+                };//始终返回正数(取绝对值)
+                window.numberq1 = function (num) {
+                    if (isNaN(Number(num))) return 1;
+                    return Math.max(Math.abs(Number(num)), 1);
+                };//始终返回正数且至少为1(取绝对值)
+                window.number0 = function (num) {
+                    if (isNaN(Number(num))) return 0;
+                    return Math.max(Number(num), 0);
+                };//始终返回正数
+                window.number1 = function (num) {
+                    if (isNaN(Number(num))) return 1;
+                    return Math.max(Number(num), 1);
+                };//始终返回正数且至少为1
+                window.deepClone = function (obj) {
+                    const clone = {};
+                    for (const key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            const info = obj[key];
+                            if (typeof info == 'object') {
+                                if (Array.isArray(info)) {
+                                    clone[key] = info.slice();
+                                } else {
+                                    clone[key] = window.deepClone(info);
+                                }
+                            } else {
+                                clone[key] = info;
+                            }
+                        }
+                    }
+                    return clone;
+                }; //深拷贝对象
+            };
+            numfunc();
             HTMLElement.prototype.HL_BG = function (name) {
                 const video = document.createElement('video');
                 video.src = `extension/火灵月影/mp4/${name}.mp4`;
@@ -1974,24 +2079,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     video.remove();
                 });
             }; //给父元素添加一个覆盖的背景mp4
-            window.deepClone = function (obj) {
-                const clone = {};
-                for (const key in obj) {
-                    if (obj.hasOwnProperty(key)) {
-                        const info = obj[key];
-                        if (typeof info == 'object') {
-                            if (Array.isArray(info)) {
-                                clone[key] = info.slice();
-                            } else {
-                                clone[key] = window.deepClone(info);
-                            }
-                        } else {
-                            clone[key] = info;
-                        }
-                    }
-                }
-                return clone;
-            }; //深拷贝对象
             lib.init.css(lib.assetURL + 'extension/火灵月影/QQQ.css');
             game.src = function (name) {
                 let extimage = null,
@@ -2326,16 +2413,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //真实伤害
             };
             mogai();
-            const style = document.createElement('style');
-            style.innerHTML = '@keyframes QQQ{';
-            for (var i = 1; i <= 20; i++) {
-                let rand1 = Math.floor(Math.random() * 255),
-                    rand2 = Math.floor(Math.random() * 255),
-                    rand3 = Math.floor(Math.random() * 255);
-                style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
+            if (lib.config.extension_火灵月影_文字闪烁) {
+                const style = document.createElement('style');
+                style.innerHTML = '@keyframes QQQ{';
+                for (var i = 1; i <= 20; i++) {
+                    let rand1 = Math.floor(Math.random() * 255),
+                        rand2 = Math.floor(Math.random() * 255),
+                        rand3 = Math.floor(Math.random() * 255);
+                    style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
+                }
+                style.innerHTML += '}';
+                document.head.appendChild(style);
             }
-            style.innerHTML += '}';
-            document.head.appendChild(style);
             const shiwei = function () {
                 lib.element.player.filterCardx = function (card, filter) {
                     if (typeof card == 'string') {
@@ -5700,6 +5789,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 intro: '死亡后移出游戏',
                 init: true,
             },
+            文字闪烁: {
+                name: '<span class="Qmenu">文字闪烁</span>',
+                intro: '开启后,部分文字会附加闪烁动画效果',
+                init: true,
+            },
             关闭本体BOSS: {
                 name: '<span class="Qmenu">关闭本体BOSS</span>',
                 intro: '一键关闭本体BOSS',
@@ -5711,10 +5805,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 init: true,
             },
         },
-        package: {
-            intro: '一键给角色添加(死亡/封禁技能/移除技能/翻面/横置/移出游戏)抗性<br><br>本扩展自带抗性角色:李白/许劭/抗性测试,感兴趣的朋友可以挑战一下<br><br>致谢名单:<br>感谢咪咪狗提供构造函数修改思路<br>感谢云念与苏见笑进行bug测试<br>感谢诗笺指出不足<br>感谢u提供扩展名字<br>感谢不能提及名字的某人不能提及内容的帮助',
-            author: '潜在水里的火&&Iking',
-            version: Infinity,
-        },
+        package: extensionInfo,
     };
 });
