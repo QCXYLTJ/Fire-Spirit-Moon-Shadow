@@ -2147,25 +2147,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     });
                 });
             }; //播放mp4
-            lib.element.player.GS = function () {
-                const skills = this.skills.slice();
-                for (const i of Array.from(this.node.equips.childNodes)) {
-                    if (Array.isArray(lib.card[i.name].skills)) {
-                        skills.addArray(lib.card[i.name].skills);
-                    }
-                }
-                for (const i in this.additionalSkills) {
-                    if (Array.isArray(this.additionalSkills[i])) {
-                        skills.addArray(this.additionalSkills[i]);
-                    } else if (typeof this.additionalSkills[i] == 'string') {
-                        skills.add(this.additionalSkills[i]);
-                    }
-                }
-                skills.addArray(Object.keys(this.tempSkills));
-                skills.addArray(this.hiddenSkills);
-                skills.addArray(this.invisibleSkills);
-                return skills;
-            }; //获取武将所有技能函数
             //—————————————————————————————————————————————————————————————————————————————解构魔改本体函数
             const mogai = function () {
                 lib.element.player.dyingResult = async function () {
@@ -2517,6 +2498,146 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //可以转化为的牌//filter控制player.filterCard//range控制是否计算次数与距离限制
             };
             shiwei();
+            //—————————————————————————————————————————————————————————————————————————————技能相关自创函数
+            const jineng = function () {
+                lib.element.player.GS = function () {
+                    const skills = this.skills.slice();
+                    for (const i of Array.from(this.node.equips.childNodes)) {
+                        if (Array.isArray(lib.card[i.name].skills)) {
+                            skills.addArray(lib.card[i.name].skills);
+                        }
+                    }
+                    for (const i in this.additionalSkills) {
+                        if (Array.isArray(this.additionalSkills[i])) {
+                            skills.addArray(this.additionalSkills[i]);
+                        } else if (typeof this.additionalSkills[i] == 'string') {
+                            skills.add(this.additionalSkills[i]);
+                        }
+                    }
+                    skills.addArray(Object.keys(this.tempSkills));
+                    skills.addArray(this.hiddenSkills);
+                    skills.addArray(this.invisibleSkills);
+                    return skills;
+                }; //获取武将所有技能函数
+                lib.element.player.GAS = function () {
+                    const skills = this.skills.slice();
+                    for (const i in this.additionalSkills) {
+                        if (Array.isArray(this.additionalSkills[i])) {
+                            skills.addArray(this.additionalSkills[i]);
+                        } else if (typeof this.additionalSkills[i] == 'string') {
+                            skills.add(this.additionalSkills[i]);
+                        }
+                    }
+                    return skills;
+                }; //获取武将的武将牌上技能函数
+                lib.element.player.GES = function () {
+                    const skills = [];
+                    for (const i of Array.from(this.node.equips.childNodes)) {
+                        if (Array.isArray(lib.card[i.name].skills)) {
+                            skills.addArray(lib.card[i.name].skills);
+                        }
+                    }
+                    return skills;
+                }; //获取武将装备技能函数
+                lib.element.player.GTS = function () {
+                    return Object.keys(this.tempSkills);
+                }; //获取武将临时技能函数
+                lib.element.player.RS = function (Q) {
+                    if (Array.isArray(Q)) {
+                        for (const i of Q) {
+                            this.RS(i);
+                        }
+                    } else {
+                        this.skills.remove(Q);
+                        this.hiddenSkills.remove(Q);
+                        this.invisibleSkills.remove(Q);
+                        delete this.tempSkills[Q];
+                        for (var i in this.additionalSkills) {
+                            this.additionalSkills[i].remove(Q);
+                        }
+                        this.checkConflict(Q);
+                        this.RST(Q);
+                        if (lib.skill.global.includes(Q)) {
+                            lib.skill.global.remove(Q);
+                            delete lib.skill.globalmap[Q];
+                            for (var i in lib.hook.globalskill) {
+                                lib.hook.globalskill[i].remove(Q);
+                            }
+                        }
+                    }
+                    return Q;
+                }; //移除技能函数
+                lib.element.player.RST = function (skills) {
+                    if (typeof skills == 'string') skills = [skills];
+                    game.expandSkills(skills);
+                    for (const Q of skills) {
+                        this.initedSkills.remove(Q);
+                        for (var i in lib.hook) {
+                            if (Array.isArray(lib.hook[i]) && lib.hook[i].includes(Q)) {
+                                try {
+                                    delete lib.hook[i];
+                                } catch (e) {
+                                    console.log(i + 'lib.hook不能delete');
+                                }
+                            }
+                        }
+                        for (var i in lib.hook.globalskill) {
+                            if (lib.hook.globalskill[i].includes(Q)) {
+                                lib.hook.globalskill[i].remove(Q);
+                                if (lib.hook.globalskill[i].length == 0) {
+                                    delete lib.hook.globalskill[i];
+                                }
+                            }
+                        }
+                    }
+                    return this;
+                }; //移除技能时机函数
+                lib.element.player.CS = function () {
+                    const skill = this.GS();
+                    game.expandSkills(skill);
+                    this.skills = [];
+                    this.tempSkills = {};
+                    this.initedSkills = [];
+                    this.invisibleSkills = [];
+                    this.hiddenSkills = [];
+                    this.additionalSkills = {};
+                    for (const key in lib.hook) {
+                        if (key.startsWith(this.playerid)) {
+                            try {
+                                delete lib.hook[key];
+                            } catch (e) {
+                                console.log(key + 'lib.hook不能delete');
+                            }
+                        }
+                    }
+                    for (const hook in lib.hook.globalskill) {
+                        for (const i of skill) {
+                            if (lib.hook.globalskill[hook].includes(i)) {
+                                lib.hook.globalskill[hook].remove(i);
+                            }
+                        }
+                    }
+                    return this.skills;
+                }; //清空所有技能函数
+                lib.element.player.DS = function () {
+                    const skill = this.GS();
+                    game.expandSkills(skill);
+                    this._hookTrigger = ['QQQ_fengjin'];
+                    this.storage.skill_blocker = ['QQQ_fengjin'];
+                    for (const i of skill) {
+                        this.disabledSkills[i] = 'QQQ';
+                        this.storage[`temp_ban_${i}`] = true;
+                    }
+                    return this.skills;
+                }; //失效所有技能函数
+                lib.skill.QQQ_fengjin = {
+                    hookTrigger: {
+                        block: (event, player, triggername, skill) => true,
+                    },
+                    skillBlocker: (skill, player) => true,
+                };
+            }; //技能相关自创函数
+            jineng();
             game.import('character', function (lib, game, ui, get, ai, _status) {
                 const QQQ = {
                     name: '火灵月影',
@@ -3832,7 +3953,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     async content(event, trigger, player) {
                                         const num = player.getEnemies().length;
-                                        trigger.baseDamage = 1 + num;
+                                        trigger.baseDamage += num;
                                         trigger.shanRequired = 1 + num;
                                     },
                                 },
@@ -4315,7 +4436,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const his = player.actionHistory;
                                 const evt = his[his.length - 1];
                                 const num = evt.useCard.map((e) => e.card?.suit).unique().length;
-                                trigger.baseDamage = 1 + num;
+                                trigger.baseDamage += num;
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————铁骨铮臣  神  24体力
