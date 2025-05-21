@@ -599,7 +599,7 @@ kangxing();
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
 const kangxingq = function () {
     //醉诗
-    //每回合限两次,每轮开始时、体力值变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌
+    //每回合限两次,每轮开始时、体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌
     Reflect.defineProperty(lib.skill, '醉诗', {
         get() {
             return {
@@ -616,7 +616,7 @@ const kangxingq = function () {
                     let count = Math.min(numberq1(trigger.num), 9);
                     while (count-- > 0) {
                         if (Math.random() < 0.6) {
-                            player.node.avatar.style.backgroundImage = `url('${lib.assetURL}extension/火灵月影/image/HL_李白.jpg')`;
+                            player.node.avatar.style.backgroundImage = `url(extension/火灵月影/image/HL_李白.jpg)`;
                             ui.background.setBackgroundImage('extension/火灵月影/image/HL_李白4.jpg');
                         } else {
                             player.node.avatar.setBackgroundImage('extension/火灵月影/image/HL_李白2.jpg');
@@ -1959,7 +1959,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             if ((lib.translate[j] && lib.translate[j].includes(input.value)) || j.includes(input.value)) {
                                 //QQQ
                                 const JUESE = window.document.createElement('div');
-                                JUESE.style.backgroundImage = `url('${game.src(j)}')`;
+                                JUESE.style.backgroundImage = `url(${game.src(j)})`;
                                 JUESE.className = 'characterQ';
                                 JUESE.innerHTML = get.translation(j);
                                 JUESE.link = j;
@@ -1991,7 +1991,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             }
                             for (const j in lib.characterPack[this.link]) {
                                 const JUESE = window.document.createElement('div');
-                                JUESE.style.backgroundImage = `url('${game.src(j)}')`;
+                                JUESE.style.backgroundImage = `url(${game.src(j)})`;
                                 JUESE.className = 'characterQ';
                                 JUESE.innerHTML = get.translation(j);
                                 JUESE.link = j;
@@ -2016,8 +2016,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
         },
         precontent() {
             get.vcardInfo = function (card) { }; //卡牌storage里面存了DOM元素会循环引用导致不能JSON.stringify
-            game.addGroup('仙', `<img src="${lib.assetURL}extension/火灵月影/other/xian.png"width="30"height="30">`, '仙', {
-                color: '#28e3ce',
+            game.addGroup('仙', `<img src="extension/火灵月影/other/xian.png"width="30"height="30">`, '仙', {
+                color: ' #28e3ce',
                 image: 'ext:火灵月影/other/xian.png',
             });
             const numfunc = function () {
@@ -2079,7 +2079,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     video.remove();
                 });
             }; //给父元素添加一个覆盖的背景mp4
-            lib.init.css(lib.assetURL + 'extension/火灵月影/QQQ.css');
+            lib.init.css('extension/火灵月影/QQQ.css');
             game.src = function (name) {
                 let extimage = null,
                     nameinfo = get.character(name),
@@ -2104,7 +2104,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             }; //获取武将名对应立绘路径
             game.HL_VIDEO = async function (name) {
                 return new Promise((resolve) => {
-                    const url = lib.assetURL + `extension/火灵月影/mp4/${name}.mp4`;
+                    const url = `extension/火灵月影/mp4/${name}.mp4`;
                     const video = window.document.createElement('video');
                     video.src = url;
                     video.style.zIndex = 999;
@@ -2851,8 +2851,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     },
                                 });
-                                ui.background.style.backgroundImage = `url('${lib.assetURL}extension/火灵月影/image/HL_amiya1.jpg')`;
-                                ui.backgroundMusic.src = `${lib.assetURL}extension/火灵月影/BGM/HL_amiya.mp3`;
+                                ui.background.style.backgroundImage = `url(extension/火灵月影/image/HL_amiya1.jpg)`;
+                                ui.backgroundMusic.src = `extension/火灵月影/BGM/HL_amiya.mp3`;
                                 ui.backgroundMusic.loop = true;
                             },
                             trigger: {
@@ -3377,7 +3377,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
-                        // 焚城:锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️牌数点火焰伤害
+                        // 焚城:锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害
                         HL_fencheng: {
                             group: ['bosshp'],
                             init(player) {
@@ -3866,7 +3866,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 镇关:炼狱模式解锁,锁定技,当你成为一张基本牌或普通锦囊牌的目标时,你进行一次判定,若为黑色,此牌对你无效
                         HL_zhenguan: {
                             trigger: {
-                                target: 'useCardToTargeted',
+                                target: ['useCardToPlayer'],
                             },
                             forced: true,
                             filter(event, player) {
@@ -4538,7 +4538,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————凡人之愿  群  3体力
                         // 凡愿
-                        // 锁定技,体力减少时,进行一次判定;若不为♥️,防止之
+                        // 锁定技,体力减少时,进行一次判定;若不为♥️️,防止之
                         HL_fanyuan: {
                             trigger: {
                                 player: ['changeHpBegin'],
@@ -4811,7 +4811,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————凡人之愿  群  3体力
                         HL_fanren: '凡人之愿',
                         HL_fanyuan: '凡愿',
-                        HL_fanyuan_info: '锁定技,体力减少时,进行一次判定;若不为♥️,防止之',
+                        HL_fanyuan_info: '锁定技,体力减少时,进行一次判定;若不为♥️️,防止之',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————国之柱石  神  200体力
                         HL_zhushi: '国之柱石',
                         HL_zhenguo: '镇国',
@@ -4857,45 +4857,45 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //————————————————————————————————————————————博卓卡斯替·圣卫铳骑
                         HL_shengwei: '博卓卡斯替·圣卫铳骑',
                         HL_quanyu: '劝谕',
-                        HL_quanyu_info: '<span class="Qmenu">锁定技,</span>敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌',
+                        HL_quanyu_info: '<span class=Qmenu>锁定技,</span>敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌',
                         HL_zhaohu: '照护',
-                        HL_zhaohu_info: '<span class="Qmenu">锁定技,</span>受到与你距离为2及其以上的敌方角色的伤害至多为1;敌方角色受到你造成的伤害之后直到下回合之前其造成和受到的伤害+1',
+                        HL_zhaohu_info: '<span class=Qmenu>锁定技,</span>受到与你距离为2及其以上的敌方角色的伤害至多为1;敌方角色受到你造成的伤害之后直到下回合之前其造成和受到的伤害+1',
                         //————————————————————————————————————————————奎隆·魔诃萨埵权化
                         HL_kuilong: '奎隆·魔诃萨埵权化',
                         HL_chengjie: '惩戒',
-                        HL_chengjie_info: '<span class="Qmenu">锁定技,</span>当你使用负收益牌指定敌方角色时,该牌额外结算四次',
+                        HL_chengjie_info: '<span class=Qmenu>锁定技,</span>当你使用负收益牌指定敌方角色时,该牌额外结算四次',
                         //————————————————————————————————————————————特雷西斯·黑冠尊主
                         HL_heiguanzunzhu: '特雷西斯·黑冠尊主',
                         HL_zhengfu: '征服',
-                        HL_zhengfu_info: '<span class="Qmenu">锁定技,</span>你视为拥有技能【无双】,【铁骑】,【破军】,【强袭】',
+                        HL_zhengfu_info: '<span class=Qmenu>锁定技,</span>你视为拥有技能【无双】,【铁骑】,【破军】,【强袭】',
                         //————————————————————————————————————————————曼弗雷德
                         HL_manfuleide: '曼弗雷德',
                         HL_junshixunlian: '军事训练',
-                        HL_junshixunlian_info: '<span class="Qmenu">锁定技,</span>①你视为装备【先天八卦阵】<br>②造成伤害时有50%替换为随机属性伤害<br>③自身受到【杀】的伤害后此技能失效直到本轮结束',
+                        HL_junshixunlian_info: '<span class=Qmenu>锁定技,</span>①你视为装备【先天八卦阵】<br>②造成伤害时有50%替换为随机属性伤害<br>③自身受到【杀】的伤害后此技能失效直到本轮结束',
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
                         HL_amiya: '阿米娅·炉芯终曲',
                         HL_buyingcunzai: '不应存在之人',
-                        HL_buyingcunzai_info: '<span class="Qmenu">锁定技,</span>①免疫体力上限减少与体力值调整,拥有50%减伤<br>②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束',
+                        HL_buyingcunzai_info: '<span class=Qmenu>锁定技,</span>①免疫体力上限减少与体力值调整,拥有50%减伤<br>②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束',
                         HL_chuangyi: '仅剩的创意',
-                        HL_chuangyi_info: '<span class="Qmenu">锁定技,</span>①游戏开始时你获得3枚<仅剩的创意>,将场上所有角色势力锁定为<神>,并令敌方角色获得<束缚>状态,直到你造成伤害<br>②每轮开始时或造成伤害/体力变化后,你获得等量的<仅剩的创意>并摸等量的牌<br>③你的手牌上限等于<仅剩的创意>数<br>④准备阶段,你消耗3枚<仅剩的创意>对敌方角色各造成1点伤害',
+                        HL_chuangyi_info: '<span class=Qmenu>锁定技,</span>①游戏开始时你获得3枚<仅剩的创意>,将场上所有角色势力锁定为<神>,并令敌方角色获得<束缚>状态,直到你造成伤害<br>②每轮开始/造成伤害/体力变化后,你获得等量的<仅剩的创意>并摸等量的牌<br>③你的手牌上限等于<仅剩的创意>数<br>④准备阶段,你消耗3枚<仅剩的创意>对敌方角色各造成1点伤害',
                         HL_jintouchongxian: '尽头重现',
-                        HL_jintouchongxian_info: '<span class="Qmenu">锁定技,</span>准备阶段若你<仅剩的创意>达到30枚以上,消耗30枚<仅剩的创意>随机召唤一位随从加入战斗,每名随从限一次.随从除武将牌上技能外皆视为拥有<贵乱>',
+                        HL_jintouchongxian_info: '<span class=Qmenu>锁定技,</span>准备阶段若你<仅剩的创意>达到30枚以上,消耗30枚<仅剩的创意>随机召唤一位随从加入战斗,每名随从限一次.随从除武将牌上技能外皆视为拥有<贵乱>',
                         HL_guiluan: '贵乱',
-                        HL_guiluan_info: '<span class="Qmenu">锁定技,</span>当你使用【杀】、【决斗】、【过河拆桥】、【顺手牵羊】和【逐近弃远】时,若场上有未成为目标的敌方角色,你令这些角色也成为此牌目标',
+                        HL_guiluan_info: '<span class=Qmenu>锁定技,</span>当你使用【杀】、【决斗】、【过河拆桥】、【顺手牵羊】和【逐近弃远】时,若场上有未成为目标的敌方角色,你令这些角色也成为此牌目标',
                         HL_cunxuxianzhao: '存续先兆',
                         HL_cunxuxianzhao_info: '蓄力技(0/10),结束阶段,若蓄力值已满消耗所有蓄力值随机令一名敌方角色所有技能失效并死亡.每名随从死亡时增加五点蓄力值',
                         HL_wuzhong: '无终',
                         HL_wuzhong_info: '觉醒技,当你即将死亡时取消之并将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】',
                         HL_heiguan: '黑冠余威',
-                        HL_heiguan_info: '<span class="Qmenu">锁定技,</span>①当体力值首次回复至上限后立即令敌方角色失去一半体力值<br>②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)',
+                        HL_heiguan_info: '<span class=Qmenu>锁定技,</span>①当体力值首次回复至上限后立即令敌方角色失去一半体力值<br>②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)',
                         HL_qipan: '无言的期盼',
-                        HL_qipan_info: '<span class="Qmenu">锁定技,</span>结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等',
+                        HL_qipan_info: '<span class=Qmenu>锁定技,</span>结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等',
                         HL_yongheng: '永恒存续',
-                        HL_yongheng_info: '<span class="Qmenu">锁定技,</span>①自身为BOSS且死亡后若场上仍有其他角色,则令所有角色死亡随后视其胜利<br>②自身不为BOSS且进入濒死状态时令其他角色失去所有体力值,然后你回复等量体力值并摸等量的牌(每局限一次)',
+                        HL_yongheng_info: '<span class=Qmenu>锁定技,</span>①自身为BOSS且死亡后若场上仍有其他角色,则令所有角色死亡随后视其胜利<br>②自身不为BOSS且进入濒死状态时令其他角色失去所有体力值,然后你回复等量体力值并摸等量的牌(每局限一次)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白
                         HL_李白: '李白',
                         醉诗: '醉诗',
-                        醉诗_info: '每回合限两次,每轮开始时、体力值变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌',
+                        醉诗_info: '每回合限两次,每轮开始/体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,然后你随机使用弃牌堆或处理区中一张伤害牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————许劭
                         HL_许劭: '许劭',
                         评鉴: '评鉴',
@@ -4934,7 +4934,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         HL_liru: '焚城魔士',
                         HL_fencheng: '焚城',
-                        HL_fencheng_info: '登场时,对所有敌方角色各造成三点火焰伤害.锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️牌数点火焰伤害',
+                        HL_fencheng_info: '登场时,对所有敌方角色各造成三点火焰伤害.锁定技,准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害',
                         HL_juece: '绝策',
                         HL_juece_info: '二阶段解锁,锁定技,每名角色结束阶段,你令所有此回合失去过牌的角色各失去一点体力',
                         HL_mieji: '灭计',
@@ -4985,12 +4985,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     }
                 } //QQQ
-                if (!lib.config.all.characters.includes('火灵月影')) {
-                    lib.config.all.characters.push('火灵月影');
-                }
-                if (!lib.config.characters.includes('火灵月影')) {
-                    lib.config.characters.push('火灵月影');
-                }
+                lib.config.all.characters.add('火灵月影');
+                lib.config.characters.add('火灵月影');
                 lib.translate['火灵月影_character_config'] = `火灵月影`;
                 return QQQ;
             });
@@ -5897,31 +5893,31 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
         },
         config: {
             群聊: {
-                name: '<a href="https://qm.qq.com/q/SsTlU9gc24"><span class="Qmenu">【火灵月影】群聊: 771901025</span></a>',
+                name: '<a href="https://qm.qq.com/q/SsTlU9gc24"><span class=Qmenu>【火灵月影】群聊: 771901025</span></a>',
                 clear: true,
             },
             lianyu: {
-                name: '<span class="Qmenu">挑战炼狱模式</span>',
+                name: '<span class=Qmenu>挑战炼狱模式</span>',
                 intro: '开启后,神之無雙增加技能',
                 init: true,
             },
             死亡移除: {
-                name: '<span class="Qmenu">死亡移除</span>',
+                name: '<span class=Qmenu>死亡移除</span>',
                 intro: '死亡后移出游戏',
                 init: true,
             },
             文字闪烁: {
-                name: '<span class="Qmenu">文字闪烁</span>',
+                name: '<span class=Qmenu>文字闪烁</span>',
                 intro: '开启后,部分文字会附加闪烁动画效果',
                 init: true,
             },
             关闭本体BOSS: {
-                name: '<span class="Qmenu">关闭本体BOSS</span>',
+                name: '<span class=Qmenu>关闭本体BOSS</span>',
                 intro: '一键关闭本体BOSS',
                 init: true,
             },
             武将全部可选: {
-                name: '<span class="Qmenu">武将全部可选</span>',
+                name: '<span class=Qmenu>武将全部可选</span>',
                 intro: '开启后,任何禁将、隐藏武将、BOSS武将都会变得可选,你甚至可以在BOSS模式用BOSS自己打自己',
                 init: true,
             },
