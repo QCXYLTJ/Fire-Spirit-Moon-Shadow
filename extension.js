@@ -5545,7 +5545,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 }
                                                 if (!_status.auto) {
                                                     ui.click.auto();
-                                                }
+                                                }//托管
                                                 for (const npc of players) {
                                                     game.log(player, '惩罚直接结束游戏的角色', npc);
                                                     const next = game.createEvent('diex', false);
@@ -5553,12 +5553,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     next.player = npc;
                                                     next._triggered = null;
                                                     next.setContent(lib.element.content.die);
-                                                }
+                                                }//即死
                                                 setTimeout(function () {
-                                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                                                    elements.forEach(el => {
-                                                        el.remove();
-                                                    });
+                                                    if (player.getEnemies().length) {
+                                                        const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                                                        elements.forEach(el => {
+                                                            el.remove();
+                                                        });//移除结算框
+                                                        while (ui.control.firstChild) {
+                                                            ui.control.firstChild.remove();
+                                                        }//移除重开再战按钮
+                                                    }
+                                                    else {
+                                                        _status.pauseManager.over.start();
+                                                        game.pause();
+                                                    }//没敌人了就终止游戏
                                                 }, 500);
                                             }
                                             else {
