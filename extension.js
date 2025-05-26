@@ -528,6 +528,7 @@ const kangxing1 = function () {
                     }
                     const tempskill = tempSkills.get(player);
                     if (remove) {
+                        game.expandSkills(remove);
                         for (const skill of remove) {
                             if (tempskill[skill]) {
                                 delete tempskill[skill];
