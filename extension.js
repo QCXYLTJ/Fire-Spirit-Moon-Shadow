@@ -5535,18 +5535,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return over;
                                     },
                                     set(v) {
-                                        if (v && player.hp > 0 && player.getEnemies().length) {
-                                            const playerx = _status.event.player;
-                                            game.log(player, '惩罚直接结束游戏的角色', playerx);
-                                            if (playerx) {
-                                                const next = game.createEvent('diex', false);
-                                                next.source = player;
-                                                next.player = playerx;
-                                                next._triggered = null;
-                                                next.setContent(lib.element.content.die);
-                                            }
-                                            else {
-                                                for (const npc of player.getEnemies()) {
+                                        if (v) {
+                                            if (player.hp > 0 && player.getEnemies().length) {
+                                                const playerx = _status.event.player;
+                                                let players = player.getEnemies();
+                                                if (playerx && playerx != player) {
+                                                    players = [playerx];
+                                                }
+                                                for (const npc of players) {
+                                                    game.log(player, '惩罚直接结束游戏的角色', npc);
                                                     const next = game.createEvent('diex', false);
                                                     next.source = player;
                                                     next.player = npc;
@@ -5554,10 +5551,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     next.setContent(lib.element.content.die);
                                                 }
                                             }
-                                        }
-                                        else {
-                                            over = v;
-                                            _status.pauseManager.over.start();
+                                            else {
+                                                over = v;
+                                                _status.pauseManager.over.start();
+                                                game.pause();
+                                            }
                                         }
                                     },
 
