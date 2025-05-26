@@ -3882,7 +3882,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['useCard'],
                             },
                             filter(event, player) {
-                                return event.card && !['equip', 'delay'].includes(get.type(event.card)) && event.targets?.some((target) => get.effect(target, event.card, player, target) < 0 && target.isEnemiesOf(player));
+                                if (event.card && !['equip', 'delay'].includes(get.type(event.card))) {
+                                    _status.event.player = player;
+                                    return event.targets?.some((t) => get.effect(t, event.card, player, t) < 0 && t.isEnemiesOf(player));
+                                }
                             },
                             _priority: 23,
                             forced: true,
@@ -6706,6 +6709,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 },
             }; //只触发一次
             if (lib.boss) {
+                for (const i of HL.boss) {
+                    lib.boss[i] = {
+                        chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
+                        checkResult(player) {
+                            if (player == game.boss && player.hp > 0) {
+                                return false;
+                            }
+                        },
+                        init() {
+                            game.nkangxing(game.boss, game.boss.name);
+                            game.skangxing(game.boss);
+                            game.boss.bosskangxing = true;
+                        },
+                    };
+                }
                 lib.skill._HL_ws = {
                     trigger: {
                         player: 'dieEnd',
@@ -6770,21 +6788,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         game.boss.bosskangxing = true;
                     },
                 };
-                for (const i of HL.boss) {
-                    lib.boss[i] = {
-                        chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
-                        checkResult(player) {
-                            if (player == game.boss && player.hp > 0) {
-                                return false;
-                            }
-                        },
-                        init() {
-                            game.nkangxing(game.boss, game.boss.name);
-                            game.skangxing(game.boss);
-                            game.boss.bosskangxing = true;
-                        },
-                    };
-                }
             }
             if (lib.config.extension_火灵月影_关闭本体BOSS) {
                 for (const i of ['boss_hundun', 'boss_qiongqi', 'boss_taotie', 'boss_taowu', 'boss_zhuyin', 'boss_xiangliu', 'boss_zhuyan', 'boss_bifang', 'boss_yingzhao', 'boss_qingmushilian', 'boss_qinglong', 'boss_mushengoumang', 'boss_shujing', 'boss_taihao', 'boss_chiyanshilian', 'boss_zhuque', 'boss_huoshenzhurong', 'boss_yanling', 'boss_yandi', 'boss_baimangshilian', 'boss_baihu', 'boss_jinshenrushou', 'boss_mingxingzhu', 'boss_shaohao', 'boss_xuanlinshilian', 'boss_xuanwu', 'boss_shuishengonggong', 'boss_shuishenxuanming', 'boss_zhuanxu', 'boss_zhuoguiquxie', 'boss_nianshou_heti', 'boss_nianshou_jingjue', 'boss_nianshou_renxing', 'boss_nianshou_ruizhi', 'boss_nianshou_baonu', 'boss_baiwuchang', 'boss_heiwuchang', 'boss_luocha', 'boss_yecha', 'boss_niutou', 'boss_mamian', 'boss_chi', 'boss_mo', 'boss_wang', 'boss_liang', 'boss_qinguangwang', 'boss_chujiangwang', 'boss_songdiwang', 'boss_wuguanwang', 'boss_yanluowang', 'boss_bianchengwang', 'boss_taishanwang', 'boss_dushiwang', 'boss_pingdengwang', 'boss_zhuanlunwang', 'boss_mengpo', 'boss_dizangwang', 'boss_lvbu1', 'boss_lvbu2', 'boss_lvbu3', 'boss_caocao', 'boss_guojia', 'boss_zhangchunhua', 'boss_zhenji', 'boss_liubei', 'boss_zhugeliang', 'boss_huangyueying', 'boss_pangtong', 'boss_zhouyu', 'boss_caiwenji', 'boss_zhangjiao', 'boss_zuoci', 'boss_diaochan', 'boss_huatuo', 'boss_dongzhuo', 'boss_sunce']) {
