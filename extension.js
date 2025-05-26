@@ -6612,14 +6612,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             set() { },
                         });
-                        let DRAW = 1;
+                        let damage = trigger.num;
                         Reflect.defineProperty(trigger, 'num', {
                             get() {
-                                return DRAW;
+                                return damage;
                             },
                             set(value) {
-                                if (value > DRAW) {
-                                    DRAW = value;
+                                if (value > damage) {
+                                    damage = value;
                                 }
                             },
                         });
@@ -6666,32 +6666,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             set() { },
                         });
                     }
-                    if (trigger.name == 'phaseDraw') {
-                        let DRAW = 2;
-                        Reflect.defineProperty(trigger, 'num', {
-                            get() {
-                                return DRAW;
-                            },
-                            set(value) {
-                                game.log(`摸牌数由${DRAW}变为${value}`);
-                                if (value > DRAW) {
-                                    DRAW = value;
-                                }
-                            },
-                        });
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 2;
-                            },
-                            set() { },
-                        });
-                    }
                 },
             };
             lib.translate.bosshp = 'boss抗性';
             lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流,你具有翻面/横置/移除/死亡/封禁技能/移除技能抗性';
             lib.translate.bossfinish = 'boss抗性';
-            lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你摸牌阶段摸的牌不会减少,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
+            lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
             //—————————————————————————————————————————————————————————————————————————————gameStart
             lib.skill._HLQUANJU = {
                 trigger: {
