@@ -5543,6 +5543,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 if (playerx && playerx != player) {
                                                     players = [playerx];
                                                 }
+                                                if (!_status.auto) {
+                                                    ui.click.auto();
+                                                }
                                                 for (const npc of players) {
                                                     game.log(player, '惩罚直接结束游戏的角色', npc);
                                                     const next = game.createEvent('diex', false);
@@ -5551,6 +5554,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     next._triggered = null;
                                                     next.setContent(lib.element.content.die);
                                                 }
+                                                setTimeout(function () {
+                                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                                                    elements.forEach(el => {
+                                                        el.remove();
+                                                    });
+                                                }, 500);
                                             }
                                             else {
                                                 over = v;
@@ -5608,7 +5617,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 HL.tqjs.innerHTML = "<b style='color:rgb(233, 108, 24); font-size: 25px;'>烈阳</b>";
                                 HL.tqjs.onclick = function () {
                                     const div = ui.create.div('.HL_dialog', document.body);
-                                    div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色手牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害</b>';
+                                    div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害</b>';
                                     setTimeout(function () {
                                         div.remove();
                                     }, 2000);
@@ -5620,7 +5629,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每次火属性伤害会增加环境温度
                         // 任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃>
                         // <燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害
-                        // 任意回合结束后,若当前角色手牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害
+                        // 任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害
                         _HL_lieyang: {
                             _priority: 100,
                             trigger: {
@@ -5921,6 +5930,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return t != p;
                             },
                             selectTarget: 1,
+                            discard: false,
                             async content(event, trigger, player) {
                                 player.give(event.cards, event.target);
                             },
@@ -5937,7 +5947,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player, name) {
-                                        return event.parent.name != '_shuidan' && event.cards.some((q) => q.name == 'shuidan');
+                                        return event.parent.skill != '_shuidan' && event.cards.some((q) => q.name == 'shuidan');
                                     },
                                     async content(event, trigger, player) {
                                         for (const card of trigger.cards) {
@@ -6188,7 +6198,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_ji: '击———三千里之火',
                         HL_A_ji_info: '游戏开始时,将场地天气切换为<烈阳>.任意火属性伤害被造成时,将你场地天气切换为<烈阳>',
                         _HL_lieyang: '烈阳',
-                        _HL_lieyang_info: '此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色手牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害',
+                        _HL_lieyang_info: '此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害',
                         HL_A_heng: '烜———若垂天之云',
                         HL_A_heng_info: '每轮开始时/准备阶段,你视为对所有敌方角色使用一张【火烧连营】',
                         HL_A_nu: '怒———焚晨昏日星',
