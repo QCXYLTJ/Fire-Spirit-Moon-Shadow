@@ -4056,7 +4056,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
                         // 焚城:准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害
                         HL_fencheng: {
-                            group: ['bosshp'],
+                            group: ['bosshp', 'bossfinish'],
                             init(player) {
                                 for (const npc of player.getEnemies()) {
                                     npc.damage(3, 'fire');
@@ -4254,7 +4254,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     await player.chooseUseTarget({ name: 'sha' }, true, false, 'nodistance');
                                 }
                             },
-                            group: ['HL_luanwu_2', 'bosshp'],
+                            group: ['HL_luanwu_2', 'bosshp', 'bossfinish'],
                             subSkill: {
                                 1: {
                                     mod: {
@@ -4375,7 +4375,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 登场时,展示所有敌方角色的手牌并弃置其中的伤害牌
                         // 耀武:敌方角色使用伤害牌时,你取消所有目标,然后令此牌对你结算x次(x为此牌指定的目标数)
                         HL_yaowu: {
-                            group: ['bosshp'],
+                            group: ['bosshp', 'bossfinish'],
                             init(player) {
                                 for (const npc of player.getEnemies()) {
                                     npc.discard(npc.getCards('h', (c) => get.tag(c, 'damage')));
@@ -4563,7 +4563,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————無雙飞将群80勾玉
                         // 登场时,视作依次使用四张【杀】
-                        // 無雙:你使用【杀】指定目标时,令其武将牌上的技能失效且此【杀】需要x张【闪】来响应,此杀伤害提高x点,你使用的【杀】可以额外指定至多五个目标.(x为敌方角色数)
+                        // 無雙
+                        // 你使用【杀】指定敌方角色时,令其武将牌上的技能失效<br>你的【杀】需要x张【闪】来响应,基础伤害提高x点,可以额外指定至多五个目标(x为敌方角色数)
                         HL_wushuang: {
                             mod: {
                                 selectTarget(card, player, range) {
@@ -4573,7 +4574,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                             trigger: {
-                                player: 'useCardBefore',
+                                player: ['useCardBefore'],
                             },
                             forced: true,
                             firstDo: true,
@@ -4581,42 +4582,27 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.card.name == 'sha' && event.targets?.length;
                             },
                             async content(event, trigger, player) {
-                                for (const npc of trigger.targets) {
-                                    npc.addSkill('HL_wushuang_1');
+                                const targets = trigger.targets.filter((q) => q.isEnemiesOf(player));
+                                for (const npc of targets) {
+                                    if (!npc.storage.skill_blocker) {
+                                        npc.storage.skill_blocker = [];
+                                    }
+                                    npc.storage.skill_blocker.add('HL_wushuang');
                                 }
                                 player
                                     .when({ player: 'useCardAfter' })
                                     .filter((e) => e == trigger)
                                     .then(() => {
-                                        for (const npc of trigger.targets) {
-                                            npc.removeSkill('HL_wushuang_1');
+                                        for (const npc of targets) {
+                                            npc.storage.skill_blocker.remove('HL_wushuang');
                                         }
-                                    });
+                                    }).vars({ targets: targets });
                             },
-                            group: ['HL_wushuang_2', 'bosshp'],
+                            skillBlocker(skill, player) {
+                                return true;
+                            },
+                            group: ['HL_wushuang_2', 'bosshp', 'bossfinish'],
                             subSkill: {
-                                1: {
-                                    init(player) {
-                                        if (!player.storage.skill_blocker) {
-                                            player.storage.skill_blocker = [];
-                                        }
-                                        player.storage.skill_blocker.add('HL_wushuang_1');
-                                    },
-                                    onremove(player) {
-                                        if (player.storage.skill_blocker) {
-                                            player.storage.skill_blocker.remove('HL_wushuang_1');
-                                        }
-                                    },
-                                    skillBlocker(skill) {
-                                        return skill != 'HL_wushuang_1';
-                                    },
-                                    mark: true,
-                                    intro: {
-                                        content(storage, player) {
-                                            return '<li>無雙:此杀结算期间武将牌上的技能失效';
-                                        },
-                                    },
-                                },
                                 2: {
                                     init(player) {
                                         let num = 4;
@@ -4625,7 +4611,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         } //这里await但是init没有await,所以执行到chooseusetarget=>choosetarget=>get.effectuse的时候找不到当前事件card
                                     },
                                     trigger: {
-                                        player: 'shaBefore',
+                                        player: ['shaBefore'],
                                     },
                                     forced: true,
                                     async content(event, trigger, player) {
@@ -4946,33 +4932,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player.isEnemiesOf(player) && evt.sourceDamage.length;
                             },
                             async content(event, trigger, player) {
-                                trigger.player.addSkill('HL_zhene_1');
+                                if (!trigger.player.storage.skill_blocker) {
+                                    trigger.player.storage.skill_blocker = [];
+                                }
+                                trigger.player.storage.skill_blocker.add('HL_zhene');
                                 await player.useCard({ name: 'sha' }, trigger.player);
-                                trigger.player.removeSkill('HL_zhene_1');
+                                trigger.player.storage.skill_blocker.remove('HL_zhene');
                             },
-                            subSkill: {
-                                1: {
-                                    init(player) {
-                                        if (!player.storage.skill_blocker) {
-                                            player.storage.skill_blocker = [];
-                                        }
-                                        player.storage.skill_blocker.add('HL_zhene_1');
-                                    },
-                                    onremove(player) {
-                                        if (player.storage.skill_blocker) {
-                                            player.storage.skill_blocker.remove('HL_zhene_1');
-                                        }
-                                    },
-                                    skillBlocker(skill) {
-                                        return skill != 'HL_zhene_1';
-                                    },
-                                    mark: true,
-                                    intro: {
-                                        content(storage, player) {
-                                            return '<li>镇恶:此杀结算期间武将牌上的技能失效';
-                                        },
-                                    },
-                                },
+                            skillBlocker(skill, player) {
+                                return true;
                             },
                         },
                         // 蒙光
@@ -5601,7 +5569,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skillBlocker(skill, player) {
                                 const boss = HL.HL_A_luo;
                                 if (boss && player != boss && (player.hp < 3 || player.maxHp < 3)) {
-                                    return skill != 'HL_A_luo';
+                                    return true;
                                 }
                             },
                         },
@@ -6353,7 +6321,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————無雙飞将
                         HL_lvbu: '無雙飞将',
                         HL_wushuang: '無雙',
-                        HL_wushuang_info: '登场时,视作依次使用四张【杀】.你使用【杀】指定目标时,令其武将牌上的技能失效且此【杀】需要x张【闪】来响应,此杀伤害提高x点,你使用的【杀】可以额外指定至多五个目标.(x为敌方角色数)',
+                        HL_wushuang_info: '登场时,视作依次使用四张【杀】.你使用【杀】指定敌方角色时,令其武将牌上的技能失效<br>你的【杀】需要x张【闪】来响应,基础伤害提高x点,可以额外指定至多五个目标(x为敌方角色数)',
                         HL_wumou: '无谋',
                         HL_wumou_info: '二阶段解锁,你使用的除【决斗】以外的锦囊牌失效,使用的基本牌结算三次',
                         HL_jiwu: '极武',
