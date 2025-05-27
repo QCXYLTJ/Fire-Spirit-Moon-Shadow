@@ -4594,7 +4594,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     .filter((e) => e == trigger)
                                     .then(() => {
                                         for (const npc of targets) {
-                                            npc.storage.skill_blocker.remove('HL_wushuang');
+                                            npc.storage.skill_blocker?.remove('HL_wushuang');
                                         }
                                     }).vars({ targets: targets });
                             },
@@ -4937,7 +4937,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                                 trigger.player.storage.skill_blocker.add('HL_zhene');
                                 await player.useCard({ name: 'sha' }, trigger.player);
-                                trigger.player.storage.skill_blocker.remove('HL_zhene');
+                                trigger.player.storage.skill_blocker?.remove('HL_zhene');
                             },
                             skillBlocker(skill, player) {
                                 return true;
