@@ -5234,7 +5234,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     return {
                                         filterCard: true,
                                         selectCard: 1,
-                                        popname: true,
                                         position: 'hes',
                                         check: (card) => 12 - get.value(card),
                                         viewAs: {
@@ -5506,7 +5505,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     get() {
                                         return over;
                                     },
-                                    set(v) {
+                                    async set(v) {
                                         if (v) {
                                             if (player.hp > 0 && player.getEnemies().length) {
                                                 const playerx = _status.event.player;
@@ -5523,28 +5522,29 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     next.source = player;
                                                     next.player = npc;
                                                     next._triggered = null;
-                                                    next.setContent(lib.element.content.die);
+                                                    await next.setContent(lib.element.content.die);
                                                 }//即死
-                                                setTimeout(function () {
-                                                    if (player.getEnemies().length) {
-                                                        const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                                                        elements.forEach(el => {
-                                                            el.remove();
-                                                        });//移除结算框
-                                                        while (ui.control.firstChild) {
-                                                            ui.control.firstChild.remove();
-                                                        }//移除重开再战按钮
-                                                    }
-                                                    else {
-                                                        _status.pauseManager.over.start();
-                                                        game.pause();
-                                                    }//没敌人了就终止游戏
-                                                }, 500);
+                                                if (player.hp > 0 && player.getEnemies().length) {
+                                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                                                    elements.forEach(el => {
+                                                        el.remove();
+                                                    });//移除结算框
+                                                    while (ui.control.firstChild) {
+                                                        ui.control.firstChild.remove();
+                                                    }//移除重开再战按钮
+                                                }
+                                                else {
+                                                    over = true;
+                                                    _status.pauseManager.waitPause = async function () {
+                                                        await new Promise(() => { });
+                                                    };
+                                                }//没敌人了就终止游戏
                                             }
                                             else {
-                                                over = v;
-                                                _status.pauseManager.over.start();
-                                                game.pause();
+                                                over = true;
+                                                _status.pauseManager.waitPause = async function () {
+                                                    await new Promise(() => { });
+                                                };
                                             }
                                         }
                                     },
