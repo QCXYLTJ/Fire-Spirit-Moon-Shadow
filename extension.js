@@ -5690,7 +5690,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             async content(event, trigger, player) {
-                                if (Math.random() > 0.9) {
+                                if (Math.random() > 0.7) {
                                     await game.HL_VIDEO(event.name);
                                 }
                                 player.useCard({ name: 'huoshaolianying' }, player.getEnemies(), false);
@@ -5712,7 +5712,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 await player.addCharge(trigger.num);
                                 if (player.countCharge() > 8) {
-                                    if (Math.random() > 0.5) {
+                                    if (Math.random() > 0.7) {
                                         await game.HL_VIDEO(event.name);
                                     }
                                     player.removeCharge(9);
@@ -5948,7 +5948,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             async content(event, trigger, player) {
-                                if (Math.random() > 0.9) {
+                                if (Math.random() > 0.7) {
                                     await game.HL_VIDEO(event.name);
                                 }
                                 player.useCard({ name: 'shuiyanqijunx' }, player.getEnemies(), false);
@@ -5970,7 +5970,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 await player.addCharge(trigger.num);
                                 if (player.countCharge() > 8) {
-                                    if (Math.random() > 0.5) {
+                                    if (Math.random() > 0.7) {
                                         await game.HL_VIDEO(event.name);
                                     }
                                     player.removeCharge(9);
@@ -6118,7 +6118,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             async content(event, trigger, player) {
-                                if (Math.random() > 0.9) {
+                                if (Math.random() > 0.7) {
                                     await game.HL_VIDEO(event.name);
                                 }
                                 await player.useCard({ name: 'shuiyanqijunx' }, player.getEnemies(), false);
@@ -6141,7 +6141,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 await player.addCharge(trigger.num);
                                 if (player.countCharge() > 17) {
-                                    if (Math.random() > 0.5) {
+                                    if (Math.random() > 0.7) {
                                         await game.HL_VIDEO(event.name);
                                     }
                                     player.removeCharge(18);
