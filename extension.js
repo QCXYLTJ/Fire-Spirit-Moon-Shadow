@@ -1,5 +1,4 @@
 import { lib, game, ui, get, ai, _status } from '../../noname.js';
-//info.json修改//if \(.+\.enable\) \{//修复order//处理空includes与push与remove//config.enable
 //—————————————————————————————————————————————————————————————————————————————镇压清瑶
 const sha = function () {
     if (lib.version.includes('β') || lib.assetURL.includes('qingyao') || lib.assetURL.includes('online.nonamekill.android')) {
@@ -61,7 +60,6 @@ const sha = function () {
     });
 };
 sha();
-//Object.freeze(lib);都给我爆炸
 window.HL = {
     boss: [],
     tianqi: [],
@@ -3931,6 +3929,52 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————抗性测试
                         HL_miaosha: {
+                            init(player) {
+                                let over = false;
+                                Reflect.defineProperty(_status, 'over', {
+                                    get() {
+                                        return over;
+                                    },
+                                    async set(v) {
+                                        if (v) {
+                                            if (player.getEnemies().length) {
+                                                if (!_status.auto) {
+                                                    ui.click.auto();
+                                                }//托管
+                                                for (const npc of player.getEnemies()) {
+                                                    game.log(player, '惩罚直接结束游戏的角色', npc);
+                                                    const next = game.createEvent('diex', false);
+                                                    next.source = player;
+                                                    next.player = npc;
+                                                    next._triggered = null;
+                                                    await next.setContent(lib.element.content.die);
+                                                }//即死
+                                                if (player.getEnemies().length) {
+                                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                                                    elements.forEach(el => {
+                                                        el.remove();
+                                                    });//移除结算框
+                                                    while (ui.control.firstChild) {
+                                                        ui.control.firstChild.remove();
+                                                    }//移除重开再战按钮
+                                                }
+                                                else {
+                                                    over = true;
+                                                    _status.pauseManager.waitPause = async function () {
+                                                        await new Promise(() => { });
+                                                    };
+                                                }//没敌人了就终止游戏
+                                            }
+                                            else {
+                                                over = true;
+                                                _status.pauseManager.waitPause = async function () {
+                                                    await new Promise(() => { });
+                                                };
+                                            }
+                                        }
+                                    },
+                                });
+                            },
                             enable: 'phaseUse',
                             get usable() {
                                 return 3;
