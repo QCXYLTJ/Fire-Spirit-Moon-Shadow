@@ -67,18 +67,6 @@ window.HL = {
 };
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
 const kangxing1 = function () {
-    if (!lib.config.kangxing) {
-        game.saveConfig('kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
-    }
-    const qinit = lib.element.player.init;
-    const oplayer = ui.create.player;
-    Reflect.defineProperty(ui.create, 'player', {
-        get() {
-            return oplayer;
-        },
-        set() { },
-        configurable: false,
-    });
     const qcontains = HTMLDivElement.prototype.contains;
     Reflect.defineProperty(HTMLDivElement.prototype, 'contains', {
         get() {
@@ -127,15 +115,18 @@ const kangxing1 = function () {
         set() { },
         configurable: false,
     });
-    const allplayers = [];
-    const _players = [];
-    let qplayers = [];
+    if (!lib.config.HL_kangxing) {
+        game.saveConfig('HL_kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
+    }
+    const startplayers = [];
+    let allplayers = [];
+    const kplayers = [];
     const obj = {
         get players() {
             if (!_status.gameStarted && lib.config.mode != 'boss') {
-                return allplayers;
+                return startplayers;
             } //防止没载入名字击杀
-            return _players.filter((q) => {
+            return kplayers.filter((q) => {
                 if (!q) {
                     return false;
                 }
@@ -145,30 +136,37 @@ const kangxing1 = function () {
                 return true;
             });
         },
+        get dead() {
+            if (!_status.gameStarted && lib.config.mode != 'boss') {
+                return [];
+            } //防止没载入名字击杀
+            return kdead;
+        },
     };
     Reflect.defineProperty(game, 'players', {
         get() {
-            qplayers = [...new Set([...qplayers, ...obj.players])]; //防代理,但是不防前面的代理,如果放第一位,那么前面添加player就不会被set方法检测到
-            return new Proxy(qplayers, {
+            allplayers = [...new Set([...allplayers.filter((player) => !obj.dead.includes(player)), ...obj.players])];
+            return new Proxy(allplayers, {
                 set(target, property, value) {
                     const result = Reflect.set(target, property, value);//先执行移除,不然里面有个undefined元素
                     if (property === 'length') {
                         game.sort();
                     }
                     return result;//不能与上面合并
-                },
+                },//防代理,但是不防前面的代理,如果放第一位,那么前面添加player就不会被set方法检测到
             }); //直接赋值不会触发set方法
         },
         configurable: false,
         set(value) {
-            qplayers = value;
+            allplayers = value;
         },
     });
-    let _dead = [];
+    let alldead = [];
+    const kdead = [];
     Reflect.defineProperty(game, 'dead', {
         get() {
-            _dead = [...new Set(_dead.filter((player) => !obj.players.includes(player)))];
-            return new Proxy(_dead, {
+            alldead = [...new Set([...alldead.filter((player) => !obj.players.includes(player)), ...obj.dead])];
+            return new Proxy(alldead, {
                 set(target, property, value) {
                     const result = Reflect.set(target, property, value);//先执行移除,不然里面有个undefined元素
                     if (property === 'length') {
@@ -180,313 +178,346 @@ const kangxing1 = function () {
         },
         configurable: false,
         set(value) {
-            _dead = value;
+            alldead = value;
         },
     });
-    const _name = new Map();
-    class qplayer extends HTMLDivElement {
-        constructor(position) {
-            if (position instanceof lib.element.Player) {
-                const other = position;
-                [position] = other._args;
-            }
-            /**
-             * @type {this}
-             */
-            // @ts-ignore
-            const player = ui.create.div('.player', position);
-            allplayers.push(player);
-            let qname;
-            Reflect.defineProperty(player, 'name', {
-                get() {
-                    const real = _name.get(player);
-                    if (real) {
-                        return real;
-                    } //这里不能调用obj.players会爆栈
-                    return qname;
-                },
-                set(v) {
-                    if (lib.config.kangxing.concat(['HL_李白', 'HL_许劭', 'HL_kangxing']).includes(v)) {
-                        game.nkangxing(player, v); //先改名
-                        game.skangxing(player);
-                    }
-                    qname = v;
-                },
-                configurable: false,
-            });
-            let hooktrigger = [];
-            Reflect.defineProperty(player, '_hookTrigger', {
-                get() {
-                    if (obj.players.includes(player)) {
-                        return [];
-                    }
-                    return hooktrigger;
-                },
-                set(v) {
-                    hooktrigger = v;
-                },
-                configurable: false,
-            });
-            let remove = false;
-            Reflect.defineProperty(player, 'removed', {
-                get() {
-                    if (obj.players.includes(player)) {
-                        return false;
-                    }
-                    return remove;
-                },
-                set(v) {
-                    remove = v;
-                },
-                configurable: false,
-            });
-            let qdisabledSkills = {};
-            Reflect.defineProperty(player, 'disabledSkills', {
-                get() {
-                    if (obj.players.includes(player)) {
-                        return new Proxy(
-                            {},
-                            {
-                                get(u, i) {
-                                    return [];
-                                },
+    const kname = new Map();
+    let oplayer = ui.create.player;
+    Reflect.defineProperty(ui.create, 'player', {
+        get() {
+            return function (position, noclick) {
+                const player = oplayer(position, noclick);
+                startplayers.push(player);
+                let qname;
+                Reflect.defineProperty(player, 'name', {
+                    get() {
+                        const real = kname.get(player);
+                        if (real) {
+                            return real;
+                        } //这里不能调用obj.players会爆栈
+                        return qname;
+                    },
+                    set(v) {
+                        qname = v;
+                        if (lib.config.HL_kangxing.includes(v)) {
+                            game.nkangxing(player, v); //先改名
+                            game.skangxing(player);
+                            game.log(player, '加入抗性');
+                        } else {
+                            if (lib.config.extension_火灵月影_即死) {
+                                kdead.push(player);
+                                new MutationObserver(function () {
+                                    if (obj.dead.includes(player)) {
+                                        const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                        if (!classq.includes('dead')) {
+                                            player.classList.add('dead');
+                                            player.style.transform = 'rotate(20deg)';
+                                        }
+                                    }
+                                }).observe(player, {
+                                    attributes: true,
+                                    attributeFilter: ['class'],
+                                });
+                                game.log(player, '挂掉了');
                             }
-                        );
-                    }
-                    return qdisabledSkills;
-                },
-                set(v) {
-                    qdisabledSkills = v;
-                },
-                configurable: false,
-            });
-            let qstorage = {};
-            Reflect.defineProperty(player, 'storage', {
-                get() {
-                    if (obj.players.includes(player)) {
-                        if (player.name == 'HL_许劭') {
-                            //用hasskill会爆栈
+                        }
+                    },
+                    configurable: false,
+                });
+                let hooktrigger = [];
+                Reflect.defineProperty(player, '_hookTrigger', {
+                    get() {
+                        if (obj.players.includes(player)) {
+                            return [];
+                        }
+                        return hooktrigger;
+                    },
+                    set(v) {
+                        hooktrigger = v;
+                    },
+                    configurable: false,
+                });
+                let remove = false;
+                Reflect.defineProperty(player, 'removed', {
+                    get() {
+                        if (obj.players.includes(player)) {
+                            return false;
+                        }
+                        return remove;
+                    },
+                    set(v) {
+                        remove = v;
+                    },
+                    configurable: false,
+                });
+                let qdisabledSkills = {};
+                Reflect.defineProperty(player, 'disabledSkills', {
+                    get() {
+                        if (obj.players.includes(player)) {
+                            return new Proxy(
+                                {},
+                                {
+                                    get(u, i) {
+                                        return [];
+                                    },
+                                }
+                            );
+                        }
+                        return qdisabledSkills;
+                    },
+                    set(v) {
+                        qdisabledSkills = v;
+                    },
+                    configurable: false,
+                });
+                let qstorage = {};
+                Reflect.defineProperty(player, 'storage', {
+                    get() {
+                        if (obj.players.includes(player)) {
+                            if (player.name == 'HL_许劭') {
+                                //用hasskill会爆栈
+                                return new Proxy(qstorage, {
+                                    get(u, i) {
+                                        if (i == 'nohp' || i == 'norecover' || i.startsWith('temp_ban_')) return false;
+                                        if ((!(i in u) && !i.startsWith('_') && i != 'North_ld_chenxun' && i != '东皇钟' && i != 'jiu' && i != 'sksn_jinian') || i == 'skill_blocker')
+                                            return [
+                                                [[], []],
+                                                [[], []],
+                                                [[], []],
+                                            ];
+                                        return u[i];
+                                    },
+                                });
+                            }
                             return new Proxy(qstorage, {
                                 get(u, i) {
-                                    if (i == 'nohp' || i == 'norecover' || i.startsWith('temp_ban_')) return false;
-                                    if ((!(i in u) && !i.startsWith('_') && i != 'North_ld_chenxun' && i != '东皇钟' && i != 'jiu' && i != 'sksn_jinian') || i == 'skill_blocker')
-                                        return [
-                                            [[], []],
-                                            [[], []],
-                                            [[], []],
-                                        ];
+                                    if (i == 'skill_blocker') return [];
+                                    if (i.startsWith('temp_ban_')) return false;
                                     return u[i];
                                 },
                             });
                         }
-                        return new Proxy(qstorage, {
-                            get(u, i) {
-                                if (i == 'skill_blocker') return [];
-                                if (i.startsWith('temp_ban_')) return false;
-                                return u[i];
-                            },
-                        });
-                    }
-                    return qstorage;
-                },
-                set(v) {
-                    qstorage = v;
-                },
-                configurable: false,
-            });
-            Reflect.defineProperty(player, 'dieAfter', {
-                get() {
-                    if (obj.players.includes(player)) {
-                        return game.kongfunc;
-                    }
-                    return lib.element.player.dieAfter;
-                },
-                set() { },
-                configurable: false,
-            });
-            const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
-            let classlist = player.classList;
-            Reflect.defineProperty(player, 'classList', {
-                get() {
-                    if (obj.players.includes(player)) {
-                        return {
-                            add(q) {
-                                const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                if (!classq.includes(q) && list.includes(q)) {
-                                    qpush.call(classq, q);
-                                }
-                                qsetstyle.call(player, 'class', classq.join(' ').trim());
-                            },
-                            remove(q) {
-                                const classq = qgetstyle
-                                    .call(player, 'class')
-                                    .split(/\s+/g)
-                                    .filter((i) => i != q);
-                                qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
-                            },
-                            toggle(q) {
-                                const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                if (classq.includes(q)) {
-                                    player.classList.remove(q);
-                                } else {
-                                    player.classList.add(q);
-                                }
-                            },
-                            contains(q) {
-                                player.node.hp.classList.remove('hidden');
-                                player.node.avatar.style.transform = '';
-                                player.node.avatar.style.filter = '';
-                                player.style.transform = '';
-                                player.style.filter = '';
-                                const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                for (const style of classq) {
-                                    if (!list.includes(style)) {
-                                        player.classList.remove(style);
+                        return qstorage;
+                    },
+                    set(v) {
+                        qstorage = v;
+                    },
+                    configurable: false,
+                });
+                const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
+                let classlist = player.classList;
+                Reflect.defineProperty(player, 'classList', {
+                    get() {
+                        if (obj.players.includes(player)) {
+                            return {
+                                add(q) {
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    if (!classq.includes(q) && list.includes(q)) {
+                                        qpush.call(classq, q);
                                     }
-                                }
-                                return list.includes(q) && classq.includes(q);
-                            },
+                                    qsetstyle.call(player, 'class', classq.join(' ').trim());
+                                },
+                                remove(q) {
+                                    const classq = qgetstyle
+                                        .call(player, 'class')
+                                        .split(/\s+/g)
+                                        .filter((i) => i != q);
+                                    qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
+                                },
+                                toggle(q) {
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    if (classq.includes(q)) {
+                                        player.classList.remove(q);
+                                    } else {
+                                        player.classList.add(q);
+                                    }
+                                },
+                                contains(q) {
+                                    player.node.hp.classList.remove('hidden');
+                                    player.node.avatar.style.transform = '';
+                                    player.node.avatar.style.filter = '';
+                                    player.style.transform = '';
+                                    player.style.filter = '';
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    for (const style of classq) {
+                                        if (!list.includes(style)) {
+                                            player.classList.remove(style);
+                                        }
+                                    }
+                                    return list.includes(q) && classq.includes(q);
+                                },
+                            };
+                        }
+                        if (obj.dead.includes(player)) {
+                            return {
+                                add(q) {
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    classq.push(q);
+                                    qsetstyle.call(player, 'class', classq.join(' ').trim());
+                                },
+                                remove(q) {
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    if (q != 'dead') {
+                                        classq.remove(q);
+                                    }
+                                    qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
+                                },
+                                toggle(q) {
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    if (classq.includes(q)) {
+                                        player.classList.remove(q);
+                                    } else {
+                                        player.classList.add(q);
+                                    }
+                                },
+                                contains(q) {
+                                    if (!game.players.length) {
+                                        game.over();
+                                    }
+                                    player.style.transform = 'rotate(20deg)';
+                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                    if (!classq.includes('dead')) {
+                                        player.classList.add('dead');
+                                    }
+                                    return classq.includes(q) || q == 'dead';
+                                },
+                            };
+                        }
+                        return classlist;
+                    },
+                    set(v) {
+                        classlist = v;
+                    },
+                    configurable: false,
+                });
+                Reflect.defineProperty(player, 'uninit', {
+                    get() {
+                        return function () {
+                            try {
+                                delete this.name;
+                            } catch (e) {
+                                console.log(this.name, e);
+                            }
+                            delete this.name1;
+                            delete this.tempname;
+                            delete this.skin;
+                            delete this.sex;
+                            delete this.group;
+                            delete this.hp;
+                            delete this.maxHp;
+                            delete this.hujia;
+                            if (this.name2) {
+                                delete this.singleHp;
+                                delete this.name2;
+                            }
+                            this.skipList = [];
+                            this.clearSkills(true);
+                            this.initedSkills = [];
+                            this.additionalSkills = {};
+                            this.disabledSkills = {};
+                            this.hiddenSkills = [];
+                            this.awakenedSkills = [];
+                            this.forbiddenSkills = {};
+                            this.phaseNumber = 0;
+                            this.stat = [{ card: {}, skill: {} }];
+                            this.tempSkills = {};
+                            this.storage = {};
+                            this.marks = {};
+                            this.expandedSlots = {};
+                            this.disabledSlots = {};
+                            this.ai = { friend: [], enemy: [], neutral: [] };
+                            this.$uninit();
+                            return this;
                         };
-                    }
-                    return classlist;
-                },
-                set(v) {
-                    classlist = v;
-                },
-                configurable: false,
-            });
-            Reflect.defineProperty(player, 'init', {
-                get() {
-                    return qinit;
-                },
-                set() { },
-                configurable: false,
-            });
-            Reflect.defineProperty(player, 'uninit', {
-                get() {
-                    return function () {
-                        try {
-                            delete this.name;
-                        } catch (e) {
-                            console.log(this.name, e);
-                        }
-                        delete this.name1;
-                        delete this.tempname;
-                        delete this.skin;
-                        delete this.sex;
-                        delete this.group;
-                        delete this.hp;
-                        delete this.maxHp;
-                        delete this.hujia;
-                        if (this.name2) {
-                            delete this.singleHp;
-                            delete this.name2;
-                        }
-                        this.skipList = [];
-                        this.clearSkills(true);
-                        this.initedSkills = [];
-                        this.additionalSkills = {};
-                        this.disabledSkills = {};
-                        this.hiddenSkills = [];
-                        this.awakenedSkills = [];
-                        this.forbiddenSkills = {};
-                        this.phaseNumber = 0;
-                        this.stat = [{ card: {}, skill: {} }];
-                        this.tempSkills = {};
-                        this.storage = {};
-                        this.marks = {};
-                        this.expandedSlots = {};
-                        this.disabledSlots = {};
-                        this.ai = { friend: [], enemy: [], neutral: [] };
-                        this.$uninit();
-                        return this;
-                    };
-                },
-                set() { },
-                configurable: false,
-            });
-            Reflect.defineProperty(player, 'isAlive', {
-                get() {
-                    return function () {
-                        if (obj.players.includes(player)) {
-                            return true;
-                        }
-                        return !this.classList.contains('dead');
-                    };
-                },
-                set() { },
-                configurable: false,
-            });
-            Reflect.defineProperty(player, 'isDead', {
-                get() {
-                    return function () {
-                        if (obj.players.includes(player)) {
-                            return false;
-                        }
-                        return this.classList.contains('dead');
-                    };
-                },
-                set() { },
-                configurable: false,
-            });
-            Reflect.defineProperty(player, 'isIn', {
-                get() {
-                    return function () {
-                        if (obj.players.includes(player)) {
-                            return true;
-                        }
-                        return !this.classList.contains('dead') && !this.classList.contains('out') && !this.removed;
-                    };
-                },
-                set() { },
-                configurable: false,
-            });
-            Object.setPrototypeOf(player, (qplayer || lib.element.Player).prototype);
-            // @ts-ignore
-            player._args = [position];
-            return player;
-        }
-    }
-    Object.assign(qplayer.prototype, lib.element.Player.prototype);
-    Reflect.defineProperty(lib.element, 'Player', {
-        get() {
-            return qplayer;
+                    },
+                    set() { },
+                    configurable: false,
+                });
+                Reflect.defineProperty(player, 'isAlive', {
+                    get() {
+                        return function () {
+                            if (obj.players.includes(player)) {
+                                return true;
+                            }
+                            if (obj.dead.includes(player)) {
+                                return false;
+                            }
+                            return !this.classList.contains('dead');
+                        };
+                    },
+                    set() { },
+                    configurable: false,
+                });
+                Reflect.defineProperty(player, 'isDead', {
+                    get() {
+                        return function () {
+                            if (obj.players.includes(player)) {
+                                return false;
+                            }
+                            if (obj.dead.includes(player)) {
+                                return true;
+                            }
+                            return this.classList.contains('dead');
+                        };
+                    },
+                    set() { },
+                    configurable: false,
+                });
+                Reflect.defineProperty(player, 'isIn', {
+                    get() {
+                        return function () {
+                            if (obj.players.includes(player)) {
+                                return true;
+                            }
+                            if (obj.dead.includes(player)) {
+                                return false;
+                            }
+                            return !this.classList.contains('dead') && !this.classList.contains('out') && !this.removed;
+                        };
+                    },
+                    set() { },
+                    configurable: false,
+                });
+                return player;
+            };
         },
-        set() { },
+        set(v) {
+            oplayer = v;
+        },
         configurable: false,
     });
-    const _skills = {};
-    let qskill = lib.skill;
+    let allskill = lib.skill;
+    const kskill = {};
     Reflect.defineProperty(lib, 'skill', {
         get() {
-            return new Proxy(qskill, {
+            return new Proxy(allskill, {
                 get(u, i) {
-                    if (i in _skills) {
-                        return Object.assign({}, _skills[i]);
+                    if (i in kskill) {
+                        return Object.assign({}, kskill[i]);
                     }
                     return u[i];
                 },
             });
         },
         set(v) {
-            qskill = v;
+            allskill = v;
         },
         configurable: false,
     }); //只能记录加载名字那一刻的技能,在之前被别人置空无解,除非直接按第一次赋值的来
-    const _hook = {};
-    let qhook = lib.hook;
+    let allhook = lib.hook;
+    const khook = {};
     Reflect.defineProperty(lib, 'hook', {
         get() {
-            return new Proxy(qhook, {
+            return new Proxy(allhook, {
                 get(u, i) {
-                    if (i in _hook) {
+                    if (i in khook) {
                         if (Array.isArray(u[i])) {
-                            u[i] = [...new Set([...u[i], ..._hook[i]])];
+                            u[i] = [...new Set([...u[i], ...khook[i]])];
                         } else {
-                            u[i] = _hook[i].slice();
+                            u[i] = khook[i].slice();
                         }
-                        if (_hook[i].some((hook) => !u[i].includes(hook))) {
-                            return _hook[i].slice();
+                        if (khook[i].some((hook) => !u[i].includes(hook))) {
+                            return khook[i].slice();
                         }
                     }
                     return u[i];
@@ -494,37 +525,23 @@ const kangxing1 = function () {
             });
         },
         set(v) {
-            qhook = v;
+            allhook = v;
         },
         configurable: false,
     }); //之前加入和之前技能共用时机的新技能或者when技能会没有hook,现在可以加但是新加的锁不了,除非重构_hook使其按map角色存储hook
-    const tempSkills = new Map();
+    const ktempSkills = new Map();
     Reflect.defineProperty(game, 'skangxing', {
         get() {
             return function (player, skills, remove) {
                 if (player.playerid) {
                     if (!skills) {
-                        skills = [];
-                        switch (player.name) {
-                            case 'HL_李白':
-                                skills.push('醉诗');
-                                break;
-                            case 'HL_许劭':
-                                skills.push('评鉴');
-                                break;
-                            case 'HL_kangxing':
-                                skills.push('HL_miaosha');
-                                break;
-                            default:
-                                skills.addArray(lib.character[player.name].skills);
-                                break;
-                        }
+                        skills = lib.character[player.name].skills.slice();
                     }
                     game.expandSkills(skills);
-                    if (!tempSkills.has(player)) {
-                        tempSkills.set(player, {});
+                    if (!ktempSkills.has(player)) {
+                        ktempSkills.set(player, {});
                     }
-                    const tempskill = tempSkills.get(player);
+                    const tempskill = ktempSkills.get(player);
                     if (remove) {
                         game.expandSkills(remove);
                         for (const skill of remove) {
@@ -535,8 +552,8 @@ const kangxing1 = function () {
                     }
                     for (const skill of skills) {
                         tempskill[skill] = 'QQQ';
-                        if (!_skills[skill]) {
-                            _skills[skill] = lib.skill[skill];
+                        if (!kskill[skill]) {
+                            kskill[skill] = lib.skill[skill];
                         }
                         const trigger = lib.skill[skill].trigger;
                         for (const i in trigger) {
@@ -546,10 +563,10 @@ const kangxing1 = function () {
                             if (Array.isArray(trigger[i])) {
                                 for (const j of trigger[i]) {
                                     const key = `${player.playerid}_${i}_${j}`;
-                                    if (!_hook[key]) {
-                                        _hook[key] = [];
+                                    if (!khook[key]) {
+                                        khook[key] = [];
                                     }
-                                    _hook[key].add(skill); //之前直接全加进去太离谱了
+                                    khook[key].add(skill); //之前直接全加进去太离谱了
                                 }
                             }
                         }
@@ -574,8 +591,8 @@ const kangxing1 = function () {
                     if (!name) {
                         name = player.name;
                     }
-                    _players.add(player);
-                    _name.set(player, name);
+                    kplayers.add(player);
+                    kname.set(player, name);
                     new MutationObserver(function () {
                         if (obj.players.includes(player)) {
                             if (qcontains.call(ui.arena, player)) return;
@@ -605,6 +622,74 @@ const kangxing1 = function () {
         set() { },
         configurable: false,
     });
+    const ocheckresult = game.checkResult;
+    Reflect.defineProperty(game, 'checkResult', {
+        get() {
+            return function () {
+                if (obj.players.some((q) => q.getEnemies().length)) return;
+                return ocheckresult();
+            };
+        },
+        set() { },
+        configurable: false,
+    });
+    lib.skill._HL_kangxing = {
+        trigger: {
+            global: ['gameStart', 'chooseToUseBefore', 'chooseButtonBefore', 'chooseTargetBefore', 'chooseControlBefore', 'chooseCharacterBefore', 'chooseBoolBefore', 'chooseCardBefore', 'dieBefore', 'die'],
+        },
+        forced: true,
+        forceDie: true,
+        filter(event, player) {
+            if (obj.players.includes(player) && !player.HL_over) {
+                player.HL_over = true;
+                let over = false;
+                Reflect.defineProperty(_status, 'over', {
+                    get() {
+                        return over;
+                    },
+                    async set(v) {
+                        if (v) {
+                            if (player.getEnemies().length) {
+                                if (!_status.auto) {
+                                    ui.click.auto();
+                                }//托管
+                                for (const npc of player.getEnemies()) {
+                                    game.log(player, '惩罚直接结束游戏的角色', npc);
+                                    const next = game.createEvent('diex', false);
+                                    next.source = player;
+                                    next.player = npc;
+                                    next._triggered = null;
+                                    await next.setContent(lib.element.content.die);
+                                }//即死
+                                if (player.getEnemies().length) {
+                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                                    elements.forEach(el => {
+                                        el.remove();
+                                    });//移除结算框
+                                    while (ui.control.firstChild) {
+                                        ui.control.firstChild.remove();
+                                    }//移除重开再战按钮
+                                }
+                                else {
+                                    over = true;
+                                    _status.pauseManager.waitPause = async function () {
+                                        await new Promise(() => { });
+                                    };
+                                }//没敌人了就终止游戏
+                            }
+                            else {
+                                over = true;
+                                _status.pauseManager.waitPause = async function () {
+                                    await new Promise(() => { });
+                                };
+                            }
+                        }
+                    },
+                });
+            }
+        },
+        content() { },
+    };
 };
 kangxing1();
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
@@ -1745,8 +1830,10 @@ const boss = function () {
         silent: true,
         forceDie: true,
         forceOut: true,
-        filter: () => game.sort(),
-        async content(event, trigger, player) { },
+        filter() {
+            game.sort();
+        },
+        content() { },
     }; //排座位
     let _me;
     Reflect.defineProperty(game, 'me', {
@@ -1931,7 +2018,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     chongzhi.className = 'chongzhiQ';
                     chongzhi.innerHTML = '重置设置';
                     chongzhi.onclick = function () {
-                        game.saveConfig('kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
+                        game.saveConfig('HL_kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
                     };
                     remove.add(chongzhi);
                     document.body.appendChild(chongzhi);
@@ -1942,8 +2029,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     OK.onclick = function () {
                         if (div.log) {
                             const name = div.log.link;
-                            lib.config.kangxing.add(name);
-                            game.saveConfig('kangxing', lib.config.kangxing);
+                            lib.config.HL_kangxing.add(name);
+                            game.saveConfig('HL_kangxing', lib.config.HL_kangxing);
                             const npc = game.players.find((q) => q.name == name);
                             if (npc) {
                                 game.skangxing(npc);
@@ -3929,52 +4016,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————抗性测试
                         HL_miaosha: {
-                            init(player) {
-                                let over = false;
-                                Reflect.defineProperty(_status, 'over', {
-                                    get() {
-                                        return over;
-                                    },
-                                    async set(v) {
-                                        if (v) {
-                                            if (player.getEnemies().length) {
-                                                if (!_status.auto) {
-                                                    ui.click.auto();
-                                                }//托管
-                                                for (const npc of player.getEnemies()) {
-                                                    game.log(player, '惩罚直接结束游戏的角色', npc);
-                                                    const next = game.createEvent('diex', false);
-                                                    next.source = player;
-                                                    next.player = npc;
-                                                    next._triggered = null;
-                                                    await next.setContent(lib.element.content.die);
-                                                }//即死
-                                                if (player.getEnemies().length) {
-                                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                                                    elements.forEach(el => {
-                                                        el.remove();
-                                                    });//移除结算框
-                                                    while (ui.control.firstChild) {
-                                                        ui.control.firstChild.remove();
-                                                    }//移除重开再战按钮
-                                                }
-                                                else {
-                                                    over = true;
-                                                    _status.pauseManager.waitPause = async function () {
-                                                        await new Promise(() => { });
-                                                    };
-                                                }//没敌人了就终止游戏
-                                            }
-                                            else {
-                                                over = true;
-                                                _status.pauseManager.waitPause = async function () {
-                                                    await new Promise(() => { });
-                                                };
-                                            }
-                                        }
-                                    },
-                                });
-                            },
                             enable: 'phaseUse',
                             get usable() {
                                 return 3;
@@ -6788,6 +6829,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             群聊: {
                 name: '<a href="https://qm.qq.com/q/SsTlU9gc24"><span class=Qmenu>【火灵月影】群聊: 771901025</span></a>',
                 clear: true,
+            },
+            即死: {
+                name: '<span class=Qmenu>即死</span>',
+                intro: '斩尽世间一切敌',
+                init: false,
             },
             lianyu: {
                 name: '<span class=Qmenu>挑战炼狱模式</span>',
