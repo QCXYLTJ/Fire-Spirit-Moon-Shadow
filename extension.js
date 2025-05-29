@@ -622,7 +622,7 @@ const kangxing1 = function () {
         set() { },
         configurable: false,
     });
-    const ocheckresult = game.checkResult;
+    let ocheckresult = game.checkResult;
     Reflect.defineProperty(game, 'checkResult', {
         get() {
             return function () {
@@ -630,7 +630,9 @@ const kangxing1 = function () {
                 return ocheckresult();
             };
         },
-        set() { },
+        set(v) {
+            ocheckresult = v;
+        },
         configurable: false,
     });
     lib.skill._HL_kangxing = {
@@ -640,7 +642,7 @@ const kangxing1 = function () {
         forced: true,
         forceDie: true,
         filter(event, player) {
-            if (obj.players.includes(player) && !player.HL_over) {
+            if (kplayers.includes(player) && !player.HL_over) {
                 player.HL_over = true;
                 let over = false;
                 Reflect.defineProperty(_status, 'over', {
