@@ -3379,7 +3379,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————BOSS
                         HL_李白: {
                             sex: 'male',
-                            skills: [],
+                            skills: ['醉诗'],
                             isBoss: true,
                             isBossAllowed: true,
                         },
@@ -3418,6 +3418,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             hp: 40,
                             maxHp: 40,
                             skills: ['HL_A_zhi', 'HL_A_luo', 'HL_A_ji', 'HL_A_heng', 'HL_A_nu', 'HL_A_zhuan'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
+                        HL_shao: {
+                            hp: 8,
+                            maxHp: 8,
+                            skills: ['HL_kangkaijiang', 'HL_yelongliezhan', 'HL_pulaomingzhong', 'HL_gongfubishui', 'HL_shaoEGO', 'HL_xingxingzhihuo'],
                             isBoss: true,
                             isBossAllowed: true,
                         },
@@ -5587,59 +5594,61 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 体力上限或体力值低于3的敌方角色,所有技能失效
                         HL_A_luo: {
                             init(player) {
-                                let over = false;
-                                Reflect.defineProperty(_status, 'over', {
-                                    get() {
-                                        return over;
-                                    },
-                                    async set(v) {
-                                        if (v) {
-                                            if (player.hp > 0 && player.getEnemies().length) {
-                                                const playerx = _status.event.player;
-                                                let players = player.getEnemies();
-                                                if (playerx && playerx != player) {
-                                                    players = [playerx];
-                                                }
-                                                if (!_status.auto) {
-                                                    ui.click.auto();
-                                                }//托管
-                                                for (const npc of players) {
-                                                    game.log(player, '惩罚直接结束游戏的角色', npc);
-                                                    const next = game.createEvent('diex', false);
-                                                    next.source = player;
-                                                    next.player = npc;
-                                                    next._triggered = null;
-                                                    await next.setContent(lib.element.content.die);
-                                                }//即死
+                                if (player.playerid) {
+                                    let over = false;
+                                    Reflect.defineProperty(_status, 'over', {
+                                        get() {
+                                            return over;
+                                        },
+                                        async set(v) {
+                                            if (v) {
                                                 if (player.hp > 0 && player.getEnemies().length) {
-                                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                                                    elements.forEach(el => {
-                                                        el.remove();
-                                                    });//移除结算框
-                                                    while (ui.control.firstChild) {
-                                                        ui.control.firstChild.remove();
-                                                    }//移除重开再战按钮
+                                                    const playerx = _status.event.player;
+                                                    let players = player.getEnemies();
+                                                    if (playerx && playerx != player) {
+                                                        players = [playerx];
+                                                    }
+                                                    if (!_status.auto) {
+                                                        ui.click.auto();
+                                                    }//托管
+                                                    for (const npc of players) {
+                                                        game.log(player, '惩罚直接结束游戏的角色', npc);
+                                                        const next = game.createEvent('diex', false);
+                                                        next.source = player;
+                                                        next.player = npc;
+                                                        next._triggered = null;
+                                                        await next.setContent(lib.element.content.die);
+                                                    }//即死
+                                                    if (player.hp > 0 && player.getEnemies().length) {
+                                                        const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                                                        elements.forEach(el => {
+                                                            el.remove();
+                                                        });//移除结算框
+                                                        while (ui.control.firstChild) {
+                                                            ui.control.firstChild.remove();
+                                                        }//移除重开再战按钮
+                                                    }
+                                                    else {
+                                                        over = true;
+                                                        _status.pauseManager.waitPause = async function () {
+                                                            await new Promise(() => { });
+                                                        };
+                                                    }//没敌人了就终止游戏
                                                 }
                                                 else {
                                                     over = true;
                                                     _status.pauseManager.waitPause = async function () {
                                                         await new Promise(() => { });
                                                     };
-                                                }//没敌人了就终止游戏
+                                                }
                                             }
-                                            else {
-                                                over = true;
-                                                _status.pauseManager.waitPause = async function () {
-                                                    await new Promise(() => { });
-                                                };
-                                            }
-                                        }
-                                    },
+                                        },
 
-                                });
-                                if (!HL.HL_A_luo) {
-                                    HL.HL_A_luo = player;
-                                }
+                                    });
+                                    if (!HL.HL_A_luo) {
+                                        HL.HL_A_luo = player;
+                                    }
+                                }//挑战模式适配
                             },
                             trigger: {
                                 global: ['gameStart', 'phaseBegin'],
@@ -6242,6 +6251,348 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————邵
+                        HL_kangkaijiang: {
+                            trigger: {
+                                player: ['useCardToPlayered', 'respond', 'useCard'],
+                                target: 'useCardToTargeted',
+                            },
+                            filter(event, player) {
+                                if (['respond', 'useCard'].includes(event.name)) return ['shan'].includes(event.card.name);
+                                if (!(event.card.name == 'juedou' || event.card.name == 'sha')) return false;
+                                return player == event.target || event.parent.triggeredTargets3.length == 1;
+                            },
+                            forced: true,
+                            content() {
+                                var card = [];
+                                var card1 = get.cardPile(function (card) {
+                                    return card.name == 'sha';
+                                });
+                                var card2 = get.cardPile(function (card) {
+                                    return card.name == 'shan';
+                                });
+                                if (card1) card.add(card1);
+                                if (card2) card.add(card2);
+                                if (card.length) player.gain(card, 'gain2');
+                            },
+                            ai: {
+                                effect: {
+                                    target(card, player, target) {
+                                        if (card.name == 'sha') return [1, 0.6];
+                                    },
+                                    player(card, player, target) {
+                                        if (card.name == 'sha') return [1, 1];
+                                    },
+                                },
+                            },
+                        },
+                        HL_yelongliezhan: {
+                            trigger: {
+                                source: 'damageSource',
+                            },
+                            filter(event, player) {
+                                return event.nature == 'fire';
+                            },
+                            forced: true,
+                            content() {
+                                trigger.player.addMark('_HL_shaoshang');
+                                player.chooseToDiscard(true, 'he');
+                            },
+                            mod: {
+                                cardnature(card, player) {
+                                    if (card.name == 'sha' && get.color(card) == 'red') return 'fire';
+                                },
+                                cardUsable(card, player) {
+                                    if (card.name == 'sha' && get.color(card) == 'red') return Infinity;
+                                },
+                            },
+                        },
+                        HL_pulaomingzhong: {
+                            trigger: {
+                                global: 'discardEnd',
+                                player: 'loseHpBegin',
+                            },
+                            forced: true,
+                            content() {
+                                if (trigger.name == 'loseHp') trigger.cancel();
+                                else {
+                                    if (trigger.player == player) {
+                                        var players = player.getEnemies().sortBySeat();
+                                        for (const i of players) {
+                                            i.chooseToDiscard(true, 'he');
+                                        }
+                                    }
+                                    trigger.player.addMark('_HL_shaoshang');
+                                }
+                            },
+                            group: 'HL_pulaomingzhong_discard',
+                            subSkill: {
+                                discard: {
+                                    trigger: {
+                                        player: 'loseAfter',
+                                        global: ['equipAfter', 'addJudgeAfter', 'gainAfter', 'loseAsyncAfter', 'addToExpansionAfter'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        if (event.getl && !event.getl(player)) return false;
+                                        return player.countCards('h') > 20;
+                                    },
+                                    content() {
+                                        player.chooseToDiscard('h', true, player.countCards('h') - 20);
+                                    },
+                                },
+                            },
+                        },
+                        HL_gongfubishui: {
+                            trigger: {
+                                player: 'damageBegin',
+                            },
+                            filter(event, player) {
+                                return ['fire', 'thunder', undefined].includes(event.nature);
+                            },
+                            forced: true,
+                            HL_ignore: ['_HL_shaoshang'],
+                            content() {
+                                if (trigger.nature == 'fire') trigger.cancel();
+                                else {
+                                    trigger.num--;
+                                    if (player.hp == player.maxHp) player.changeHujia();
+                                    else player.recover();
+                                }
+                            },
+                            ai: {
+                                effect: {
+                                    target(card, player, target) {
+                                        if (get.tag(card, 'fireDamage')) return [0, 2];
+                                        if (get.tag(card, 'thunderDamage')) return [0, 1.5];
+                                    },
+                                },
+                            },
+                        },
+                        HL_shaoEGO: {
+                            trigger: {
+                                player: ['useCard', 'respond'],
+                                source: 'damageSource',
+                            },
+                            filter(event, player) {
+                                return player.countMark('HL_shaoEGO') < 15;
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                //QQQ
+                                if (trigger.name == 'damage') {
+                                    player.addMark('HL_shaoEGO', Math.min(3, 15 - player.countMark('HL_shaoEGO')));
+                                } else {
+                                    player.addMark('HL_shaoEGO', 1);
+                                }
+                            },
+                            marktext: '情感',
+                            intro: {
+                                name: '情感',
+                                content: 'mark',
+                            },
+                            mod: {
+                                cardUsable(card, player, num) {
+                                    var n = Math.floor(player.countMark('HL_shaoEGO') / 3);
+                                    if (card.name == 'sha') return num + n;
+                                },
+                            },
+                            group: ['bosshp', 'bossfinish', 'HL_shaoEGO_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['phaseBegin', 'phaseEnd'],
+                                    },
+                                    forced: true,
+                                    filter: (event, player) => player.name == 'HL_shao' && player.storage.HL_shaoEGO > 12 && ['HL_jiaotu', 'HL_bian', 'HL_liwen', 'HL_yazi', 'HL_suoni', 'HL_taotie', 'HL_bili'].some((q) => !player.hasSkill(q)),
+                                    async content(event, trigger, player) {
+                                        //QQQ
+                                        for (const i of ['HL_jiaotu', 'HL_bian', 'HL_liwen', 'HL_yazi', 'HL_suoni', 'HL_taotie', 'HL_bili']) {
+                                            player.addSkill(i);
+                                            player.node.avatar.style.backgroundImage = `url(extension/雪月风花/character/HL_shao_EGO.jpg)`;
+                                            ui.background.style.backgroundImage = `url(extension/雪月风花/character/shao_EGO.jpg)`;
+                                            ui.backgroundMusic.src = `extension/雪月风花/audio/shao_EGO.mp3`;
+                                            ui.backgroundMusic.loop = true;
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        HL_jiaotu: {
+                            trigger: {
+                                target: ['useCardToTarget'],
+                            },
+                            forced: true,
+                            filter: (event, player) => event.player.isEnemiesOf(player),
+                            async content(event, trigger, player) {
+                                //QQQ
+                                if (trigger.card.number && trigger.cards && trigger.cards[0]) {
+                                    const { result } = await player.chooseCard('与其使用的牌拼点', 'h');
+                                    if (result.cards && result.cards[0]) {
+                                        game.cardsGotoOrdering(result.cards);
+                                        await player.$compare(result.cards[0], trigger.player, trigger.cards[0]);
+                                        game.log(player, '的拼点牌为', result.cards[0]);
+                                        game.log(trigger.player, '的拼点牌为', trigger.cards[0]);
+                                        if (result.cards[0].number > trigger.cards[0].number) {
+                                            trigger.parent.all_excluded = true;
+                                            trigger.player.addMark('_HL_shaoshang', 3);
+                                        }
+                                    }
+                                } else {
+                                    trigger.parent.all_excluded = true;
+                                }
+                            },
+                        },
+                        HL_bian: {
+                            trigger: {
+                                global: ['phaseBegin'],
+                            },
+                            forced: true,
+                            filter: (event, player) => event.player.isEnemiesOf(player),
+                            async content(event, trigger, player) {
+                                //QQQ
+                                for (const i of game.players.filter((q) => q.isEnemiesOf(player) && q.countMark('_HL_shaoshang'))) {
+                                    const num = i.countMark('_HL_shaoshang');
+                                    i.damage(num, 'fire');
+                                    const num1 = num + player.hp - player.maxHp;
+                                    if (num1 > 0) {
+                                        player.recover(num - num1);
+                                        player.changeHujia(num1);
+                                    } else {
+                                        player.recover(num);
+                                    }
+                                }
+                            },
+                        },
+                        HL_liwen: {
+                            trigger: {
+                                target: ['useCardToTarget'],
+                            },
+                            forced: true,
+                            filter: (event, player) => event.player.isEnemiesOf(player),
+                            async content(event, trigger, player) {
+                                //QQQ
+                                const { result } = await player.judge('螭吻吞脊', (card) => (get.color(card) == 'black' ? -2 : 2));
+                                if (result && result.card) {
+                                    if (get.color(result.card) == 'black') {
+                                        player.loseHp();
+                                    } else {
+                                        trigger.player.loseHp();
+                                    }
+                                }
+                            },
+                        },
+                        HL_yazi: {
+                            trigger: {
+                                player: ['useCardToTarget'],
+                            },
+                            filter: (event, player) => event.target.isEnemiesOf(player),
+                            forced: true,
+                            async content(event, trigger, player) {
+                                const { result } = await player.judge('睚眦雪恨', (card) => (card.number == player.maxHp ? 0 : 2));
+                                if (result && result.card) {
+                                    if (result.card.number != player.maxHp) {
+                                        trigger.target.addMark('_HL_shaoshang', 2);
+                                    }
+                                }
+                            },
+                        },
+                        HL_suoni: {
+                            trigger: {
+                                player: ['phaseBegin', 'phaseEnd'],
+                            },
+                            forced: true,
+                            filter: (event, player) => game.players.some((q) => q.countMark('_HL_shaoshang')),
+                            async content(event, trigger, player) {
+                                //QQQ
+                                var num = 0;
+                                for (const i of game.players) {
+                                    num += i.countMark('_HL_shaoshang');
+                                }
+                                const num1 = num * player.countMark('HL_shaoEGO');
+                                for (const i of game.players) {
+                                    if (i.countMark('_HL_shaoshang') && i.isEnemiesOf(player)) {
+                                        var num2 = 6;
+                                        while (num2-- > 0) {
+                                            await i.damage(num1, 'fire');
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                        HL_taotie: {
+                            trigger: {
+                                player: ['damageBegin4'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                var num = 0;
+                                for (const i of game.players) {
+                                    num += i.countMark('_HL_shaoshang');
+                                }
+                                return event.num > 0 && player.countCards('he') && num > 0;
+                            },
+                            async content(event, trigger, player) {
+                                const { result } = await player.chooseToDiscard(1, 'he', true);
+                                if (result.cards && result.cards[0]) {
+                                    var num = 0;
+                                    for (const i of game.players) {
+                                        num += i.countMark('_HL_shaoshang');
+                                    }
+                                    trigger.num -= num;
+                                    if (trigger.num < 0) {
+                                        trigger.cancel();
+                                    }
+                                }
+                            },
+                            group: ['HL_taotie_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['loseHpBegin'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.gainMaxHp();
+                                        trigger.cancel();
+                                    },
+                                },
+                            },
+                        },
+                        HL_bili: {
+                            trigger: {
+                                source: ['damageBefore'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                var num = 0;
+                                for (const i of game.players) {
+                                    num += i.countMark('_HL_shaoshang');
+                                }
+                                trigger.num += num;
+                            },
+                            group: ['HL_bili_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: 'compare',
+                                        target: 'compare',
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        var num = 0;
+                                        for (const i of game.players) {
+                                            num += i.countMark('_HL_shaoshang');
+                                        }
+                                        if (player == trigger.player) {
+                                            trigger.num1 += num;
+                                        } else {
+                                            trigger.num2 += num;
+                                        }
+                                    },
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -6254,6 +6605,36 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————邵
+                        HL_shao: '邵',
+                        HL_xingxingzhihuo: '星星之火',
+                        HL_xingxingzhihuo_info: '锁定技,当你失去最后的手牌时,将你的手牌补充为四',
+                        HL_kangkaijiang: '慷慨激昂',
+                        HL_kangkaijiang_info: '锁定技,每当你使用(指定目标后)或被使用(成为目标后)【决斗】或【杀】时或每当你使用或打出【闪】时,你从牌堆或弃牌堆中摸一张【杀】与【闪】.',
+                        HL_yelongliezhan: '烨龙烈斩',
+                        HL_yelongliezhan_info: '锁定技,你的红色【杀】视为无次数限制的火属性【杀】;当你造成火属性伤害后,目标角色获得一枚『烧伤』标记,然后你弃置一张牌.',
+                        HL_pulaomingzhong: '蒲牢鸣钟',
+                        HL_pulaomingzhong_info: '锁定技,①当你弃置牌后,你令场上所有敌方角色弃置一张牌;当任意角色弃置牌后,其获得一枚烧伤标记;②体力流失对你无效;③当你的手牌数大于20后,你将手牌弃置20张.',
+                        HL_gongfubishui: '蚣蝮避水',
+                        HL_gongfubishui_info: '锁定技,①当你受到伤害时,若此伤害为火属性,则此伤害对你无效;若此伤害不为冰属性,则此伤害减一,然后你回复一点体力值(若你的体力值已达上限,则改为你获得一点护甲值);②你免疫〖烧伤〗效果.',
+                        HL_shaoEGO: '邵E·G·O',
+                        HL_shaoEGO_info: '锁定技,你每使用或打出一张牌/造成一次伤害,获得一枚/三枚『情感』标记(上限为15);你每拥有三枚此标记,你使用杀的次数+1.',
+                        HL_shaoEGO_1: '邵E.G.O',
+                        HL_shaoEGO_1_info: '任意角色的回合开始或结束,若情感标记大于12,获得以下技能',
+                        HL_jiaotu: '椒图镇邪',
+                        HL_jiaotu_info: '锁定技,当你成为敌方角色使用牌的目标时,若此牌有点数且为实体牌:(你与其使用的牌拼点,若你赢,令此牌无效,然后令其获得三枚烧伤标记).否则令此牌无效',
+                        HL_bian: '狴犴争讼',
+                        HL_bian_info: '锁定技,敌方角色的回合开始时,令拥有烧伤标记的敌方角色受到x点伤害(x为其烧伤标记数量),然后你回复等量体力(若体力已达到上限,则改为获得等量护甲)',
+                        HL_liwen: '螭吻吞脊',
+                        HL_liwen_info: '锁定技,当你成为敌方角色使用牌的目标时,进行一次判定,若判定牌不为黑色,你令其流失一点体力,否则你流失一点体力',
+                        HL_yazi: '睚眦雪恨',
+                        HL_yazi_info: '锁定技,当你使用牌指定敌方角色成为目标时,进行一次判定,若判定牌的点数与你的体力上限不同,令其获得两枚烧伤标记',
+                        HL_suoni: '狻猊腾云',
+                        HL_suoni_info: '锁定技,你的回合开始或回合结束时,若场上敌方角色拥有烧伤标记,令其受到六次x点伤害(x为场上烧伤标记数量×你的情感标记数)',
+                        HL_taotie: '饕餮饗食',
+                        HL_taotie_info: '锁定技,当你受到伤害时,你弃置一张牌,令此伤害减x(x为场上烧伤标记数量);当你流失体力时,令其无效,然后你增加一点体力上限',
+                        HL_bili: '赑屃负礎',
+                        HL_bili_info: '锁定技,当你造成伤害时,令此伤害加X(X为场上的烧伤标记数量);当你拼点时,点数加X',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————至高烈阳
                         HL_zhigaolieyang: '至高烈阳',
                         HL_A_zhi: '止✣长昼月之息',
