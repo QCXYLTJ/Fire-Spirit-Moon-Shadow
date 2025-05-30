@@ -6593,6 +6593,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        //星星之火:锁定技,当你失去最后的手牌时,将你的手牌补充为四
+                        HL_xingxingzhihuo: {
+                            trigger: {
+                                player: ['loseAfter'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return !player.countCards('h');
+                            },
+                            async content(event, trigger, player) {
+                                player.draw(4);
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
