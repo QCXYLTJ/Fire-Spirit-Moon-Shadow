@@ -488,7 +488,7 @@ const kangxing1 = function () {
             oplayer = v;
         },
         configurable: false,
-    });
+    });//生成玩家时载入抗性
     //—————————————————————————————————————————————————————————————————————————————锁定技能与钩子
     let allskill = lib.skill;
     const kskill = {};
@@ -661,6 +661,7 @@ const kangxing1 = function () {
                 }
             }
         },
+        configurable: false,
     });//禁止强制结束游戏
     lib.arenaReady.push(function () {
         new MutationObserver(function () {
@@ -5604,59 +5605,31 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_luo: {
                             init(player) {
                                 if (player.playerid) {
-                                    let over = false;
-                                    Reflect.defineProperty(_status, 'over', {
-                                        get() {
-                                            return over;
-                                        },
-                                        async set(v) {
-                                            if (v) {
-                                                if (player.hp > 0 && player.getEnemies().length) {
-                                                    const playerx = _status.event.player;
-                                                    let players = player.getEnemies();
-                                                    if (playerx && playerx != player) {
-                                                        players = [playerx];
-                                                    }
-                                                    if (!_status.auto) {
-                                                        ui.click.auto();
-                                                    }//托管
-                                                    for (const npc of players) {
-                                                        game.log(player, '惩罚直接结束游戏的角色', npc);
-                                                        const next = game.createEvent('diex', false);
-                                                        next.source = player;
-                                                        next.player = npc;
-                                                        next._triggered = null;
-                                                        await next.setContent(lib.element.content.die);
-                                                    }//即死
-                                                    if (player.hp > 0 && player.getEnemies().length) {
-                                                        const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                                                        elements.forEach(el => {
-                                                            el.remove();
-                                                        });//移除结算框
-                                                        while (ui.control.firstChild) {
-                                                            ui.control.firstChild.remove();
-                                                        }//移除重开再战按钮
-                                                    }
-                                                    else {
-                                                        over = true;
-                                                        _status.pauseManager.waitPause = async function () {
-                                                            await new Promise(() => { });
-                                                        };
-                                                    }//没敌人了就终止游戏
-                                                }
-                                                else {
-                                                    over = true;
-                                                    _status.pauseManager.waitPause = async function () {
-                                                        await new Promise(() => { });
-                                                    };
-                                                }
+                                    const oover = game.over;
+                                    game.over = function (result, bool) {
+                                        if (player.hp > 0 && player.getEnemies().length) {
+                                            const playerx = _status.event.player;
+                                            let players = player.getEnemies();
+                                            if (playerx && playerx != player) {
+                                                players = [playerx];
                                             }
-                                        },
-
-                                    });
-                                    if (!HL.HL_A_luo) {
-                                        HL.HL_A_luo = player;
-                                    }
+                                            if (!_status.auto) {
+                                                ui.click.auto();
+                                            }//托管
+                                            for (const npc of players) {
+                                                game.log(player, '惩罚直接结束游戏的角色', npc);
+                                                const next = game.createEvent('diex', false);
+                                                next.source = player;
+                                                next.player = npc;
+                                                next._triggered = null;
+                                                next.setContent(lib.element.content.die);
+                                            }//即死
+                                            if (player.hp > 0 && player.getEnemies().length) {
+                                                return;
+                                            }
+                                        }
+                                        return oover(result, bool);
+                                    };
                                 }//挑战模式适配
                             },
                             trigger: {
@@ -5664,6 +5637,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             async content(event, trigger, player) {
+                                if (!HL.HL_A_luo) {
+                                    HL.HL_A_luo = player;
+                                }
                                 for (const npc of player.getEnemies()) {
                                     if (!npc.storage.skill_blocker) {
                                         npc.storage.skill_blocker = [];
