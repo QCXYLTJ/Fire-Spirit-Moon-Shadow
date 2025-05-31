@@ -6395,8 +6395,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         //QQQ
                                         for (const i of ['HL_jiaotu', 'HL_bian', 'HL_liwen', 'HL_yazi', 'HL_suoni', 'HL_taotie', 'HL_bili']) {
                                             player.addSkill(i);
-                                            player.node.avatar.style.backgroundImage = `url(extension/火灵月影/character/HL_shao_EGO.jpg)`;
-                                            ui.background.style.backgroundImage = `url(extension/火灵月影/character/shao_EGO.jpg)`;
+                                            player.node.avatar.style.backgroundImage = `url(extension/火灵月影/image/HL_shao_EGO.jpg)`;
+                                            ui.background.style.backgroundImage = `url(extension/火灵月影/image/shao_EGO.jpg)`;
                                             ui.backgroundMusic.src = `extension/火灵月影/audio/shao_EGO.mp3`;
                                             ui.backgroundMusic.loop = true;
                                         }
