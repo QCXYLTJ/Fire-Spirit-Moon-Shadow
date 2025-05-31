@@ -67,6 +67,7 @@ window.HL = {
 };
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
 const kangxing1 = function () {
+    //—————————————————————————————————————————————————————————————————————————————锁定几个原型方法
     const qcontains = HTMLDivElement.prototype.contains;
     Reflect.defineProperty(HTMLDivElement.prototype, 'contains', {
         get() {
@@ -118,6 +119,7 @@ const kangxing1 = function () {
     if (!lib.config.HL_kangxing) {
         game.saveConfig('HL_kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
     }
+    //—————————————————————————————————————————————————————————————————————————————锁定玩家/死亡列表
     const startplayers = [];
     let allplayers = [];
     const kplayers = [];
@@ -160,7 +162,7 @@ const kangxing1 = function () {
         set(value) {
             allplayers = value;
         },
-    });
+    });//锁定玩家列表
     let alldead = [];
     const kdead = [];
     Reflect.defineProperty(game, 'dead', {
@@ -180,7 +182,8 @@ const kangxing1 = function () {
         set(value) {
             alldead = value;
         },
-    });
+    });//锁定死亡列表
+    //—————————————————————————————————————————————————————————————————————————————生成玩家时载入抗性
     const kname = new Map();
     let oplayer = ui.create.player;
     Reflect.defineProperty(ui.create, 'player', {
@@ -486,6 +489,7 @@ const kangxing1 = function () {
         },
         configurable: false,
     });
+    //—————————————————————————————————————————————————————————————————————————————锁定技能与钩子
     let allskill = lib.skill;
     const kskill = {};
     Reflect.defineProperty(lib, 'skill', {
@@ -529,6 +533,7 @@ const kangxing1 = function () {
         },
         configurable: false,
     }); //之前加入和之前技能共用时机的新技能或者when技能会没有hook,现在可以加但是新加的锁不了,除非重构_hook使其按map角色存储hook
+    //—————————————————————————————————————————————————————————————————————————————游戏内载入抗性函数
     const ktempSkills = new Map();
     Reflect.defineProperty(game, 'skangxing', {
         get() {
@@ -583,7 +588,7 @@ const kangxing1 = function () {
         },
         set() { },
         configurable: false,
-    });
+    });//临时技能锁定,技能钩子锁定,lib.skill锁定
     Reflect.defineProperty(game, 'nkangxing', {
         get() {
             return function (player, name) {
@@ -593,15 +598,6 @@ const kangxing1 = function () {
                     }
                     kplayers.add(player);
                     kname.set(player, name);
-                    new MutationObserver(function () {
-                        if (obj.players.includes(player)) {
-                            if (qcontains.call(ui.arena, player)) return;
-                            console.log('还原角色被删除的武将牌');
-                            qappend.call(ui.arena, player);
-                        }
-                    }).observe(ui.arena, {
-                        childList: true,
-                    });
                     const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
                     new MutationObserver(function () {
                         if (obj.players.includes(player)) {
@@ -621,7 +617,8 @@ const kangxing1 = function () {
         },
         set() { },
         configurable: false,
-    });
+    });//名字抗性加入,类列表节点监听
+    //—————————————————————————————————————————————————————————————————————————————可有可无的部分,但是防止某些人强制胜利就自以为赢了
     let ocheckresult = game.checkResult;
     Reflect.defineProperty(game, 'checkResult', {
         get() {
@@ -634,64 +631,76 @@ const kangxing1 = function () {
             ocheckresult = v;
         },
         configurable: false,
-    });
-    lib.skill._HL_kangxing = {
-        trigger: {
-            global: ['gameStart', 'chooseToUseBefore', 'chooseButtonBefore', 'chooseTargetBefore', 'chooseControlBefore', 'chooseCharacterBefore', 'chooseBoolBefore', 'chooseCardBefore', 'dieBefore', 'die'],
+    });//禁止强制结束游戏
+    let over = false;
+    Reflect.defineProperty(_status, 'over', {
+        get() {
+            return over;
         },
-        forced: true,
-        forceDie: true,
-        filter(event, player) {
-            if (kplayers.includes(player) && !player.HL_over) {
-                player.HL_over = true;
-                let over = false;
-                Reflect.defineProperty(_status, 'over', {
-                    get() {
-                        return over;
-                    },
-                    async set(v) {
-                        if (v) {
-                            if (player.getEnemies().length) {
-                                if (!_status.auto) {
-                                    ui.click.auto();
-                                }//托管
-                                for (const npc of player.getEnemies()) {
-                                    game.log(player, '惩罚直接结束游戏的角色', npc);
-                                    const next = game.createEvent('diex', false);
-                                    next.source = player;
-                                    next.player = npc;
-                                    next._triggered = null;
-                                    await next.setContent(lib.element.content.die);
-                                }//即死
-                                if (player.getEnemies().length) {
-                                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                                    elements.forEach(el => {
-                                        el.remove();
-                                    });//移除结算框
-                                    while (ui.control.firstChild) {
-                                        ui.control.firstChild.remove();
-                                    }//移除重开再战按钮
-                                }
-                                else {
-                                    over = true;
-                                    _status.pauseManager.waitPause = async function () {
-                                        await new Promise(() => { });
-                                    };
-                                }//没敌人了就终止游戏
-                            }
-                            else {
-                                over = true;
-                                _status.pauseManager.waitPause = async function () {
-                                    await new Promise(() => { });
-                                };
-                            }
-                        }
-                    },
-                });
+        set(v) {
+            if (v) {
+                if (obj.players.some((q) => q.getEnemies().length)) {
+                    if (!_status.auto) {
+                        ui.click.auto();
+                    }//托管
+                    setTimeout(function () {
+                        const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                        elements.forEach(el => {
+                            el.remove();
+                        });//移除结算框
+                        while (ui.control.firstChild) {
+                            ui.control.firstChild.remove();
+                        }//移除重开再战按钮
+                    }, 500);
+                }
+                else {
+                    over = true;
+                    _status.pauseManager.waitPause = async function () {
+                        await new Promise(() => { });
+                    };
+                }
             }
         },
-        content() { },
-    };
+    });//禁止强制结束游戏
+    lib.arenaReady.push(function () {
+        new MutationObserver(function () {
+            for (const player of obj.players) {
+                if (ui.arena.contains(player)) continue;
+                console.log('还原角色被删除的武将牌');
+                ui.arena.appendChild(player);
+            }
+        }).observe(ui.arena, {
+            childList: true,
+        });
+        new MutationObserver((mutationsList) => {
+            for (let mutation of mutationsList) {
+                mutation.addedNodes.forEach(node => {
+                    const string = node.innerHTML;
+                    for (const player of obj.players) {
+                        if (string.includes(`${get.translation(player)}</span>被`) || string.includes(`${get.translation(player)}</span>阵亡`)) {
+                            node.remove();
+                        }
+                    }
+                });
+            }
+        }).observe(ui.sidebar, {
+            childList: true
+        });
+        new MutationObserver((mutationsList) => {
+            for (let mutation of mutationsList) {
+                mutation.addedNodes.forEach(node => {
+                    const string = node.innerHTML;
+                    for (const player of obj.players) {
+                        if (string.includes(`${get.translation(player)}</span>被`) || string.includes(`${get.translation(player)}</span>阵亡`)) {
+                            node.remove();
+                        }
+                    }
+                });
+            }
+        }).observe(ui.arenalog, {
+            childList: true
+        });
+    });//禁止弹出死亡播报
 };
 kangxing1();
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
