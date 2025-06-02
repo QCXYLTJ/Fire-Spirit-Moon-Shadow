@@ -315,7 +315,7 @@ const kangxing1 = function () {
                                 add(q) {
                                     const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                                     if (!classq.includes(q) && list.includes(q)) {
-                                        qpush.call(classq, q);
+                                        classq.push(q);
                                     }
                                     qsetstyle.call(player, 'class', classq.join(' ').trim());
                                 },
