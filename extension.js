@@ -4251,7 +4251,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        global: ['loseAfter'],
+                                        global: ['loseEnd'],
                                     },
                                     forced: true,
                                     mark: true,
@@ -6315,7 +6315,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 discard: {
                                     trigger: {
-                                        player: 'loseAfter',
+                                        player: ['loseEnd'],
                                         global: ['equipAfter', 'addJudgeAfter', 'gainAfter', 'loseAsyncAfter', 'addToExpansionAfter'],
                                     },
                                     forced: true,
@@ -6582,7 +6582,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //星星之火:当你失去最后的手牌时,将你的手牌补充为四
                         HL_xingxingzhihuo: {
                             trigger: {
-                                player: ['loseAfter'],
+                                player: ['loseEnd'],
                             },
                             forced: true,
                             filter(event, player) {
