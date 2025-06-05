@@ -2175,8 +2175,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             HTMLElement.prototype.HL_BG = function (name) {
                 const video = document.createElement('video');
                 video.src = `extension/火灵月影/mp4/${name}.mp4`;
-                video.style = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute;';
-                video.style.zIndex = -5; //大于背景图片即可
+                video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
                 video.autoplay = true;
                 video.loop = true;
                 this.appendChild(video);
@@ -2212,27 +2211,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     const url = `extension/火灵月影/mp4/${name}.mp4`;
                     const video = window.document.createElement('video');
                     video.src = url;
-                    video.style.zIndex = 999;
-                    video.style.height = '100%';
-                    video.style.width = '100%';
-                    video.style.position = 'fixed';
-                    video.style.objectFit = 'cover';
-                    video.style.left = 0;
-                    video.style.right = 0;
+                    video.style.cssText = 'z-index: 999; height: 100%; width: 100%; position: fixed; object-fit: cover; left: 0; right: 0; mix-blend-mode: screen; pointer-events: none;';
                     video.autoplay = true;
                     video.loop = false;
-                    video.style.mixBlendMode = 'screen';
-                    video.style.pointerEvents = 'none';
                     const backButton = window.document.createElement('div');
-                    backButton.style.zIndex = 999;
                     backButton.innerHTML = '返回游戏'; //文字内容
-                    backButton.style.position = 'absolute'; //绝对定位
-                    backButton.style.bottom = '10px';
-                    backButton.style.right = '10px';
-                    backButton.style.color = 'red'; //文字颜色
-                    backButton.style.fontSize = '16px'; //文字大小
-                    backButton.style.padding = '5px 10px'; //内边距
-                    backButton.style.background = 'rgba(0, 0, 0, 0.3)'; //背景颜色为黑色透明度为0.3
+                    backButton.style.cssText = 'z-index: 999; position: absolute; bottom: 10px; right: 10px; color: red; font-size: 16px; padding: 5px 10px; background: rgba(0, 0, 0, 0.3);';
                     backButton.onclick = function () {
                         backButton.remove();
                         video.remove();
@@ -4145,16 +4129,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————HL_ws
                         HL_ws: {
                             init(player) {
-                                const video = document.createElement('video');
-                                video.src = `extension/火灵月影/mp4/HL_ws.mp4`;
-                                video.style = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute;';
-                                video.style.zIndex = -5; //大于背景图片即可
-                                video.autoplay = true;
-                                video.loop = true;
-                                player.node.avatar.appendChild(video);
-                                video.addEventListener('error', function () {
-                                    video.remove();
-                                });
+                                player.node.avatar.HL_BG('HL_ws');
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
