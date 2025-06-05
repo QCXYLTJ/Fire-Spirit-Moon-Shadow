@@ -2021,12 +2021,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             ui.create.system(
                 '火灵月影',
                 async function () {
-                    const div = window.document.createElement('div');
+                    const div = document.createElement('div');
                     div.id = 'divQ';
                     const JUESELIST = [];
                     const remove = [];
                     //————————————————————————————————————————————————————————重置设置
-                    const chongzhi = window.document.createElement('div');
+                    const chongzhi = document.createElement('div');
                     chongzhi.className = 'chongzhiQ';
                     chongzhi.innerHTML = '重置设置';
                     chongzhi.onclick = function () {
@@ -2035,7 +2035,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     remove.add(chongzhi);
                     document.body.appendChild(chongzhi);
                     //————————————————————————————————————————————————————————确定
-                    const OK = window.document.createElement('div');
+                    const OK = document.createElement('div');
                     OK.className = 'backQ';
                     OK.innerHTML = '确定';
                     OK.onclick = function () {
@@ -2058,7 +2058,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     //————————————————————————————————————————————————————————搜索
                     const input = document.createElement('input');
                     input.className = 'shuruQ';
-                    const FIND = window.document.createElement('div');
+                    const FIND = document.createElement('div');
                     FIND.className = 'findQ';
                     FIND.innerHTML = '搜索';
                     FIND.onclick = function () {
@@ -2068,7 +2068,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         for (const j in lib.character) {
                             if ((lib.translate[j] && lib.translate[j].includes(input.value)) || j.includes(input.value)) {
                                 //QQQ
-                                const JUESE = window.document.createElement('div');
+                                const JUESE = document.createElement('div');
                                 JUESE.style.backgroundImage = `url(${game.src(j)})`;
                                 JUESE.className = 'characterQ';
                                 JUESE.innerHTML = get.translation(j);
@@ -2091,7 +2091,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     document.body.appendChild(input);
                     //————————————————————————————————————————————————————————武将列表
                     for (const i in lib.characterPack) {
-                        const PACK = window.document.createElement('div');
+                        const PACK = document.createElement('div');
                         PACK.className = 'packQ';
                         PACK.innerHTML = get.translation(i + '_character_config');
                         PACK.link = i;
@@ -2100,7 +2100,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 x.remove();
                             }
                             for (const j in lib.characterPack[this.link]) {
-                                const JUESE = window.document.createElement('div');
+                                const JUESE = document.createElement('div');
                                 JUESE.style.backgroundImage = `url(${game.src(j)})`;
                                 JUESE.className = 'characterQ';
                                 JUESE.innerHTML = get.translation(j);
@@ -2172,9 +2172,22 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //深拷贝对象
             };
             numfunc();
-            HTMLElement.prototype.HL_BG = function (name) {
+            HTMLDivElement.prototype.setBackgroundImage = function (src) {
+                if (Array.isArray(src)) {
+                    src = src[0];
+                }
+                if (src.includes('.mp4')) {
+                    this.style.backgroundImage = 'none';
+                    this.setBackgroundMp4(src);
+                }
+                else {
+                    this.style.backgroundImage = `url(${src})`;
+                }
+                return this;
+            }; //引入mp4新逻辑
+            HTMLElement.prototype.setBackgroundMp4 = function (src) {
                 const video = document.createElement('video');
-                video.src = `extension/火灵月影/mp4/${name}.mp4`;
+                video.src = src;
                 video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
                 video.autoplay = true;
                 video.loop = true;
@@ -2182,7 +2195,42 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 video.addEventListener('error', function () {
                     video.remove();
                 });
+                return video;
             }; //给父元素添加一个覆盖的背景mp4
+            HTMLElement.prototype.HL_BG = function (name) {
+                const src = `extension/火灵月影/mp4/${name}.mp4`;
+                const video = this.setBackgroundMp4(src);
+                return video;
+            }; //火灵月影背景mp4
+            game.HL_VIDEO = async function (name) {
+                return new Promise((resolve) => {
+                    const video = document.createElement('video');
+                    video.src = `extension/火灵月影/mp4/${name}.mp4`;
+                    video.style.cssText = 'z-index: 999; height: 100%; width: 100%; position: fixed; object-fit: cover; left: 0; right: 0; mix-blend-mode: screen; pointer-events: none;';
+                    video.autoplay = true;
+                    video.loop = false;
+                    const backButton = document.createElement('div');
+                    backButton.innerHTML = '返回游戏'; //文字内容
+                    backButton.style.cssText = 'z-index: 999; position: absolute; bottom: 10px; right: 10px; color: red; font-size: 16px; padding: 5px 10px; background: rgba(0, 0, 0, 0.3);';
+                    backButton.onclick = function () {
+                        backButton.remove();
+                        video.remove();
+                        resolve();
+                    }; //设置返回按钮的点击事件
+                    document.body.appendChild(video); //document上面创建video元素之后不要立刻贴上,加一个延迟可以略过前面的播放框,配置越烂延迟越大
+                    document.body.appendChild(backButton);
+                    video.addEventListener('error', function () {
+                        backButton.remove();
+                        video.remove();
+                        resolve();
+                    });
+                    video.addEventListener('ended', function () {
+                        backButton.remove();
+                        video.remove();
+                        resolve();
+                    });
+                });
+            }; //播放mp4
             lib.init.css('extension/火灵月影/QQQ.css');
             game.src = function (name) {
                 let extimage = null,
@@ -2206,36 +2254,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 else if (extimage) return extimage.replace(/^ext:/, 'extension/');
                 return `image/character/${name}.jpg`;
             }; //获取武将名对应立绘路径
-            game.HL_VIDEO = async function (name) {
-                return new Promise((resolve) => {
-                    const url = `extension/火灵月影/mp4/${name}.mp4`;
-                    const video = window.document.createElement('video');
-                    video.src = url;
-                    video.style.cssText = 'z-index: 999; height: 100%; width: 100%; position: fixed; object-fit: cover; left: 0; right: 0; mix-blend-mode: screen; pointer-events: none;';
-                    video.autoplay = true;
-                    video.loop = false;
-                    const backButton = window.document.createElement('div');
-                    backButton.innerHTML = '返回游戏'; //文字内容
-                    backButton.style.cssText = 'z-index: 999; position: absolute; bottom: 10px; right: 10px; color: red; font-size: 16px; padding: 5px 10px; background: rgba(0, 0, 0, 0.3);';
-                    backButton.onclick = function () {
-                        backButton.remove();
-                        video.remove();
-                        resolve();
-                    }; //设置返回按钮的点击事件
-                    document.body.appendChild(video); //document上面创建video元素之后不要立刻贴上,加一个延迟可以略过前面的播放框,配置越烂延迟越大
-                    document.body.appendChild(backButton);
-                    video.addEventListener('error', function () {
-                        backButton.remove();
-                        video.remove();
-                        resolve();
-                    });
-                    video.addEventListener('ended', function () {
-                        backButton.remove();
-                        video.remove();
-                        resolve();
-                    });
-                });
-            }; //播放mp4
             //—————————————————————————————————————————————————————————————————————————————解构魔改本体函数
             const mogai = function () {
                 lib.element.player.dyingResult = async function () {
@@ -3382,6 +3400,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['评鉴'],
                             isBoss: true,
                             isBossAllowed: true,
+                            trashBin: [`ext:火灵月影/mp4/HL_许劭.mp4`],
                         },
                         HL_amiya: {
                             sex: 'female',
@@ -3398,6 +3417,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_ws'],
                             isBoss: true,
                             isBossAllowed: true,
+                            trashBin: [`ext:火灵月影/mp4/HL_ws.mp4`],
                         },
                         HL_wangzuo: {
                             sex: 'female',
@@ -6823,7 +6843,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     info.group = '仙';
                     info.isZhugong = true;
-                    info.trashBin = [`ext:火灵月影/image/${i}.jpg`];
+                    if (!info.trashBin) {
+                        info.trashBin = [`ext:火灵月影/image/${i}.jpg`];
+                    }
                     info.dieAudios = [`ext:火灵月影/die/${i}.mp3`];
                 }
                 for (const i in QQQ.skill) {
