@@ -3833,6 +3833,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 document.body.HL_BG('HL_amiya2');
                                 player.node.avatar.HL_BG('HL_amiya1');
                                 player.hp = player.maxHp;
+                                player.wudi = true;
                                 player.wudix = false;
                                 lib.character.HL_amiya.skills.addArray(['HL_heiguan', 'HL_qipan', 'HL_yongheng']);
                                 game.skangxing(player);
@@ -3869,13 +3870,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ②自身不为BOSS且进入濒死状态时令其他角色失去所有体力值,你回复等量体力值并摸等量的牌(每局限一次)
                         HL_yongheng: {
                             trigger: {
-                                player: ['die', 'dying'],
+                                player: ['dieBegin', 'dying'],
                             },
                             forced: true,
                             forceDie: true,
-                            filter: (event, player) => player.hp <= 0 && !player.yongheng,
+                            filter(event, player, name) {
+                                if (player.hp <= 0 && !player.yongheng) {
+                                    if (name == 'dieBegin') {
+                                        return player == game.boss;
+                                    }
+                                    return player != game.boss;
+                                }
+                            },
                             async content(event, trigger, player) {
-                                if (trigger.name == 'die' && player == game.boss) {
+                                if (trigger.name == 'die') {
+                                    game.checkResult = game.kongfunc;
                                     for (const npc of game.players.filter((q) => q != player)) {
                                         const next = game.createEvent('diex', false);
                                         next.source = player;
@@ -3886,7 +3895,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     game.over('阿米娅被击败了');
                                     player.yongheng = true;
                                 }
-                                if (trigger.name == 'dying' && player != game.boss) {
+                                else {
                                     let num = 0;
                                     for (const npc of game.players.filter((q) => q != player)) {
                                         num += npc.hp;
