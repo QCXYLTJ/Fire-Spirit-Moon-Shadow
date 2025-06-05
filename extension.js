@@ -827,7 +827,6 @@ const kangxing2 = function () {
                         '醉诗',
                         '测试',
                     ];
-                    player.node.avatar.HL_BG('HL_许劭');
                     player.getExpansions = function () {
                         return get.cards(3);
                     };
@@ -4148,9 +4147,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————HL_ws
                         HL_ws: {
-                            init(player) {
-                                player.node.avatar.HL_BG('HL_ws');
-                            },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
