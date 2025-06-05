@@ -757,76 +757,325 @@ const kangxing2 = function () {
         set() { },
         configurable: false,
     });
-    Reflect.defineProperty(lib.skill, '评鉴', {
+    lib.onfree.push(function () {
+        const triggerq = {
+            player: {},
+            global: {},
+            source: {},
+            target: {},
+        };
+        for (const i in lib.skill) {
+            const info = lib.skill[i];
+            if (info.trigger && lib.translate[`${i}_info`]) {
+                for (const j in info.trigger) {
+                    const infox = info.trigger[j];
+                    const infoq = triggerq[j];
+                    if (infoq) {
+                        if (Array.isArray(infox)) {
+                            for (const x of infox) {
+                                infoq[x] = numberq0(infoq[x]) + 1;
+                            }
+                        } else if (typeof infox == 'string') {
+                            infoq[infox] = numberq0(infoq[infox]) + 1;
+                        }
+                    }
+                }
+            }
+        }
+        for (const target in triggerq) {
+            const info = triggerq[target];
+            for (const name in info) {
+                if (info[name] < 5 || ['gain', 'lose'].some((t) => name.includes(t))) {
+                    delete info[name];
+                }
+            }
+        }
+        game.triggerx = {
+            player: Object.keys(triggerq.player).filter((q) => !['logSkill'].includes(q)),
+            global: Object.keys(triggerq.global).filter((q) => !['logSkill'].includes(q)),
+            source: Object.keys(triggerq.source).filter((q) => !['logSkill'].includes(q)),
+            target: Object.keys(triggerq.target).filter((q) => !['logSkill'].includes(q)),
+        };
+    }); //需要晚的时机的
+    HL.pingjianban = [
+        //卡死
+        'ywuhun',
+        'lsns_wuliang',
+        //发动频率过高
+        'xinfu_pdgyingshi',
+        'clanguixiang',
+        'qiaobian',
+        'sbqiaobian',
+        'rgxkuangcao',
+        'Grand_chuanqi',
+        'sksn_dieying',
+        'white_gqliangyi',
+        'xinzhizheng',
+        //没标记或不满足条件
+        'xingwu',
+        'sbjieyin',
+        'sbenyuan',
+        'tiandan',
+        'jsrgwuchang',
+        'rehuashen',
+        'huashen',
+        'dccuixin',
+        'jsrgzhengyi',
+        'yijin',
+        'tgtt_junzhu',
+        'jiebing',
+        'nzry_zhizheng',
+        'dcjichou',
+        'sksn_yinxian',
+        'funie_chuli',
+        'llbz_huanmeng',
+        'llbz_huanhua',
+        'llbz_enyuan',
+        'North_dc_ziman',
+        'sksn_jinian',
+        'xx_zhipei',
+        'wufei',
+        'dczixi',
+        'yjyongquan',
+        'mbbojian',
+        'leiyu',
+        'dqzw_fuzhou',
+        //负面技能
+        'misuzu_hengzhou',
+        'iwasawa_mysong',
+        'yxs_menshen',
+        'chengmou',
+        'twbaobian',
+        'boss_hunyou',
+        'Grand_LausSaintClaudius',
+        'sksn_jianyu',
+        'sksn_wenshi',
+        'DIY_chaoxi',
+        'chuli_fuze_gain',
+        'North_yhy_cihua',
+        'haoshi',
+        'olhaoshi',
+        'sksn_yunjing',
+        //火灵月影
+        'HL_pingjian',
+        'HL_pingjian_player', 'HL_pingjian_target', 'HL_pingjian_source', 'HL_pingjian_global',
+        '阵亡',
+        '贵相',
+        '醉诗',
+        '测试',
+    ];
+    for (const namex of ['player', 'global', 'source', 'target']) {
+        Reflect.defineProperty(lib.skill, `HL_pingjian_${namex}`, {
+            get() {
+                return {
+                    trigger: {
+                        [namex]: game.triggerx[namex],
+                    },
+                    forced: true,
+                    popup: false,
+                    filter(event, player, name) {
+                        const skills = Object.keys(lib.skill).filter((i) => {
+                            const infox = lib.skill[i];
+                            if (lib.translate[`${i}_info`] && !HL.pingjianban.includes(i) && infox.trigger) {
+                                const triggerx = infox?.trigger[namex];
+                                if (Array.isArray(triggerx)) {
+                                    return triggerx.includes(name);
+                                }
+                                return triggerx == name;
+                            }
+                        });
+                        return skills.length;
+                    },
+                    async content(event, trigger, player) {
+                        const namey = event.triggername;
+                        const skills = Object.keys(lib.skill).filter((i) => {
+                            const infox = lib.skill[i];
+                            if (lib.translate[`${i}_info`] && !HL.pingjianban.includes(i) && infox.trigger) {
+                                const triggerx = infox?.trigger[namex];
+                                if (Array.isArray(triggerx)) {
+                                    return triggerx.includes(namey);
+                                }
+                                return triggerx == namey;
+                            }
+                        });
+                        game.log(namex, namey);
+                        if (skills.length) {
+                            const list = skills.randomGets(3);
+                            const {
+                                result: { control },
+                            } = await player
+                                .chooseControl(list)
+                                .set(
+                                    'choiceList',
+                                    list.map(function (i) {
+                                        return `<div class='skill'><${get.translation(lib.translate[`${i}_ab`] || get.translation(i).slice(0, 2))}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
+                                    })
+                                )
+                                .set('displayIndex', false)
+                                .set('prompt', `评鉴·${namex}·${namey}:请选择发动的技能`);
+                            HL.pingjianban.push(control);
+                            const info = lib.skill[control];
+                            console.log(control, '评鉴');
+                            game.log(control);
+                            player.say(control);
+                            await game.delay(2);
+                            if (info.init) {
+                                info.init(player, control);
+                            }
+                            let indexedData, targets;
+                            if (typeof info.getIndex === 'function') {
+                                indexedData = info.getIndex(trigger, player, namey);
+                            }
+                            if (typeof info.logTarget === 'string') {
+                                targets = trigger[info.logTarget];
+                            } else if (typeof info.logTarget === 'function') {
+                                targets = info.logTarget(trigger, player, namey, indexedData);
+                            }
+                            if (get.itemtype(targets) === 'player') {
+                                targets = [targets];
+                            }
+                            if (!trigger.source) {
+                                trigger.source = player.getEnemies().randomGet();
+                            }
+                            if (!trigger.targets) {
+                                trigger.targets = player.getEnemies();
+                            } //QQQ
+                            if (!trigger.target) {
+                                trigger.target = trigger.targets[0];
+                            }
+                            if (!trigger.cards || !trigger.cards[0]) {
+                                trigger.cards = get.cards(3);
+                            }
+                            if (!trigger.card) {
+                                trigger.card = ui.cardPile.firstChild;
+                            }
+                            if (!trigger.num) {
+                                trigger.num = 1;
+                            }
+                            if (!trigger.skill) {
+                                trigger.skill = 'HL_pingjian';
+                            }
+                            if (!trigger.sourceSkill) {
+                                trigger.sourceSkill = 'HL_pingjian';
+                            }
+                            if (!trigger.respondTo || !trigger.respondTo[0]) {
+                                trigger.respondTo = [trigger.source, trigger.card];
+                            }
+                            const start = [];
+                            if (info.group) {
+                                if (Array.isArray(info.group)) {
+                                    start.addArray(info.group);
+                                } else {
+                                    start.push(info.group);
+                                }
+                            }
+                            start.push(control);
+                            for (const i of start) {
+                                const infox = lib.skill[i];
+                                if (!infox || !infox.trigger || !infox.trigger.player) continue;
+                                if (infox.trigger.player == 'enterGame' || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes('enterGame'))) {
+                                    game.log(i + '是游戏开始时技能');
+                                    if (typeof infox.cost === 'function') {
+                                        var next = game.createEvent(`${i}_cost`, false);
+                                        next.player = player;
+                                        next._trigger = _status.event;
+                                        next.skill = i;
+                                        const { result } = await next.setContent(infox.cost);
+                                        if (result && result.bool) {
+                                            var next = game.createEvent(i, false);
+                                            next.skill = i;
+                                            next.player = player;
+                                            next._trigger = _status.event;
+                                            if (result.targets && result.targets[0]) {
+                                                next.targets = result.targets;
+                                            }
+                                            if (result.cards) {
+                                                next.cards = result.cards;
+                                            }
+                                            if (result.cost_data) {
+                                                next.cost_data = result.cost_data;
+                                            }
+                                            await next.setContent(infox.content);
+                                        }
+                                    } else {
+                                        const next = game.createEvent(i, false);
+                                        next.skill = i;
+                                        next.player = player;
+                                        next._trigger = _status.event;
+                                        await next.setContent(infox.content);
+                                    }
+                                }
+                            }
+                            if (typeof info.cost === 'function') {
+                                var next = game.createEvent(`${control}_cost`);
+                                next.player = player;
+                                next._trigger = trigger;
+                                next.triggername = namey;
+                                next.skill = control;
+                                const { result } = await next.setContent(info.cost);
+                                if (result && result.bool) {
+                                    var next = game.createEvent(control, false);
+                                    if (targets) next.targets = targets;
+                                    next.skill = control;
+                                    next.player = player;
+                                    next._trigger = trigger;
+                                    next.triggername = namey;
+                                    if (result.targets && result.targets[0]) {
+                                        next.targets = result.targets;
+                                    }
+                                    if (result.cards) {
+                                        next.cards = result.cards;
+                                    }
+                                    if (result.cost_data) {
+                                        next.cost_data = result.cost_data;
+                                    }
+                                    if (!next.cards) {
+                                        next.cards = [ui.cardPile.firstChild];
+                                    }
+                                    if (!next.targets) {
+                                        next.targets = player.getEnemies();
+                                    }
+                                    if (!next.target) {
+                                        next.target = next.targets[0];
+                                    }
+                                    next.setContent(info.content);
+                                }
+                            } else {
+                                const next = game.createEvent(control, false);
+                                if (targets) {
+                                    next.targets = targets;
+                                }
+                                if (indexedData) {
+                                    next.indexedData = indexedData;
+                                }
+                                if (!next.cards) {
+                                    next.cards = [ui.cardPile.firstChild];
+                                }
+                                if (!next.targets) {
+                                    next.targets = player.getEnemies();
+                                }
+                                if (!next.target) {
+                                    next.target = next.targets[0];
+                                }
+                                next.skill = control;
+                                next.player = player;
+                                next._trigger = trigger;
+                                next.triggername = namey;
+                                next.setContent(info.content);
+                            }
+                        }
+                    },
+                    _priority: 20,
+                };
+            },
+            set() { },
+            configurable: false,
+        });
+    }
+    Reflect.defineProperty(lib.skill, 'HL_pingjian', {
         get() {
             return {
                 init(player) {
-                    player.pingjianban = [
-                        //卡死
-                        'ywuhun',
-                        'lsns_wuliang',
-                        //发动频率过高
-                        'xinfu_pdgyingshi',
-                        'clanguixiang',
-                        'qiaobian',
-                        'sbqiaobian',
-                        'rgxkuangcao',
-                        'Grand_chuanqi',
-                        'sksn_dieying',
-                        'white_gqliangyi',
-                        'xinzhizheng',
-                        //没标记或不满足条件
-                        'xingwu',
-                        'sbjieyin',
-                        'sbenyuan',
-                        'tiandan',
-                        'jsrgwuchang',
-                        'rehuashen',
-                        'huashen',
-                        'dccuixin',
-                        'jsrgzhengyi',
-                        'yijin',
-                        'tgtt_junzhu',
-                        'jiebing',
-                        'nzry_zhizheng',
-                        'dcjichou',
-                        'sksn_yinxian',
-                        'funie_chuli',
-                        'llbz_huanmeng',
-                        'llbz_huanhua',
-                        'llbz_enyuan',
-                        'North_dc_ziman',
-                        'sksn_jinian',
-                        'xx_zhipei',
-                        'wufei',
-                        'dczixi',
-                        'yjyongquan',
-                        'mbbojian',
-                        'leiyu',
-                        'dqzw_fuzhou',
-                        //负面技能
-                        'misuzu_hengzhou',
-                        'iwasawa_mysong',
-                        'yxs_menshen',
-                        'chengmou',
-                        'twbaobian',
-                        'boss_hunyou',
-                        'Grand_LausSaintClaudius',
-                        'sksn_jianyu',
-                        'sksn_wenshi',
-                        'DIY_chaoxi',
-                        'chuli_fuze_gain',
-                        'North_yhy_cihua',
-                        'haoshi',
-                        'olhaoshi',
-                        'sksn_yunjing',
-                        //火灵月影
-                        '评鉴',
-                        '阵亡',
-                        '贵相',
-                        '醉诗',
-                        '测试',
-                    ];
                     player.getExpansions = function () {
                         return get.cards(3);
                     };
@@ -836,995 +1085,7 @@ const kangxing2 = function () {
                         return card;
                     };
                 },
-                get trigger() {
-                    if (!game.triggerx) {
-                        const triggerq = {
-                            player: {},
-                            global: {},
-                            source: {},
-                            target: {},
-                        };
-                        for (const i in lib.skill) {
-                            const info = lib.skill[i];
-                            if (info.trigger && lib.translate[`${i}_info`]) {
-                                for (const j in info.trigger) {
-                                    const infox = info.trigger[j];
-                                    const infoq = triggerq[j];
-                                    if (infoq) {
-                                        if (Array.isArray(infox)) {
-                                            for (const x of infox) {
-                                                infoq[x] = numberq0(infoq[x]) + 1;
-                                            }
-                                        } else if (typeof infox == 'string') {
-                                            infoq[infox] = numberq0(infoq[infox]) + 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        for (const i in triggerq) {
-                            const info = triggerq[i];
-                            for (const j in info) {
-                                if (info[j] < 5) {
-                                    delete info[j];
-                                }
-                            }
-                        }
-                        game.triggerx = {
-                            player: Object.keys(triggerq.player).filter((q) => !['logSkill'].includes(q)),
-                            global: Object.keys(triggerq.global).filter((q) => !['logSkill'].includes(q)),
-                            source: Object.keys(triggerq.source).filter((q) => !['logSkill'].includes(q)),
-                            target: Object.keys(triggerq.target).filter((q) => !['logSkill'].includes(q)),
-                        };
-                    }
-                    return {
-                        player: game.triggerx.player,
-                    };
-                },
-                forced: true,
-                popup: false,
-                filter(event, player, name) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.player;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(name);
-                        }
-                        return triggerx == name;
-                    });
-                    return skills.length;
-                },
-                async content(event, trigger, player) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.player;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(event.triggername);
-                        }
-                        return triggerx == event.triggername;
-                    });
-                    game.log('player', event.triggername);
-                    if (skills.length) {
-                        const list = skills.randomGets(3);
-                        const {
-                            result: { control },
-                        } = await player
-                            .chooseControl(list)
-                            .set(
-                                'choiceList',
-                                list.map(function (i) {
-                                    return `<div class='skill'><${get.translation(lib.translate[`${i}_ab`] || get.translation(i).slice(0, 2))}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
-                                })
-                            )
-                            .set('displayIndex', false)
-                            .set('prompt', '评鉴:请选择发动的技能');
-                        player.pingjianban.push(control);
-                        const info = lib.skill[control];
-                        console.log(control, '评鉴');
-                        game.log(control);
-                        player.say(control);
-                        await game.delay(2);
-                        if (info.init) {
-                            info.init(player, control);
-                        }
-                        let indexedData, targets;
-                        if (typeof info.getIndex === 'function') {
-                            indexedData = info.getIndex(trigger, player, event.triggername);
-                        }
-                        if (typeof info.logTarget === 'string') {
-                            targets = trigger[info.logTarget];
-                        } else if (typeof info.logTarget === 'function') {
-                            targets = info.logTarget(trigger, player, event.triggername, indexedData);
-                        }
-                        if (get.itemtype(targets) === 'player') {
-                            targets = [targets];
-                        }
-                        if (!trigger.source) {
-                            trigger.source = player.getEnemies().randomGet();
-                        }
-                        if (!trigger.targets) {
-                            trigger.targets = player.getEnemies();
-                        } //QQQ
-                        if (!trigger.target) {
-                            trigger.target = trigger.targets[0];
-                        }
-                        if (!trigger.cards || !trigger.cards[0]) {
-                            trigger.cards = get.cards(3);
-                        }
-                        if (!trigger.card) {
-                            trigger.card = ui.cardPile.firstChild;
-                        }
-                        if (!trigger.num) {
-                            trigger.num = 1;
-                        }
-                        if (!trigger.skill) {
-                            trigger.skill = '评鉴';
-                        }
-                        if (!trigger.sourceSkill) {
-                            trigger.sourceSkill = '评鉴';
-                        }
-                        if (!trigger.respondTo || !trigger.respondTo[0]) {
-                            trigger.respondTo = [trigger.source, trigger.card];
-                        }
-                        const start = [];
-                        if (info.group) {
-                            if (Array.isArray(info.group)) {
-                                start.addArray(info.group);
-                            } else {
-                                start.push(info.group);
-                            }
-                        }
-                        start.push(control);
-                        for (const i of start) {
-                            const infox = lib.skill[i];
-                            if (!infox || !infox.trigger || !infox.trigger.player) continue;
-                            if (infox.trigger.player == 'enterGame' || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes('enterGame'))) {
-                                game.log(i + '是游戏开始时技能');
-                                if (typeof infox.cost === 'function') {
-                                    var next = game.createEvent(`${i}_cost`, false);
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    next.skill = i;
-                                    const { result } = await next.setContent(infox.cost);
-                                    if (result && result.bool) {
-                                        var next = game.createEvent(i, false);
-                                        next.skill = i;
-                                        next.player = player;
-                                        next._trigger = _status.event;
-                                        if (result.targets && result.targets[0]) {
-                                            next.targets = result.targets;
-                                        }
-                                        if (result.cards) {
-                                            next.cards = result.cards;
-                                        }
-                                        if (result.cost_data) {
-                                            next.cost_data = result.cost_data;
-                                        }
-                                        await next.setContent(infox.content);
-                                    }
-                                } else {
-                                    const next = game.createEvent(i, false);
-                                    next.skill = i;
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    await next.setContent(infox.content);
-                                }
-                            }
-                        }
-                        if (typeof info.cost === 'function') {
-                            var next = game.createEvent(`${control}_cost`);
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.skill = control;
-                            const { result } = await next.setContent(info.cost);
-                            if (result && result.bool) {
-                                var next = game.createEvent(control, false);
-                                if (targets) next.targets = targets;
-                                next.skill = control;
-                                next.player = player;
-                                next._trigger = trigger;
-                                next.triggername = event.triggername;
-                                if (result.targets && result.targets[0]) {
-                                    next.targets = result.targets;
-                                }
-                                if (result.cards) {
-                                    next.cards = result.cards;
-                                }
-                                if (result.cost_data) {
-                                    next.cost_data = result.cost_data;
-                                }
-                                if (!next.cards) {
-                                    next.cards = [ui.cardPile.firstChild];
-                                }
-                                if (!next.targets) {
-                                    next.targets = player.getEnemies();
-                                }
-                                if (!next.target) {
-                                    next.target = next.targets[0];
-                                }
-                                next.setContent(info.content);
-                            }
-                        } else {
-                            const next = game.createEvent(control, false);
-                            if (targets) {
-                                next.targets = targets;
-                            }
-                            if (indexedData) {
-                                next.indexedData = indexedData;
-                            }
-                            if (!next.cards) {
-                                next.cards = [ui.cardPile.firstChild];
-                            }
-                            if (!next.targets) {
-                                next.targets = player.getEnemies();
-                            }
-                            if (!next.target) {
-                                next.target = next.targets[0];
-                            }
-                            next.skill = control;
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.setContent(info.content);
-                        }
-                    }
-                },
-                group: ['bossfinish', '评鉴_target', '评鉴_source', '评鉴_global'],
-                _priority: 20,
-            };
-        },
-        set() { },
-        configurable: false,
-    });
-    Reflect.defineProperty(lib.skill, '评鉴_target', {
-        get() {
-            return {
-                get trigger() {
-                    if (!game.triggerx) {
-                        const triggerq = {
-                            player: {},
-                            global: {},
-                            source: {},
-                            target: {},
-                        };
-                        for (const i in lib.skill) {
-                            const info = lib.skill[i];
-                            if (info.trigger && lib.translate[`${i}_info`]) {
-                                for (const j in info.trigger) {
-                                    const infox = info.trigger[j];
-                                    const infoq = triggerq[j];
-                                    if (infoq) {
-                                        if (Array.isArray(infox)) {
-                                            for (const x of infox) {
-                                                infoq[x] = numberq0(infoq[x]) + 1;
-                                            }
-                                        } else if (typeof infox == 'string') {
-                                            infoq[infox] = numberq0(infoq[infox]) + 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        for (const i in triggerq) {
-                            const info = triggerq[i];
-                            for (const j in info) {
-                                if (info[j] < 5) {
-                                    delete info[j];
-                                }
-                            }
-                        }
-                        game.triggerx = {
-                            player: Object.keys(triggerq.player).filter((q) => !['logSkill'].includes(q)),
-                            global: Object.keys(triggerq.global).filter((q) => !['logSkill'].includes(q)),
-                            source: Object.keys(triggerq.source).filter((q) => !['logSkill'].includes(q)),
-                            target: Object.keys(triggerq.target).filter((q) => !['logSkill'].includes(q)),
-                        };
-                    }
-                    return {
-                        target: game.triggerx.target,
-                    };
-                },
-                forced: true,
-                popup: false,
-                filter(event, player, name) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.target;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(name);
-                        }
-                        return triggerx == name;
-                    });
-                    return skills.length;
-                },
-                async content(event, trigger, player) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.target;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(event.triggername);
-                        }
-                        return triggerx == event.triggername;
-                    });
-                    game.log('target', event.triggername);
-                    if (skills.length) {
-                        const list = skills.randomGets(3);
-                        const {
-                            result: { control },
-                        } = await player
-                            .chooseControl(list)
-                            .set(
-                                'choiceList',
-                                list.map(function (i) {
-                                    return `<div class='skill'><${get.translation(lib.translate[`${i}_ab`] || get.translation(i).slice(0, 2))}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
-                                })
-                            )
-                            .set('displayIndex', false)
-                            .set('prompt', '评鉴:请选择发动的技能');
-                        player.pingjianban.push(control);
-                        const info = lib.skill[control];
-                        console.log(control, '评鉴');
-                        game.log(control);
-                        player.say(control);
-                        await game.delay(2);
-                        if (info.init) {
-                            info.init(player, control);
-                        }
-                        let indexedData, targets;
-                        if (typeof info.getIndex === 'function') {
-                            indexedData = info.getIndex(trigger, player, event.triggername);
-                        }
-                        if (typeof info.logTarget === 'string') {
-                            targets = trigger[info.logTarget];
-                        } else if (typeof info.logTarget === 'function') {
-                            targets = info.logTarget(trigger, player, event.triggername, indexedData);
-                        }
-                        if (get.itemtype(targets) === 'player') {
-                            targets = [targets];
-                        }
-                        if (!trigger.source) {
-                            trigger.source = player.getEnemies().randomGet();
-                        }
-                        if (!trigger.targets) {
-                            trigger.targets = player.getEnemies();
-                        } //QQQ
-                        if (!trigger.target) {
-                            trigger.target = trigger.targets[0];
-                        }
-                        if (!trigger.cards || !trigger.cards[0]) {
-                            trigger.cards = get.cards(3);
-                        }
-                        if (!trigger.card) {
-                            trigger.card = ui.cardPile.firstChild;
-                        }
-                        if (!trigger.num) {
-                            trigger.num = 1;
-                        }
-                        if (!trigger.skill) {
-                            trigger.skill = '评鉴';
-                        }
-                        if (!trigger.sourceSkill) {
-                            trigger.sourceSkill = '评鉴';
-                        }
-                        if (!trigger.respondTo || !trigger.respondTo[0]) {
-                            trigger.respondTo = [trigger.source, trigger.card];
-                        }
-                        const start = [];
-                        if (info.group) {
-                            if (Array.isArray(info.group)) {
-                                start.addArray(info.group);
-                            } else {
-                                start.push(info.group);
-                            }
-                        }
-                        start.push(control);
-                        for (const i of start) {
-                            const infox = lib.skill[i];
-                            if (!infox || !infox.trigger || !infox.trigger.player) continue;
-                            if (infox.trigger.player == 'enterGame' || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes('enterGame'))) {
-                                game.log(i + '是游戏开始时技能');
-                                if (typeof infox.cost === 'function') {
-                                    var next = game.createEvent(`${i}_cost`, false);
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    next.skill = i;
-                                    const { result } = await next.setContent(infox.cost);
-                                    if (result && result.bool) {
-                                        var next = game.createEvent(i, false);
-                                        next.skill = i;
-                                        next.player = player;
-                                        next._trigger = _status.event;
-                                        if (result.targets && result.targets[0]) {
-                                            next.targets = result.targets;
-                                        }
-                                        if (result.cards) {
-                                            next.cards = result.cards;
-                                        }
-                                        if (result.cost_data) {
-                                            next.cost_data = result.cost_data;
-                                        }
-                                        await next.setContent(infox.content);
-                                    }
-                                } else {
-                                    const next = game.createEvent(i, false);
-                                    next.skill = i;
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    await next.setContent(infox.content);
-                                }
-                            }
-                        }
-                        if (typeof info.cost === 'function') {
-                            var next = game.createEvent(`${control}_cost`);
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.skill = control;
-                            const { result } = await next.setContent(info.cost);
-                            if (result && result.bool) {
-                                var next = game.createEvent(control, false);
-                                if (targets) next.targets = targets;
-                                next.skill = control;
-                                next.player = player;
-                                next._trigger = trigger;
-                                next.triggername = event.triggername;
-                                if (result.targets && result.targets[0]) {
-                                    next.targets = result.targets;
-                                }
-                                if (result.cards) {
-                                    next.cards = result.cards;
-                                }
-                                if (result.cost_data) {
-                                    next.cost_data = result.cost_data;
-                                }
-                                if (!next.cards) {
-                                    next.cards = [ui.cardPile.firstChild];
-                                }
-                                if (!next.targets) {
-                                    next.targets = player.getEnemies();
-                                }
-                                if (!next.target) {
-                                    next.target = next.targets[0];
-                                }
-                                next.setContent(info.content);
-                            }
-                        } else {
-                            const next = game.createEvent(control, false);
-                            if (targets) {
-                                next.targets = targets;
-                            }
-                            if (indexedData) {
-                                next.indexedData = indexedData;
-                            }
-                            if (!next.cards) {
-                                next.cards = [ui.cardPile.firstChild];
-                            }
-                            if (!next.targets) {
-                                next.targets = player.getEnemies();
-                            }
-                            if (!next.target) {
-                                next.target = next.targets[0];
-                            }
-                            next.skill = control;
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.setContent(info.content);
-                        }
-                    }
-                },
-                _priority: 21,
-            };
-        },
-        set() { },
-        configurable: false,
-    });
-    Reflect.defineProperty(lib.skill, '评鉴_global', {
-        get() {
-            return {
-                get trigger() {
-                    if (!game.triggerx) {
-                        const triggerq = {
-                            player: {},
-                            global: {},
-                            source: {},
-                            target: {},
-                        };
-                        for (const i in lib.skill) {
-                            const info = lib.skill[i];
-                            if (info.trigger && lib.translate[`${i}_info`]) {
-                                for (const j in info.trigger) {
-                                    const infox = info.trigger[j];
-                                    const infoq = triggerq[j];
-                                    if (infoq) {
-                                        if (Array.isArray(infox)) {
-                                            for (const x of infox) {
-                                                infoq[x] = numberq0(infoq[x]) + 1;
-                                            }
-                                        } else if (typeof infox == 'string') {
-                                            infoq[infox] = numberq0(infoq[infox]) + 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        for (const i in triggerq) {
-                            const info = triggerq[i];
-                            for (const j in info) {
-                                if (info[j] < 5) {
-                                    delete info[j];
-                                }
-                            }
-                        }
-                        game.triggerx = {
-                            player: Object.keys(triggerq.player).filter((q) => !['logSkill'].includes(q)),
-                            global: Object.keys(triggerq.global).filter((q) => !['logSkill'].includes(q)),
-                            source: Object.keys(triggerq.source).filter((q) => !['logSkill'].includes(q)),
-                            target: Object.keys(triggerq.target).filter((q) => !['logSkill'].includes(q)),
-                        };
-                    }
-                    return {
-                        global: game.triggerx.global,
-                    };
-                },
-                forced: true,
-                popup: false,
-                filter(event, player, name) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.global;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(name);
-                        }
-                        return triggerx == name;
-                    });
-                    return skills.length;
-                },
-                async content(event, trigger, player) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.global;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(event.triggername);
-                        }
-                        return triggerx == event.triggername;
-                    });
-                    game.log('global', event.triggername);
-                    if (skills.length) {
-                        const list = skills.randomGets(3);
-                        const {
-                            result: { control },
-                        } = await player
-                            .chooseControl(list)
-                            .set(
-                                'choiceList',
-                                list.map(function (i) {
-                                    return `<div class='skill'><${get.translation(lib.translate[`${i}_ab`] || get.translation(i).slice(0, 2))}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
-                                })
-                            )
-                            .set('displayIndex', false)
-                            .set('prompt', '评鉴:请选择发动的技能');
-                        player.pingjianban.push(control);
-                        const info = lib.skill[control];
-                        console.log(control, '评鉴');
-                        game.log(control);
-                        player.say(control);
-                        await game.delay(2);
-                        if (info.init) {
-                            info.init(player, control);
-                        }
-                        let indexedData, targets;
-                        if (typeof info.getIndex === 'function') {
-                            indexedData = info.getIndex(trigger, player, event.triggername);
-                        }
-                        if (typeof info.logTarget === 'string') {
-                            targets = trigger[info.logTarget];
-                        } else if (typeof info.logTarget === 'function') {
-                            targets = info.logTarget(trigger, player, event.triggername, indexedData);
-                        }
-                        if (get.itemtype(targets) === 'player') {
-                            targets = [targets];
-                        }
-                        if (!trigger.source) {
-                            trigger.source = player.getEnemies().randomGet();
-                        }
-                        if (!trigger.targets) {
-                            trigger.targets = player.getEnemies();
-                        } //QQQ
-                        if (!trigger.target) {
-                            trigger.target = trigger.targets[0];
-                        }
-                        if (!trigger.cards || !trigger.cards[0]) {
-                            trigger.cards = get.cards(3);
-                        }
-                        if (!trigger.card) {
-                            trigger.card = ui.cardPile.firstChild;
-                        }
-                        if (!trigger.num) {
-                            trigger.num = 1;
-                        }
-                        if (!trigger.skill) {
-                            trigger.skill = '评鉴';
-                        }
-                        if (!trigger.sourceSkill) {
-                            trigger.sourceSkill = '评鉴';
-                        }
-                        if (!trigger.respondTo || !trigger.respondTo[0]) {
-                            trigger.respondTo = [trigger.source, trigger.card];
-                        }
-                        const start = [];
-                        if (info.group) {
-                            if (Array.isArray(info.group)) {
-                                start.addArray(info.group);
-                            } else {
-                                start.push(info.group);
-                            }
-                        }
-                        start.push(control);
-                        for (const i of start) {
-                            const infox = lib.skill[i];
-                            if (!infox || !infox.trigger || !infox.trigger.player) continue;
-                            if (infox.trigger.player == 'enterGame' || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes('enterGame'))) {
-                                game.log(i + '是游戏开始时技能');
-                                if (typeof infox.cost === 'function') {
-                                    var next = game.createEvent(`${i}_cost`, false);
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    next.skill = i;
-                                    const { result } = await next.setContent(infox.cost);
-                                    if (result && result.bool) {
-                                        var next = game.createEvent(i, false);
-                                        next.skill = i;
-                                        next.player = player;
-                                        next._trigger = _status.event;
-                                        if (result.targets && result.targets[0]) {
-                                            next.targets = result.targets;
-                                        }
-                                        if (result.cards) {
-                                            next.cards = result.cards;
-                                        }
-                                        if (result.cost_data) {
-                                            next.cost_data = result.cost_data;
-                                        }
-                                        await next.setContent(infox.content);
-                                    }
-                                } else {
-                                    const next = game.createEvent(i, false);
-                                    next.skill = i;
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    await next.setContent(infox.content);
-                                }
-                            }
-                        }
-                        if (typeof info.cost === 'function') {
-                            var next = game.createEvent(`${control}_cost`);
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.skill = control;
-                            const { result } = await next.setContent(info.cost);
-                            if (result && result.bool) {
-                                var next = game.createEvent(control, false);
-                                if (targets) next.targets = targets;
-                                next.skill = control;
-                                next.player = player;
-                                next._trigger = trigger;
-                                next.triggername = event.triggername;
-                                if (result.targets && result.targets[0]) {
-                                    next.targets = result.targets;
-                                }
-                                if (result.cards) {
-                                    next.cards = result.cards;
-                                }
-                                if (result.cost_data) {
-                                    next.cost_data = result.cost_data;
-                                }
-                                if (!next.cards) {
-                                    next.cards = [ui.cardPile.firstChild];
-                                }
-                                if (!next.targets) {
-                                    next.targets = player.getEnemies();
-                                }
-                                if (!next.target) {
-                                    next.target = next.targets[0];
-                                }
-                                next.setContent(info.content);
-                            }
-                        } else {
-                            const next = game.createEvent(control, false);
-                            if (targets) {
-                                next.targets = targets;
-                            }
-                            if (indexedData) {
-                                next.indexedData = indexedData;
-                            }
-                            if (!next.cards) {
-                                next.cards = [ui.cardPile.firstChild];
-                            }
-                            if (!next.targets) {
-                                next.targets = player.getEnemies();
-                            }
-                            if (!next.target) {
-                                next.target = next.targets[0];
-                            }
-                            next.skill = control;
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.setContent(info.content);
-                        }
-                    }
-                },
-                _priority: 21,
-            };
-        },
-        set() { },
-        configurable: false,
-    });
-    Reflect.defineProperty(lib.skill, '评鉴_source', {
-        get() {
-            return {
-                get trigger() {
-                    if (!game.triggerx) {
-                        const triggerq = {
-                            player: {},
-                            global: {},
-                            source: {},
-                            target: {},
-                        };
-                        for (const i in lib.skill) {
-                            const info = lib.skill[i];
-                            if (info.trigger && lib.translate[`${i}_info`]) {
-                                for (const j in info.trigger) {
-                                    const infox = info.trigger[j];
-                                    const infoq = triggerq[j];
-                                    if (infoq) {
-                                        if (Array.isArray(infox)) {
-                                            for (const x of infox) {
-                                                infoq[x] = numberq0(infoq[x]) + 1;
-                                            }
-                                        } else if (typeof infox == 'string') {
-                                            infoq[infox] = numberq0(infoq[infox]) + 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        for (const i in triggerq) {
-                            const info = triggerq[i];
-                            for (const j in info) {
-                                if (info[j] < 5) {
-                                    delete info[j];
-                                }
-                            }
-                        }
-                        game.triggerx = {
-                            player: Object.keys(triggerq.player).filter((q) => !['logSkill'].includes(q)),
-                            global: Object.keys(triggerq.global).filter((q) => !['logSkill'].includes(q)),
-                            source: Object.keys(triggerq.source).filter((q) => !['logSkill'].includes(q)),
-                            target: Object.keys(triggerq.target).filter((q) => !['logSkill'].includes(q)),
-                        };
-                    }
-                    return {
-                        source: game.triggerx.source,
-                    };
-                },
-                forced: true,
-                popup: false,
-                filter(event, player, name) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.source;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(name);
-                        }
-                        return triggerx == name;
-                    });
-                    return skills.length;
-                },
-                async content(event, trigger, player) {
-                    const skills = Object.keys(lib.skill).filter((i) => {
-                        const infox = lib.skill[i];
-                        if (!lib.translate[`${i}_info`] || player.pingjianban.includes(i)) {
-                            return false;
-                        }
-                        const triggerx = infox?.trigger?.source;
-                        if (Array.isArray(triggerx)) {
-                            return triggerx.includes(event.triggername);
-                        }
-                        return triggerx == event.triggername;
-                    });
-                    game.log('source', event.triggername);
-                    if (skills.length) {
-                        const list = skills.randomGets(3);
-                        const {
-                            result: { control },
-                        } = await player
-                            .chooseControl(list)
-                            .set(
-                                'choiceList',
-                                list.map(function (i) {
-                                    return `<div class='skill'><${get.translation(lib.translate[`${i}_ab`] || get.translation(i).slice(0, 2))}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
-                                })
-                            )
-                            .set('displayIndex', false)
-                            .set('prompt', '评鉴:请选择发动的技能');
-                        player.pingjianban.push(control);
-                        const info = lib.skill[control];
-                        console.log(control, '评鉴');
-                        game.log(control);
-                        player.say(control);
-                        await game.delay(2);
-                        if (info.init) {
-                            info.init(player, control);
-                        }
-                        let indexedData, targets;
-                        if (typeof info.getIndex === 'function') {
-                            indexedData = info.getIndex(trigger, player, event.triggername);
-                        }
-                        if (typeof info.logTarget === 'string') {
-                            targets = trigger[info.logTarget];
-                        } else if (typeof info.logTarget === 'function') {
-                            targets = info.logTarget(trigger, player, event.triggername, indexedData);
-                        }
-                        if (get.itemtype(targets) === 'player') {
-                            targets = [targets];
-                        }
-                        if (!trigger.source) {
-                            trigger.source = player.getEnemies().randomGet();
-                        }
-                        if (!trigger.targets) {
-                            trigger.targets = player.getEnemies();
-                        } //QQQ
-                        if (!trigger.target) {
-                            trigger.target = trigger.targets[0];
-                        }
-                        if (!trigger.cards || !trigger.cards[0]) {
-                            trigger.cards = get.cards(3);
-                        }
-                        if (!trigger.card) {
-                            trigger.card = ui.cardPile.firstChild;
-                        }
-                        if (!trigger.num) {
-                            trigger.num = 1;
-                        }
-                        if (!trigger.skill) {
-                            trigger.skill = '评鉴';
-                        }
-                        if (!trigger.sourceSkill) {
-                            trigger.sourceSkill = '评鉴';
-                        }
-                        if (!trigger.respondTo || !trigger.respondTo[0]) {
-                            trigger.respondTo = [trigger.source, trigger.card];
-                        }
-                        const start = [];
-                        if (info.group) {
-                            if (Array.isArray(info.group)) {
-                                start.addArray(info.group);
-                            } else {
-                                start.push(info.group);
-                            }
-                        }
-                        start.push(control);
-                        for (const i of start) {
-                            const infox = lib.skill[i];
-                            if (!infox || !infox.trigger || !infox.trigger.player) continue;
-                            if (infox.trigger.player == 'enterGame' || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes('enterGame'))) {
-                                game.log(i + '是游戏开始时技能');
-                                if (typeof infox.cost === 'function') {
-                                    var next = game.createEvent(`${i}_cost`, false);
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    next.skill = i;
-                                    const { result } = await next.setContent(infox.cost);
-                                    if (result && result.bool) {
-                                        var next = game.createEvent(i, false);
-                                        next.skill = i;
-                                        next.player = player;
-                                        next._trigger = _status.event;
-                                        if (result.targets && result.targets[0]) {
-                                            next.targets = result.targets;
-                                        }
-                                        if (result.cards) {
-                                            next.cards = result.cards;
-                                        }
-                                        if (result.cost_data) {
-                                            next.cost_data = result.cost_data;
-                                        }
-                                        await next.setContent(infox.content);
-                                    }
-                                } else {
-                                    const next = game.createEvent(i, false);
-                                    next.skill = i;
-                                    next.player = player;
-                                    next._trigger = _status.event;
-                                    await next.setContent(infox.content);
-                                }
-                            }
-                        }
-                        if (typeof info.cost === 'function') {
-                            var next = game.createEvent(`${control}_cost`);
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.skill = control;
-                            const { result } = await next.setContent(info.cost);
-                            if (result && result.bool) {
-                                var next = game.createEvent(control, false);
-                                if (targets) next.targets = targets;
-                                next.skill = control;
-                                next.player = player;
-                                next._trigger = trigger;
-                                next.triggername = event.triggername;
-                                if (result.targets && result.targets[0]) {
-                                    next.targets = result.targets;
-                                }
-                                if (result.cards) {
-                                    next.cards = result.cards;
-                                }
-                                if (result.cost_data) {
-                                    next.cost_data = result.cost_data;
-                                }
-                                if (!next.cards) {
-                                    next.cards = [ui.cardPile.firstChild];
-                                }
-                                if (!next.targets) {
-                                    next.targets = player.getEnemies();
-                                }
-                                if (!next.target) {
-                                    next.target = next.targets[0];
-                                }
-                                next.setContent(info.content);
-                            }
-                        } else {
-                            const next = game.createEvent(control, false);
-                            if (targets) {
-                                next.targets = targets;
-                            }
-                            if (indexedData) {
-                                next.indexedData = indexedData;
-                            }
-                            if (!next.cards) {
-                                next.cards = [ui.cardPile.firstChild];
-                            }
-                            if (!next.targets) {
-                                next.targets = player.getEnemies();
-                            }
-                            if (!next.target) {
-                                next.target = next.targets[0];
-                            }
-                            next.skill = control;
-                            next.player = player;
-                            next._trigger = trigger;
-                            next.triggername = event.triggername;
-                            next.setContent(info.content);
-                        }
-                    }
-                },
-                _priority: 21,
+                group: ['bossfinish', 'HL_pingjian_player', 'HL_pingjian_target', 'HL_pingjian_source', 'HL_pingjian_global'],
             };
         },
         set() { },
@@ -3396,7 +2657,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         HL_许劭: {
                             sex: 'male',
-                            skills: ['评鉴'],
+                            skills: ['HL_pingjian'],
                             isBoss: true,
                             isBossAllowed: true,
                             trashBin: [`ext:火灵月影/mp4/HL_许劭.mp4`],
@@ -3623,7 +2884,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         } else {
                                             if (player.success && !player.wudi) {
                                                 qhp = value;
-                                                if (qhp < 500 && !player.wudix) {
+                                                if (qhp < (maxhp / 2) && !player.wudix) {
                                                     player.wudi = true;
                                                     player.wudix = true; //防止多次发动
                                                 }
@@ -6337,7 +5598,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return ['fire', 'thunder', undefined].includes(event.nature);
                             },
                             forced: true,
-                            HL_ignore: ['_HL_shaoshang'],
                             content() {
                                 if (trigger.nature == 'fire') trigger.cancel();
                                 else {
@@ -6352,6 +5612,32 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (get.tag(card, 'fireDamage')) return [0, 2];
                                         if (get.tag(card, 'thunderDamage')) return [0, 1.5];
                                     },
+                                },
+                            },
+                        },
+                        _HL_shaoshang: {
+                            trigger: {
+                                player: ['phaseJieshuEnd'],
+                            },
+                            filter(event, player) {
+                                return player.countMark('_HL_shaoshang') > 0;
+                            },
+                            async content(event, trigger, player) {
+                                player.damage(player.countMark('_HL_shaoshang'), 'fire', 'nosource');
+                                player.removeMark('_HL_shaoshang', Math.ceil(player.countMark('_HL_shaoshang') / 2));
+                            },
+                            forced: true,
+                            charlotte: true,
+                            marktext: '烧伤',
+                            intro: {
+                                name: '烧伤',
+                                content(storage, player, skill) {
+                                    return '<li>你的手牌上限-' + storage + ';<br><li>结束阶段,你受到' + storage + '点无来源的火属性伤害并减少一半此标记(向上取整)';
+                                },
+                            },
+                            mod: {
+                                maxHandcard(player, num) {
+                                    return num - player.countMark('_HL_shaoshang');
                                 },
                             },
                         },
@@ -6615,7 +5901,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_pulaomingzhong: '蒲牢鸣钟',
                         HL_pulaomingzhong_info: '①当你弃置牌后,你令场上所有敌方角色弃置一张牌;当任意角色弃置牌后,其获得一枚烧伤标记;②体力流失对你无效;③当你的手牌数大于20后,你将手牌弃置20张.',
                         HL_gongfubishui: '蚣蝮避水',
-                        HL_gongfubishui_info: '①当你受到伤害时,若此伤害为火属性,则此伤害对你无效;若此伤害不为冰属性,则此伤害减一,你回复一点体力值(若你的体力值已达上限,则改为你获得一点护甲值);②你免疫〖烧伤〗效果.',
+                        HL_gongfubishui_info: '当你受到伤害时,若此伤害为火属性,则此伤害对你无效;若此伤害不为冰属性,则此伤害减一,你回复一点体力值(若你的体力值已达上限,则改为你获得一点护甲值)',
                         HL_shaoEGO: '邵E·G·O',
                         HL_shaoEGO_info: '你每使用或打出一张牌/造成一次伤害,获得一枚/三枚『情感』标记(上限为15);你每拥有三枚此标记,你使用杀的次数+1.',
                         HL_shaoEGO_1: '邵E.G.O',
@@ -6776,8 +6062,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         醉诗_info: '每回合限两次,每轮开始/体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,你随机使用弃牌堆或处理区中一张伤害牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————许劭
                         HL_许劭: '许劭',
-                        评鉴: '评鉴',
-                        评鉴_info: '在很多时机,你都可以尝试运行一个对应时机技能的content',
+                        HL_pingjian: '评鉴',
+                        HL_pingjian_info: '在很多时机,你都可以尝试运行一个对应时机技能的content',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————神之無雙
                         HL_ws: '神之無雙',
                         HL_ws_info: '神之無雙挑战模式<br>1.此模式有四个boss(無雙飞将/镇关魔将/焚城魔士/乱武毒士),每阶段抽取阶段数的boss登场,且boss按阶段解锁技能<br>2.boss体力值大于0时拒绝死亡,免疫除受伤害外扣减体力值,免疫翻面横置与移除,免疫扣减体力上限',
