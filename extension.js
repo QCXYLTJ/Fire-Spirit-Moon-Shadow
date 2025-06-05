@@ -757,46 +757,6 @@ const kangxing2 = function () {
         set() { },
         configurable: false,
     });
-    lib.onfree.push(function () {
-        const triggerq = {
-            player: {},
-            global: {},
-            source: {},
-            target: {},
-        };
-        for (const i in lib.skill) {
-            const info = lib.skill[i];
-            if (info.trigger && lib.translate[`${i}_info`]) {
-                for (const j in info.trigger) {
-                    const infox = info.trigger[j];
-                    const infoq = triggerq[j];
-                    if (infoq) {
-                        if (Array.isArray(infox)) {
-                            for (const x of infox) {
-                                infoq[x] = numberq0(infoq[x]) + 1;
-                            }
-                        } else if (typeof infox == 'string') {
-                            infoq[infox] = numberq0(infoq[infox]) + 1;
-                        }
-                    }
-                }
-            }
-        }
-        for (const target in triggerq) {
-            const info = triggerq[target];
-            for (const name in info) {
-                if (info[name] < 5 || ['gain', 'lose'].some((t) => name.includes(t))) {
-                    delete info[name];
-                }
-            }
-        }
-        game.triggerx = {
-            player: Object.keys(triggerq.player).filter((q) => !['logSkill'].includes(q)),
-            global: Object.keys(triggerq.global).filter((q) => !['logSkill'].includes(q)),
-            source: Object.keys(triggerq.source).filter((q) => !['logSkill'].includes(q)),
-            target: Object.keys(triggerq.target).filter((q) => !['logSkill'].includes(q)),
-        };
-    }); //需要晚的时机的
     HL.pingjianban = [
         //卡死
         'ywuhun',
@@ -868,8 +828,50 @@ const kangxing2 = function () {
         Reflect.defineProperty(lib.skill, `HL_pingjian_${namex}`, {
             get() {
                 return {
-                    trigger: {
-                        [namex]: game.triggerx[namex],
+                    get trigger() {
+                        if (!game.triggerlist) {
+                            const triggerlist = {
+                                player: {},
+                                global: {},
+                                source: {},
+                                target: {},
+                            };
+                            for (const i in lib.skill) {
+                                const info = lib.skill[i];
+                                if (info.trigger && lib.translate[`${i}_info`]) {
+                                    for (const j in info.trigger) {
+                                        const trigger1 = info.trigger[j];
+                                        const trigger2 = triggerlist[j];
+                                        if (trigger2) {
+                                            if (Array.isArray(trigger1)) {
+                                                for (const x of trigger1) {
+                                                    trigger2[x] = numberq0(trigger2[x]) + 1;
+                                                }
+                                            } else if (typeof trigger1 == 'string') {
+                                                trigger2[trigger1] = numberq0(trigger2[trigger1]) + 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            for (const target in triggerlist) {
+                                const info = triggerlist[target];
+                                for (const name in info) {
+                                    if (info[name] < 5 || ['gain', 'lose'].some((t) => name.includes(t))) {
+                                        delete info[name];
+                                    }
+                                }
+                            }
+                            game.triggerlist = {
+                                player: Object.keys(triggerlist.player).filter((q) => !['logSkill'].includes(q)),
+                                global: Object.keys(triggerlist.global).filter((q) => !['logSkill'].includes(q)),
+                                source: Object.keys(triggerlist.source).filter((q) => !['logSkill'].includes(q)),
+                                target: Object.keys(triggerlist.target).filter((q) => !['logSkill'].includes(q)),
+                            };
+                        }
+                        return {
+                            [namex]: game.triggerlist[namex],
+                        };
                     },
                     forced: true,
                     popup: false,
