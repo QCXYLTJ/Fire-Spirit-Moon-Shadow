@@ -1447,7 +1447,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }
                 return this;
             }; //引入mp4新逻辑
-            HTMLElement.prototype.setBackgroundMp4 = function (src) {
+            HTMLDivElement.prototype.setBackgroundMp4 = function (src) {
                 const video = document.createElement('video');
                 video.src = src;
                 video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
@@ -1459,7 +1459,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 });
                 return video;
             }; //给父元素添加一个覆盖的背景mp4
-            HTMLElement.prototype.HL_BG = function (name) {
+            HTMLDivElement.prototype.HL_BG = function (name) {
                 const src = `extension/火灵月影/mp4/${name}.mp4`;
                 const video = this.setBackgroundMp4(src);
                 return video;
@@ -2651,12 +2651,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     connect: true,
                     character: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————BOSS
-                        HL_李白: {
-                            sex: 'male',
-                            skills: ['醉诗'],
-                            isBoss: true,
-                            isBossAllowed: true,
-                        },
                         HL_许劭: {
                             sex: 'male',
                             skills: ['HL_pingjian'],
@@ -2704,7 +2698,41 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             isBoss: true,
                             isBossAllowed: true,
                         },
+                        HL_libai_boss: {
+                            sex: 'male',
+                            skills: ['HL_libai_bossjieshao'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————普通
+                        HL_libai1: {
+                            sex: 'male',
+                            skills: ['HL_baiyujing', 'HL_manhuying', 'HL_shibusha', 'HL_wurenzhi'],
+                            hp: 3,
+                            maxHp: 3,
+                        },
+                        HL_libai2: {
+                            sex: 'male',
+                            skills: ['HL_baiyujing', 'HL_manhuying', 'HL_shibusha', 'HL_xujinhuan', 'HL_kongduiyue'],
+                            hp: 6,
+                            maxHp: 6,
+                        },
+                        HL_libai3: {
+                            sex: 'male',
+                            skills: ['HL_baiyujing', 'HL_manhuying', 'HL_shibusha', 'HL_xinglunan', 'HL_duoqilu', 'HL_changfengpolang'],
+                            hp: 9,
+                            maxHp: 9,
+                        },
+                        HL_libai4: {
+                            sex: 'male',
+                            skills: ['HL_baiyujing', 'HL_manhuying', 'HL_shibusha', 'HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'],
+                            hp: 12,
+                            maxHp: 12,
+                        },
+                        HL_李白: {
+                            sex: 'male',
+                            skills: ['醉诗'],
+                        },
                         HL_shengwei: {
                             sex: 'male',
                             hp: 30,
@@ -3059,12 +3087,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 player.removeCharge(10);
                                 const npc = player.getEnemies().randomGet();
-                                npc.CS();
-                                const next = game.createEvent('diex', false);
-                                next.source = player;
-                                next.player = npc;
-                                next._triggered = null;
-                                await next.setContent(lib.element.content.die);
+                                if (npc) {
+                                    npc.CS();
+                                    player.line(npc);
+                                    const next = game.createEvent('diex', false);
+                                    next.source = player;
+                                    next.player = npc;
+                                    next._triggered = null;
+                                    await next.setContent(lib.element.content.die);
+                                }
                             },
                             group: ['HL_cunxuxianzhao_1'],
                             subSkill: {
@@ -3149,6 +3180,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (trigger.name == 'die') {
                                     game.checkResult = game.kongfunc;
                                     for (const npc of game.players.filter((q) => q != player)) {
+                                        player.line(npc);
                                         const next = game.createEvent('diex', false);
                                         next.source = player;
                                         next.player = npc;
@@ -4179,7 +4211,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         while (num > 0) {
                                             const num1 = Math.floor(5 * Math.random());
                                             num -= num1;
-                                            await player.getEnemies().randomGet().damage(num1);
+                                            const npc = player.getEnemies().randomGet();
+                                            if (npc) {
+                                                await npc.damage(num1);
+                                            }
                                         }
                                     }
                                 } else {
@@ -4881,6 +4916,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 ui.click.auto();
                                             }//托管
                                             for (const npc of players) {
+                                                player.line(npc);
                                                 game.log(player, '惩罚直接结束游戏的角色', npc);
                                                 const next = game.createEvent('diex', false);
                                                 next.source = player;
@@ -5400,6 +5436,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         trigger.player.CS();
+                                        player.line(trigger.player);
                                         const next = game.createEvent('diex', false);
                                         next.source = player;
                                         next.player = trigger.player;
@@ -5880,6 +5917,392 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.draw(4);
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————李白  唐  3/6/9/12体力
+                        HL_libai_bossjieshao: {
+
+                        },
+                        // 天上白玉京
+                        // 你只能受到实体牌的伤害
+                        HL_baiyujing: {
+                            trigger: {
+                                player: ['damageBefore'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                if (event.cards?.length && event.cards[0].name == event.card.name) {
+                                    return false;
+                                }
+                                return true;
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['bosshp', 'bossfinish'],
+                        },
+                        // 赵客缦胡缨
+                        // 登场时,弃置敌方角色所有装备牌,并令其依次使用一张随机武器牌,其无法以除此之外的方式失去武器牌
+                        HL_manhuying: {
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return game.roundNumber == 1;
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of player.getEnemies()) {
+                                    await npc.discard(npc.getCards('he', { type: 'equip' }));
+                                    const card = get.cardPile((c) => get.subtype(c) == `equip1`, 'field');
+                                    await npc.equip(card);
+                                }
+                            },
+                            group: ['HL_manhuying_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['loseBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.cards?.some((c) => get.subtype(c) == `equip1` && get.position(c) == 'e') && event.player.isEnemiesOf(player) && !event.getParent('HL_manhuying', true);
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cards = trigger.cards.filter((c) => get.subtype(c) != `equip1` || get.position(c) != 'e');
+                                    },
+                                },
+                            },
+                        },
+                        // 十步杀一人
+                        // 你每使用十张牌后,击杀一名敌方角色
+                        HL_shibusha: {
+                            init(player) {
+                                player.storage.HL_shibusha = 0;
+                            },
+                            trigger: {
+                                player: ['useCardEnd'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `再使用${10 - storage}张牌击杀一名敌方角色`;
+                                },
+                            },
+                            async content(event, trigger, player) {
+                                player.storage.HL_shibusha++;
+                                if (player.storage.HL_shibusha > 9) {
+                                    player.storage.HL_shibusha = 0;
+                                    const npc = player.getEnemies().randomGet();
+                                    if (npc) {
+                                        player.line(npc);
+                                        const next = game.createEvent('diex', false);
+                                        next.source = player;
+                                        next.player = npc;
+                                        next._triggered = null;
+                                        await next.setContent(lib.element.content.die);
+                                    }
+                                }
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————一阶段
+                        // 无人知所去
+                        // 全场每累计使用三张牌后,你进入无敌状态直到下个角色准备阶段
+                        HL_wurenzhi: {
+                            init(player) {
+                                player.storage.HL_wurenzhi = 0;
+                            },
+                            trigger: {
+                                global: ['useCardEnd'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `再使用${3 - storage}张牌进入无敌`;
+                                },
+                            },
+                            async content(event, trigger, player) {
+                                player.storage.HL_wurenzhi++;
+                                if (player.storage.HL_wurenzhi > 2) {
+                                    player.storage.HL_wurenzhi = 0;
+                                    player.storage.HL_wurenzhi_1 = true;
+                                    player.when({ global: 'phaseZhunbeiBegin' }).then(() => player.storage.HL_wurenzhi_1 = false);
+                                }
+                            },
+                            group: ['HL_wurenzhi_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['changeHpBefore', 'loseBefore'],
+                                    },
+                                    forced: true,
+                                    mark: true,
+                                    intro: {
+                                        content(storage) {
+                                            if (storage) {
+                                                return `无敌`;
+                                            }
+                                            return `没有无敌`;
+                                        },
+                                    },
+                                    filter(event, player, name) {
+                                        if (player.storage.HL_wurenzhi_1) {
+                                            if (name == 'loseBefore') {
+                                                return !['useCard', 'respond', 'equip'].includes(event.parent.name);
+                                            }
+                                            return event.num < 0;
+                                        }
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                    },
+                                },
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————二阶段
+                        // 人生得意须尽欢
+                        // 任意角色进入濒死后,你结束当前回合
+                        // 任意【酒】被使用后,你下一张伤害牌伤害+1
+                        // 任意伤害牌被使用后,你摸等同于此牌伤害值张牌
+                        HL_xujinhuan: {
+                            init(player) {
+                                player.storage.HL_xujinhuan = 0;
+                            },
+                            trigger: {
+                                global: ['useCardEnd'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `下一张伤害牌伤害+${storage}`;
+                                },
+                            },
+                            filter(event, player) {
+                                return get.tag(event.card, 'damage') || event.card.name == 'jiu';
+                            },
+                            async content(event, trigger, player) {
+                                if (trigger.card.name == 'jiu') {
+                                    player.storage.HL_xujinhuan++;
+                                }
+                                else {
+                                    const his = trigger.player.actionHistory;
+                                    const evt = his[his.length - 1];
+                                    for (const i of evt.sourceDamage) {
+                                        if (i.card == trigger.card) {
+                                            player.draw(i.num);
+                                        }
+                                    }
+                                }
+                            },
+                            group: ['HL_xujinhuan_1', 'HL_xujinhuan_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['useCard'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return get.tag(event.card, 'damage') && player.storage.HL_xujinhuan > 0;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.baseDamage += player.storage.HL_xujinhuan;
+                                        player.storage.HL_xujinhuan = 0;
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        global: ['dyingBefore'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        const evt = _status.event.getParent('phase', true);
+                                        if (evt) {
+                                            evt.finish();
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 莫使金樽空对月
+                        // 所有角色黑/红色手牌视作【酒】/【杀】
+                        HL_kongduiyue: {
+                            global: ['HL_kongduiyue_1'],
+                            subSkill: {
+                                1: {
+                                    mod: {
+                                        cardname(card, player, name) {
+                                            if (['heart', 'diamond'].includes(card.suit)) {
+                                                return 'sha';
+                                            }
+                                            if (['spade', 'club'].includes(card.suit)) {
+                                                return 'jiu';
+                                            }
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————三阶段
+                        // 行路难
+                        // 敌方角色每次使用技能后失去一点体力
+                        HL_xinglunan: {
+                            trigger: {
+                                global: ['logSkillBegin', 'useSkillBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.isEnemiesOf(player) && !lib.skill.global.includes(event.skill) && !event.getParent('HL_xinglunan', true);
+                            },
+                            async content(event, trigger, player) {
+                                trigger.player.loseHp();
+                            },
+                        },
+                        // 多歧路
+                        // 任意牌被使用时,令所有合法目标成为此牌目标
+                        HL_duoqilu: {
+                            trigger: {
+                                global: ['useCardBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.targets?.length;
+                            },
+                            async content(event, trigger, player) {
+                                const targets = game.players.filter((t) => trigger.player.canUse(trigger.card, t, true));
+                                trigger.targets.addArray(targets);
+                            },
+                        },
+                        // 长风破浪会有时
+                        // 任意多目标牌被使用后,你可以视作对其中任意一个目标使用x张【杀】(x为指定的目标数)
+                        HL_changfengpolang: {
+                            trigger: {
+                                global: ['useCardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.targets?.length > 1 && !event.getParent('HL_changfengpolang', true);
+                            },
+                            async content(event, trigger, player) {
+                                let num = trigger.targets.length;
+                                const {
+                                    result: { targets },
+                                } = await player.chooseTarget(`对其中任意一个目标使用${num}张【杀】`)
+                                    .set('ai', (t) => -get.attitude(player, t));
+                                if (targets && targets[0]) {
+                                    while (num-- > 0) {
+                                        await player.useCard({ name: 'sha' }, targets[0], false);
+                                    }
+                                }
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————四阶段
+                        // 千里江陵一日还
+                        // 你第三个回合开始时,重新开始三阶段
+                        HL_yirihuan: {
+                            init(player) {
+                                player.storage.HL_yirihuan = 0;
+                            },
+                            trigger: {
+                                player: ['phaseBegin'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `再过${3 - storage}回合,重新开始三阶段`;
+                                },
+                            },
+                            async content(event, trigger, player) {
+                                player.storage.HL_yirihuan++;
+                                if (player.storage.HL_yirihuan > 2) {
+                                    player.storage.HL_yirihuan = 0;
+                                    player.qreinit('HL_libai3');
+                                    const remove = ['HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'];
+                                    player.removeSkill(remove);
+                                    game.skangxing(player, ['HL_xinglunan', 'HL_duoqilu', 'HL_changfengpolang'], remove);
+                                    const evt = _status.event.getParent('phase', true);
+                                    if (evt) {
+                                        evt.finish();
+                                    }
+                                    player.phase();
+                                }
+                            },
+                        },
+                        // 与尔同销万古愁
+                        // 敌方角色使用牌指定目标时,改为从所有合法目标里随机选择一个
+                        HL_wanguchou: {
+                            trigger: {
+                                global: ['useCardBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.targets?.length && event.player.isEnemiesOf(player);
+                            },
+                            async content(event, trigger, player) {
+                                const targets = game.players.filter((t) => trigger.player.canUse(trigger.card, t, true));
+                                trigger.targets = targets.randomGets(1);
+                            },
+                        },
+                        // 我辈岂是蓬蒿人
+                        // 你体力值减少后,随机使用牌堆与弃牌堆各一张可使用的牌
+                        // --此技能失去时,将武将牌替换为真·李白
+                        HL_penghaoren: {
+                            onremove(player, skill) {
+                                if (!HL.fangbaozhan) {
+                                    HL.fangbaozhan = true;
+                                    player.qreinit('HL_李白');
+                                    player.bosskangxing = false;
+                                    const remove = ['HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'];
+                                    player.removeSkill(remove);
+                                    game.skangxing(player, ['醉诗'], remove);
+                                    const evt = _status.event.getParent('phase', true);
+                                    if (evt) {
+                                        evt.finish();
+                                    }
+                                    player.phase();
+                                    delete HL.fangbaozhan;
+                                }
+                            },
+                            trigger: {
+                                player: ['changeHp'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.num < 0;
+                            },
+                            async content(event, trigger, player) {
+                                for (const bool of [true, false]) {
+                                    const cards = bool ? Array.from(ui.cardPile.childNodes) : Array.from(ui.discardPile.childNodes).concat(Array.from(ui.ordering.childNodes));
+                                    const card = cards.filter((q) => player.hasUseTarget(q, true, true)).randomGet();
+                                    if (card) {
+                                        await player.chooseUseTarget(card, true, false, 'nodistance');
+                                    }
+                                }
+                            },
+                            ai: {
+                                maixie: true,
+                            },
+                        },
+                        // 使我不得开心颜
+                        // 敌方角色使用♠️️牌后,其失去一点体力;敌方角色使用♥️️牌时,你回复一点体力
+                        HL_kaixinyan: {
+                            trigger: {
+                                global: ['useCardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.isEnemiesOf(player) && ['heart', 'spade'].includes(event.card.suit);
+                            },
+                            async content(event, trigger, player) {
+                                if (trigger.card.suit == 'heart') {
+                                    player.recover();
+                                }
+                                else {
+                                    trigger.player.loseHp();
+                                }
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -5892,6 +6315,46 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————李白boss介绍
+                        HL_libai_boss: '李白',
+                        HL_libai_bossjieshao: '李白boss介绍',
+                        HL_libai_bossjieshao_info: '共四个阶段加一个隐藏阶段',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————李白通用技能
+                        HL_libai1: '李白',
+                        HL_baiyujing: '天上白玉京',
+                        HL_baiyujing_info: '你只能受到实体牌的伤害',
+                        HL_manhuying: '赵客缦胡缨',
+                        HL_manhuying_info: '登场时,弃置敌方角色所有装备牌,并令其依次使用一张随机武器牌,其无法以除此之外的方式失去武器牌',
+                        HL_shibusha: '十步杀一人',
+                        HL_shibusha_info: '你每使用十张牌后,击杀一名敌方角色',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————一阶段
+                        HL_wurenzhi: '无人知所去',
+                        HL_wurenzhi_info: '全场每累计使用三张牌后,你进入无敌状态直到下个角色准备阶段',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————二阶段
+                        HL_libai2: '李白',
+                        HL_xujinhuan: '人生得意须尽欢',
+                        HL_xujinhuan_info: '任意【酒】被使用后,你下一张伤害牌伤害+1<br>任意伤害牌被使用后,你摸等同于此牌伤害值张牌<br>任意角色进入濒死后,你结束当前回合',
+                        HL_kongduiyue: '莫使金樽空对月',
+                        HL_kongduiyue_info: '所有角色黑/红色手牌视作【酒】/【杀】',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————三阶段
+                        HL_libai3: '李白',
+                        HL_xinglunan: '行路难',
+                        HL_xinglunan_info: '敌方角色每次使用技能后失去一点体力',
+                        HL_duoqilu: '多歧路',
+                        HL_duoqilu_info: '任意牌被使用时,令所有合法目标成为此牌目标',
+                        HL_changfengpolang: '长风破浪会有时',
+                        HL_changfengpolang_info: '任意多目标牌被使用后,你可以视作对其中任意一个目标使用x张【杀】(x为指定的目标数)',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————四阶段
+                        HL_libai4: '李白',
+                        HL_yirihuan: '千里江陵一日还',
+                        HL_yirihuan_info: '你第三个回合开始时,重新开始三阶段',
+                        HL_wanguchou: '与尔同销万古愁',
+                        HL_wanguchou_info: '敌方角色使用牌指定目标时,改为从所有合法目标里随机选择一个',
+                        HL_penghaoren: '我辈岂是蓬蒿人',
+                        HL_penghaoren_info: '你体力值减少后,随机使用牌堆与弃牌堆各一张可使用的牌',
+                        HL_penghaoren_append: '--此技能失去时,将武将牌替换为真·李白',
+                        HL_kaixinyan: '使我不得开心颜',
+                        HL_kaixinyan_info: '敌方角色使用♠️️牌后,其失去一点体力;敌方角色使用♥️️牌时,你回复一点体力',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————邵
                         HL_shao: '邵',
                         HL_xingxingzhihuo: '星星之火',
@@ -6486,6 +6949,45 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                         game.nkangxing(game.boss, name);
                         game.skangxing(game.boss, skills);
+                        game.boss.bosskangxing = true;
+                    },
+                };
+                lib.skill._HL_libai_boss = {
+                    trigger: {
+                        player: ['dieEnd'],
+                    },
+                    forced: true,
+                    forceDie: true,
+                    mode: ['boss'],
+                    filter(event, player) {
+                        return HL.HL_libai_boss && HL.HL_libai_boss < 4 && game.boss == player;
+                    },
+                    async content(event, trigger, player) {
+                        HL.HL_libai_boss++;
+                        const name = `HL_libai${HL.HL_libai_boss}`;
+                        const boss = game.changeBossQ(name);
+                        game.nkangxing(boss, name);
+                        game.skangxing(boss);
+                        boss.bosskangxing = true;
+                        const evt = _status.event.getParent('phase', true);
+                        if (evt) {
+                            evt.finish();
+                        }
+                        boss.phase();
+                    },
+                };
+                lib.boss.HL_libai_boss = {
+                    chongzheng: false,
+                    checkResult(player) {
+                        if (player == game.boss && game.boss.name != 'HL_libai4') {
+                            return false;
+                        }
+                    },
+                    init() {
+                        HL.HL_libai_boss = 1;
+                        game.boss.init('HL_libai1');
+                        game.nkangxing(game.boss, 'HL_libai1');
+                        game.skangxing(game.boss);
                         game.boss.bosskangxing = true;
                     },
                 };
