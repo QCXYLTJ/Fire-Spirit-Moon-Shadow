@@ -757,73 +757,76 @@ const kangxing2 = function () {
         set() { },
         configurable: false,
     });
-    HL.pingjianban = [
-        //卡死
-        'ywuhun',
-        'lsns_wuliang',
-        //发动频率过高
-        'xinfu_pdgyingshi',
-        'clanguixiang',
-        'qiaobian',
-        'sbqiaobian',
-        'rgxkuangcao',
-        'Grand_chuanqi',
-        'sksn_dieying',
-        'white_gqliangyi',
-        'xinzhizheng',
-        //没标记或不满足条件
-        'xingwu',
-        'sbjieyin',
-        'sbenyuan',
-        'tiandan',
-        'jsrgwuchang',
-        'rehuashen',
-        'huashen',
-        'dccuixin',
-        'jsrgzhengyi',
-        'yijin',
-        'tgtt_junzhu',
-        'jiebing',
-        'nzry_zhizheng',
-        'dcjichou',
-        'sksn_yinxian',
-        'funie_chuli',
-        'llbz_huanmeng',
-        'llbz_huanhua',
-        'llbz_enyuan',
-        'North_dc_ziman',
-        'sksn_jinian',
-        'xx_zhipei',
-        'wufei',
-        'dczixi',
-        'yjyongquan',
-        'mbbojian',
-        'leiyu',
-        'dqzw_fuzhou',
-        //负面技能
-        'misuzu_hengzhou',
-        'iwasawa_mysong',
-        'yxs_menshen',
-        'chengmou',
-        'twbaobian',
-        'boss_hunyou',
-        'Grand_LausSaintClaudius',
-        'sksn_jianyu',
-        'sksn_wenshi',
-        'DIY_chaoxi',
-        'chuli_fuze_gain',
-        'North_yhy_cihua',
-        'haoshi',
-        'olhaoshi',
-        'sksn_yunjing',
-        //火灵月影
-        'HL_pingjian',
-        'HL_pingjian_player', 'HL_pingjian_target', 'HL_pingjian_source', 'HL_pingjian_global',
-        '阵亡',
-        '贵相',
-        '醉诗',
-        '测试',
-    ];
+    HL.PJban = {
+        trigger: [],
+        skill: [
+            //卡死
+            'ywuhun',
+            'lsns_wuliang',
+            //发动频率过高
+            'xinfu_pdgyingshi',
+            'clanguixiang',
+            'qiaobian',
+            'sbqiaobian',
+            'rgxkuangcao',
+            'Grand_chuanqi',
+            'sksn_dieying',
+            'white_gqliangyi',
+            'xinzhizheng',
+            //没标记或不满足条件
+            'xingwu',
+            'sbjieyin',
+            'sbenyuan',
+            'tiandan',
+            'jsrgwuchang',
+            'rehuashen',
+            'huashen',
+            'dccuixin',
+            'jsrgzhengyi',
+            'yijin',
+            'tgtt_junzhu',
+            'jiebing',
+            'nzry_zhizheng',
+            'dcjichou',
+            'sksn_yinxian',
+            'funie_chuli',
+            'llbz_huanmeng',
+            'llbz_huanhua',
+            'llbz_enyuan',
+            'North_dc_ziman',
+            'sksn_jinian',
+            'xx_zhipei',
+            'wufei',
+            'dczixi',
+            'yjyongquan',
+            'mbbojian',
+            'leiyu',
+            'dqzw_fuzhou',
+            //负面技能
+            'misuzu_hengzhou',
+            'iwasawa_mysong',
+            'yxs_menshen',
+            'chengmou',
+            'twbaobian',
+            'boss_hunyou',
+            'Grand_LausSaintClaudius',
+            'sksn_jianyu',
+            'sksn_wenshi',
+            'DIY_chaoxi',
+            'chuli_fuze_gain',
+            'North_yhy_cihua',
+            'haoshi',
+            'olhaoshi',
+            'sksn_yunjing',
+            //火灵月影
+            'HL_pingjian',
+            'HL_pingjian_player', 'HL_pingjian_target', 'HL_pingjian_source', 'HL_pingjian_global',
+            '阵亡',
+            '贵相',
+            '醉诗',
+            '测试',
+        ],
+    };
     for (const namex of ['player', 'global', 'source', 'target']) {
         Reflect.defineProperty(lib.skill, `HL_pingjian_${namex}`, {
             get() {
@@ -857,7 +860,7 @@ const kangxing2 = function () {
                             for (const target in triggerlist) {
                                 const info = triggerlist[target];
                                 for (const name in info) {
-                                    if (info[name] < 5 || ['gain', 'lose'].some((t) => name.includes(t))) {
+                                    if (info[name] < 5) {
                                         delete info[name];
                                     }
                                 }
@@ -875,15 +878,18 @@ const kangxing2 = function () {
                     },
                     forced: true,
                     popup: false,
-                    filter(event, player, name) {
+                    filter(event, player, namey) {
+                        if (HL.PJban.trigger.includes(`${namex}·${namey}`)) {
+                            return false;
+                        }
                         const skills = Object.keys(lib.skill).filter((i) => {
                             const infox = lib.skill[i];
-                            if (lib.translate[`${i}_info`] && !HL.pingjianban.includes(i) && infox.trigger) {
+                            if (lib.translate[`${i}_info`] && !HL.PJban.skill.includes(i) && infox.trigger) {
                                 const triggerx = infox?.trigger[namex];
                                 if (Array.isArray(triggerx)) {
-                                    return triggerx.includes(name);
+                                    return triggerx.includes(namey);
                                 }
-                                return triggerx == name;
+                                return triggerx == namey;
                             }
                         });
                         return skills.length;
@@ -892,7 +898,7 @@ const kangxing2 = function () {
                         const namey = event.triggername;
                         const skills = Object.keys(lib.skill).filter((i) => {
                             const infox = lib.skill[i];
-                            if (lib.translate[`${i}_info`] && !HL.pingjianban.includes(i) && infox.trigger) {
+                            if (lib.translate[`${i}_info`] && !HL.PJban.skill.includes(i) && infox.trigger) {
                                 const triggerx = infox?.trigger[namex];
                                 if (Array.isArray(triggerx)) {
                                     return triggerx.includes(namey);
@@ -900,7 +906,8 @@ const kangxing2 = function () {
                                 return triggerx == namey;
                             }
                         });
-                        game.log(namex, namey);
+                        HL.PJban.trigger.push(`${namex}·${namey}`);
+                        game.log(`<b style='color:rgb(228, 17, 28);'>评鉴触发时机·${namex}·${namey}</b>`);
                         if (skills.length) {
                             const list = skills.randomGets(3);
                             const {
@@ -915,11 +922,9 @@ const kangxing2 = function () {
                                 )
                                 .set('displayIndex', false)
                                 .set('prompt', `评鉴·${namex}·${namey}:请选择发动的技能`);
-                            HL.pingjianban.push(control);
+                            HL.PJban.skill.push(control);
                             const info = lib.skill[control];
-                            console.log(control, '评鉴');
-                            game.log(control);
-                            player.say(control);
+                            game.log(`<b style='color:rgb(17, 228, 69);'>评鉴发动技能·${control}</b>`);
                             await game.delay(2);
                             if (info.init) {
                                 info.init(player, control);
@@ -1086,6 +1091,13 @@ const kangxing2 = function () {
                         player.gain(card, 'gain2');
                         return card;
                     };
+                },
+                trigger: {
+                    global: ['phaseAfter'],
+                },
+                forced: true,
+                async content(event, trigger, player) {
+                    HL.PJban.trigger = [];
                 },
                 group: ['bossfinish', 'HL_pingjian_player', 'HL_pingjian_target', 'HL_pingjian_source', 'HL_pingjian_global'],
             };
