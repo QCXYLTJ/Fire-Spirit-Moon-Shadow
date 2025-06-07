@@ -1413,7 +1413,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     document.body.appendChild(div);
                 },
                 true
-            ); //BGM
+            ); //火灵月影
         },
         precontent() {
             const numfunc = function () {
@@ -6755,11 +6755,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 linked: true,
                 order: 1000,
             }); //添加杀的属性
-            for (const i of ['gold', 'poison', 'blood', 'snow', 'kami', 'water', 'ice', 'ScarletRot']) {
-                lib.card.sha.ai.tag[i + 'Damage'] = eval(` (card, nature) => {
-                                if (game.hasNature(card, '${i}')) return 1;
-                            }`);
-                lib.card.sha.nature.add(i);
+            for (const nature of Array.from(lib.nature.keys())) {
+                lib.card.sha.ai.tag[nature + 'Damage'] = function (card) {
+                    if (game.hasNature(card, nature)) {
+                        return 1;
+                    }
+                };
+                lib.card.sha.nature.add(nature);
             }
             lib.skill.bosshp = {
                 init(player) {
@@ -6921,7 +6923,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                     };
                 }
-                lib.skill._HL_ws = {
+                lib.skill._HL_ws_boss = {
                     trigger: {
                         player: 'dieEnd',
                     },
