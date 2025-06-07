@@ -333,11 +333,14 @@ const kangxing1 = function () {
                             }
                         },
                         contains(q) {
-                            player.node.hp.classList.remove('hidden');
-                            player.node.avatar.style.transform = '';
-                            player.node.avatar.style.filter = '';
-                            player.style.transform = '';
-                            player.style.filter = '';
+                            if (ui.restart) {
+                                ui.restart.remove();
+                            }//重新开始按钮
+                            player.node.hp.classList.remove('hidden');//隐藏体力条
+                            player.node.avatar.style.transform = '';//翻转
+                            player.node.avatar.style.filter = '';//黑白滤镜
+                            player.style.transform = '';//翻转
+                            player.style.filter = '';//黑白滤镜
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             for (const style of classq) {
                                 if (!list.includes(style)) {
@@ -604,6 +607,14 @@ const kangxing1 = function () {
                     const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
                     new MutationObserver(function () {
                         if (obj.players.includes(player)) {
+                            if (ui.restart) {
+                                ui.restart.remove();
+                            }//重新开始按钮
+                            player.node.hp.classList.remove('hidden');//隐藏体力条
+                            player.node.avatar.style.transform = '';//翻转
+                            player.node.avatar.style.filter = '';//黑白滤镜
+                            player.style.transform = '';//翻转
+                            player.style.filter = '';//黑白滤镜
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             for (const style of classq) {
                                 if (!list.includes(style)) {
