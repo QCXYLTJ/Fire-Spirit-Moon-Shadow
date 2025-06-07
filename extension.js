@@ -2688,14 +2688,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             isBoss: true,
                             isBossAllowed: true,
                         },
-                        HL_ws: {
+                        HL_ws_boss: {
                             sex: 'male',
                             hp: 100,
                             maxHp: 100,
-                            skills: ['HL_ws'],
+                            skills: ['HL_ws_bossjieshao'],
                             isBoss: true,
                             isBossAllowed: true,
-                            trashBin: [`ext:火灵月影/mp4/HL_ws.mp4`],
+                            trashBin: [`ext:火灵月影/mp4/HL_ws_boss.mp4`],
                         },
                         HL_wangzuo: {
                             sex: 'female',
@@ -3476,8 +3476,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        //——————————————————————————————————————————————————————————————————————————————————————————————————HL_ws
-                        HL_ws: {
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————HL_ws_bossjieshao
+                        HL_ws_bossjieshao: {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
@@ -6562,8 +6562,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_pingjian: '评鉴',
                         HL_pingjian_info: '在很多时机,你都可以尝试运行一个对应时机技能的content',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————神之無雙
-                        HL_ws: '神之無雙boss介绍',
-                        HL_ws_info: '此武将仅为boss展示用,其他模式均为白板<br>神之無雙挑战模式<br>1.此模式有四个boss(無雙飞将/镇关魔将/焚城魔士/乱武毒士),每阶段抽取阶段数的boss登场,且boss按阶段解锁技能<br>2.boss体力值大于0时拒绝死亡,免疫除受伤害外扣减体力值,免疫翻面横置与移除,免疫扣减体力上限',
+                        HL_ws_boss: '神之無雙',
+                        HL_ws_bossjieshao: '神之無雙boss介绍',
+                        HL_ws_bossjieshao_info: '此武将仅为boss展示用,其他模式均为白板<br>神之無雙挑战模式<br>1.此模式有四个boss(無雙飞将/镇关魔将/焚城魔士/乱武毒士),每阶段抽取阶段数的boss登场,且boss按阶段解锁技能<br>2.boss体力值大于0时拒绝死亡,免疫除受伤害外扣减体力值,免疫翻面横置与移除,免疫扣减体力上限',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————無雙飞将
                         HL_lvbu: '無雙飞将',
                         HL_wushuang: '無雙',
@@ -6928,12 +6929,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     forceDie: true,
                     mode: ['boss'],
                     filter(event, player) {
-                        return HL.HL_ws?.boss.every((q) => !game.players.includes(q)) && HL.HL_ws.num < 4;
+                        return HL.HL_ws_boss?.boss.every((q) => !game.players.includes(q)) && HL.HL_ws_boss.num < 4;
                     },
                     async content(event, trigger, player) {
-                        HL.HL_ws.boss = [];
-                        HL.HL_ws.num++;
-                        const list = HL.HL_ws.name.randomGets(HL.HL_ws.num);
+                        HL.HL_ws_boss.boss = [];
+                        HL.HL_ws_boss.num++;
+                        const list = HL.HL_ws_boss.name.randomGets(HL.HL_ws_boss.num);
                         let first;
                         for (const name of list) {
                             let bossx;
@@ -6943,9 +6944,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             } else {
                                 bossx = game.addFellowQ(name);
                             }
-                            HL.HL_ws.boss.add(bossx);
+                            HL.HL_ws_boss.boss.add(bossx);
                             bossx.skills = [];
-                            const skills = lib.character[name].skills.slice(0, HL.HL_ws.num);
+                            const skills = lib.character[name].skills.slice(0, HL.HL_ws_boss.num);
                             if (lib.config.extension_火灵月影_lianyu) {
                                 skills.add(lib.character[name].skills.slice(-1));
                             }
@@ -6955,10 +6956,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     },
                 };
-                lib.boss.HL_ws = {
+                lib.boss.HL_ws_boss = {
                     chongzheng: false,
                     checkResult(player) {
-                        if (HL.HL_ws.num < 4 || HL.HL_ws.boss.some((q) => game.players.includes(q))) {
+                        if (HL.HL_ws_boss.num < 4 || HL.HL_ws_boss.boss.some((q) => game.players.includes(q))) {
                             if (player == game.boss) {
                                 return false;
                             }
@@ -6967,15 +6968,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     },
                     init() {
-                        HL.HL_ws = {
+                        HL.HL_ws_boss = {
                             num: 1,
                             name: ['HL_liru', 'HL_jiaxu', 'HL_huaxiong', 'HL_lvbu'],
                             boss: [game.boss],
                         };
-                        const name = HL.HL_ws.name.randomGet();
+                        const name = HL.HL_ws_boss.name.randomGet();
                         game.boss.init(name);
                         game.boss.skills = [];
-                        const skills = lib.character[name].skills.slice(0, HL.HL_ws.num);
+                        const skills = lib.character[name].skills.slice(0, HL.HL_ws_boss.num);
                         if (lib.config.extension_火灵月影_lianyu) {
                             skills.add(lib.character[name].skills.slice(-1));
                         }
