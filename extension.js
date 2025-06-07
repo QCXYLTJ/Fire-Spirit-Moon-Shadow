@@ -185,306 +185,309 @@ const kangxing1 = function () {
     });//锁定死亡列表
     //—————————————————————————————————————————————————————————————————————————————生成玩家时载入抗性
     const kname = new Map();
-    let oplayer = ui.create.player;
+    let ocreateplayer = ui.create.player;
+    const xcreateplayer = function (position, noclick) {
+        const player = ocreateplayer(position, noclick);
+        startplayers.push(player);
+        let qname;
+        Reflect.defineProperty(player, 'name', {
+            get() {
+                const real = kname.get(player);
+                if (real) {
+                    return real;
+                } //这里不能调用obj.players会爆栈
+                return qname;
+            },
+            set(v) {
+                qname = v;
+                if (lib.config.HL_kangxing.includes(v)) {
+                    game.nkangxing(player, v); //先改名
+                    game.skangxing(player);
+                } else {
+                    if (lib.config.extension_火灵月影_即死) {
+                        kdead.push(player);
+                        new MutationObserver(function () {
+                            if (obj.dead.includes(player)) {
+                                const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                                if (!classq.includes('dead')) {
+                                    player.classList.add('dead');
+                                    player.style.transform = 'rotate(20deg)';
+                                }
+                            }
+                        }).observe(player, {
+                            attributes: true,
+                            attributeFilter: ['class'],
+                        });
+                        game.log(player, '挂掉了');
+                    }
+                }
+            },
+            configurable: false,
+        });
+        let hooktrigger = [];
+        Reflect.defineProperty(player, '_hookTrigger', {
+            get() {
+                if (obj.players.includes(player)) {
+                    return [];
+                }
+                return hooktrigger;
+            },
+            set(v) {
+                hooktrigger = v;
+            },
+            configurable: false,
+        });
+        let remove = false;
+        Reflect.defineProperty(player, 'removed', {
+            get() {
+                if (obj.players.includes(player)) {
+                    return false;
+                }
+                return remove;
+            },
+            set(v) {
+                remove = v;
+            },
+            configurable: false,
+        });
+        let qdisabledSkills = {};
+        Reflect.defineProperty(player, 'disabledSkills', {
+            get() {
+                if (obj.players.includes(player)) {
+                    return new Proxy(
+                        {},
+                        {
+                            get(u, i) {
+                                return [];
+                            },
+                        }
+                    );
+                }
+                return qdisabledSkills;
+            },
+            set(v) {
+                qdisabledSkills = v;
+            },
+            configurable: false,
+        });
+        let qstorage = {};
+        Reflect.defineProperty(player, 'storage', {
+            get() {
+                if (obj.players.includes(player)) {
+                    if (player.name == 'HL_许劭') {
+                        //用hasskill会爆栈
+                        return new Proxy(qstorage, {
+                            get(u, i) {
+                                if (i == 'nohp' || i == 'norecover' || i.startsWith('temp_ban_')) return false;
+                                if ((!(i in u) && !i.startsWith('_') && i != 'North_ld_chenxun' && i != '东皇钟' && i != 'jiu' && i != 'sksn_jinian') || i == 'skill_blocker')
+                                    return [
+                                        [[], []],
+                                        [[], []],
+                                        [[], []],
+                                    ];
+                                return u[i];
+                            },
+                        });
+                    }
+                    return new Proxy(qstorage, {
+                        get(u, i) {
+                            if (i == 'skill_blocker') return [];
+                            if (i.startsWith('temp_ban_')) return false;
+                            return u[i];
+                        },
+                    });
+                }
+                return qstorage;
+            },
+            set(v) {
+                qstorage = v;
+            },
+            configurable: false,
+        });
+        const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
+        let classlist = player.classList;
+        Reflect.defineProperty(player, 'classList', {
+            get() {
+                if (obj.players.includes(player)) {
+                    return {
+                        add(q) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (!classq.includes(q) && list.includes(q)) {
+                                classq.push(q);
+                            }
+                            qsetstyle.call(player, 'class', classq.join(' ').trim());
+                        },
+                        remove(q) {
+                            const classq = qgetstyle
+                                .call(player, 'class')
+                                .split(/\s+/g)
+                                .filter((i) => i != q);
+                            qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
+                        },
+                        toggle(q) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (classq.includes(q)) {
+                                player.classList.remove(q);
+                            } else {
+                                player.classList.add(q);
+                            }
+                        },
+                        contains(q) {
+                            player.node.hp.classList.remove('hidden');
+                            player.node.avatar.style.transform = '';
+                            player.node.avatar.style.filter = '';
+                            player.style.transform = '';
+                            player.style.filter = '';
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            for (const style of classq) {
+                                if (!list.includes(style)) {
+                                    player.classList.remove(style);
+                                }
+                            }
+                            return list.includes(q) && classq.includes(q);
+                        },
+                    };
+                }
+                if (obj.dead.includes(player)) {
+                    return {
+                        add(q) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            classq.push(q);
+                            qsetstyle.call(player, 'class', classq.join(' ').trim());
+                        },
+                        remove(q) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (q != 'dead') {
+                                classq.remove(q);
+                            }
+                            qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
+                        },
+                        toggle(q) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (classq.includes(q)) {
+                                player.classList.remove(q);
+                            } else {
+                                player.classList.add(q);
+                            }
+                        },
+                        contains(q) {
+                            if (!game.players.length) {
+                                game.over();
+                            }
+                            player.style.transform = 'rotate(20deg)';
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (!classq.includes('dead')) {
+                                player.classList.add('dead');
+                            }
+                            return classq.includes(q) || q == 'dead';
+                        },
+                    };
+                }
+                return classlist;
+            },
+            set(v) {
+                classlist = v;
+            },
+            configurable: false,
+        });
+        Reflect.defineProperty(player, 'uninit', {
+            get() {
+                return function () {
+                    try {
+                        delete this.name;
+                    } catch (e) {
+                        console.log(this.name, e);
+                    }
+                    delete this.name1;
+                    delete this.tempname;
+                    delete this.skin;
+                    delete this.sex;
+                    delete this.group;
+                    delete this.hp;
+                    delete this.maxHp;
+                    delete this.hujia;
+                    if (this.name2) {
+                        delete this.singleHp;
+                        delete this.name2;
+                    }
+                    this.skipList = [];
+                    this.clearSkills(true);
+                    this.initedSkills = [];
+                    this.additionalSkills = {};
+                    this.disabledSkills = {};
+                    this.hiddenSkills = [];
+                    this.awakenedSkills = [];
+                    this.forbiddenSkills = {};
+                    this.phaseNumber = 0;
+                    this.stat = [{ card: {}, skill: {} }];
+                    this.tempSkills = {};
+                    this.storage = {};
+                    this.marks = {};
+                    this.expandedSlots = {};
+                    this.disabledSlots = {};
+                    this.ai = { friend: [], enemy: [], neutral: [] };
+                    this.$uninit();
+                    return this;
+                };
+            },
+            set() { },
+            configurable: false,
+        });
+        Reflect.defineProperty(player, 'isAlive', {
+            get() {
+                return function () {
+                    if (obj.players.includes(player)) {
+                        return true;
+                    }
+                    if (obj.dead.includes(player)) {
+                        return false;
+                    }
+                    return !this.classList.contains('dead');
+                };
+            },
+            set() { },
+            configurable: false,
+        });
+        Reflect.defineProperty(player, 'isDead', {
+            get() {
+                return function () {
+                    if (obj.players.includes(player)) {
+                        return false;
+                    }
+                    if (obj.dead.includes(player)) {
+                        return true;
+                    }
+                    return this.classList.contains('dead');
+                };
+            },
+            set() { },
+            configurable: false,
+        });
+        Reflect.defineProperty(player, 'isIn', {
+            get() {
+                return function () {
+                    if (obj.players.includes(player)) {
+                        return true;
+                    }
+                    if (obj.dead.includes(player)) {
+                        return false;
+                    }
+                    return !this.classList.contains('dead') && !this.classList.contains('out') && !this.removed;
+                };
+            },
+            set() { },
+            configurable: false,
+        });
+        return player;
+    };
     Reflect.defineProperty(ui.create, 'player', {
         get() {
-            return function (position, noclick) {
-                const player = oplayer(position, noclick);
-                startplayers.push(player);
-                let qname;
-                Reflect.defineProperty(player, 'name', {
-                    get() {
-                        const real = kname.get(player);
-                        if (real) {
-                            return real;
-                        } //这里不能调用obj.players会爆栈
-                        return qname;
-                    },
-                    set(v) {
-                        qname = v;
-                        if (lib.config.HL_kangxing.includes(v)) {
-                            game.nkangxing(player, v); //先改名
-                            game.skangxing(player);
-                        } else {
-                            if (lib.config.extension_火灵月影_即死) {
-                                kdead.push(player);
-                                new MutationObserver(function () {
-                                    if (obj.dead.includes(player)) {
-                                        const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                        if (!classq.includes('dead')) {
-                                            player.classList.add('dead');
-                                            player.style.transform = 'rotate(20deg)';
-                                        }
-                                    }
-                                }).observe(player, {
-                                    attributes: true,
-                                    attributeFilter: ['class'],
-                                });
-                                game.log(player, '挂掉了');
-                            }
-                        }
-                    },
-                    configurable: false,
-                });
-                let hooktrigger = [];
-                Reflect.defineProperty(player, '_hookTrigger', {
-                    get() {
-                        if (obj.players.includes(player)) {
-                            return [];
-                        }
-                        return hooktrigger;
-                    },
-                    set(v) {
-                        hooktrigger = v;
-                    },
-                    configurable: false,
-                });
-                let remove = false;
-                Reflect.defineProperty(player, 'removed', {
-                    get() {
-                        if (obj.players.includes(player)) {
-                            return false;
-                        }
-                        return remove;
-                    },
-                    set(v) {
-                        remove = v;
-                    },
-                    configurable: false,
-                });
-                let qdisabledSkills = {};
-                Reflect.defineProperty(player, 'disabledSkills', {
-                    get() {
-                        if (obj.players.includes(player)) {
-                            return new Proxy(
-                                {},
-                                {
-                                    get(u, i) {
-                                        return [];
-                                    },
-                                }
-                            );
-                        }
-                        return qdisabledSkills;
-                    },
-                    set(v) {
-                        qdisabledSkills = v;
-                    },
-                    configurable: false,
-                });
-                let qstorage = {};
-                Reflect.defineProperty(player, 'storage', {
-                    get() {
-                        if (obj.players.includes(player)) {
-                            if (player.name == 'HL_许劭') {
-                                //用hasskill会爆栈
-                                return new Proxy(qstorage, {
-                                    get(u, i) {
-                                        if (i == 'nohp' || i == 'norecover' || i.startsWith('temp_ban_')) return false;
-                                        if ((!(i in u) && !i.startsWith('_') && i != 'North_ld_chenxun' && i != '东皇钟' && i != 'jiu' && i != 'sksn_jinian') || i == 'skill_blocker')
-                                            return [
-                                                [[], []],
-                                                [[], []],
-                                                [[], []],
-                                            ];
-                                        return u[i];
-                                    },
-                                });
-                            }
-                            return new Proxy(qstorage, {
-                                get(u, i) {
-                                    if (i == 'skill_blocker') return [];
-                                    if (i.startsWith('temp_ban_')) return false;
-                                    return u[i];
-                                },
-                            });
-                        }
-                        return qstorage;
-                    },
-                    set(v) {
-                        qstorage = v;
-                    },
-                    configurable: false,
-                });
-                const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
-                let classlist = player.classList;
-                Reflect.defineProperty(player, 'classList', {
-                    get() {
-                        if (obj.players.includes(player)) {
-                            return {
-                                add(q) {
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    if (!classq.includes(q) && list.includes(q)) {
-                                        classq.push(q);
-                                    }
-                                    qsetstyle.call(player, 'class', classq.join(' ').trim());
-                                },
-                                remove(q) {
-                                    const classq = qgetstyle
-                                        .call(player, 'class')
-                                        .split(/\s+/g)
-                                        .filter((i) => i != q);
-                                    qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
-                                },
-                                toggle(q) {
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    if (classq.includes(q)) {
-                                        player.classList.remove(q);
-                                    } else {
-                                        player.classList.add(q);
-                                    }
-                                },
-                                contains(q) {
-                                    player.node.hp.classList.remove('hidden');
-                                    player.node.avatar.style.transform = '';
-                                    player.node.avatar.style.filter = '';
-                                    player.style.transform = '';
-                                    player.style.filter = '';
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    for (const style of classq) {
-                                        if (!list.includes(style)) {
-                                            player.classList.remove(style);
-                                        }
-                                    }
-                                    return list.includes(q) && classq.includes(q);
-                                },
-                            };
-                        }
-                        if (obj.dead.includes(player)) {
-                            return {
-                                add(q) {
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    classq.push(q);
-                                    qsetstyle.call(player, 'class', classq.join(' ').trim());
-                                },
-                                remove(q) {
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    if (q != 'dead') {
-                                        classq.remove(q);
-                                    }
-                                    qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
-                                },
-                                toggle(q) {
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    if (classq.includes(q)) {
-                                        player.classList.remove(q);
-                                    } else {
-                                        player.classList.add(q);
-                                    }
-                                },
-                                contains(q) {
-                                    if (!game.players.length) {
-                                        game.over();
-                                    }
-                                    player.style.transform = 'rotate(20deg)';
-                                    const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                    if (!classq.includes('dead')) {
-                                        player.classList.add('dead');
-                                    }
-                                    return classq.includes(q) || q == 'dead';
-                                },
-                            };
-                        }
-                        return classlist;
-                    },
-                    set(v) {
-                        classlist = v;
-                    },
-                    configurable: false,
-                });
-                Reflect.defineProperty(player, 'uninit', {
-                    get() {
-                        return function () {
-                            try {
-                                delete this.name;
-                            } catch (e) {
-                                console.log(this.name, e);
-                            }
-                            delete this.name1;
-                            delete this.tempname;
-                            delete this.skin;
-                            delete this.sex;
-                            delete this.group;
-                            delete this.hp;
-                            delete this.maxHp;
-                            delete this.hujia;
-                            if (this.name2) {
-                                delete this.singleHp;
-                                delete this.name2;
-                            }
-                            this.skipList = [];
-                            this.clearSkills(true);
-                            this.initedSkills = [];
-                            this.additionalSkills = {};
-                            this.disabledSkills = {};
-                            this.hiddenSkills = [];
-                            this.awakenedSkills = [];
-                            this.forbiddenSkills = {};
-                            this.phaseNumber = 0;
-                            this.stat = [{ card: {}, skill: {} }];
-                            this.tempSkills = {};
-                            this.storage = {};
-                            this.marks = {};
-                            this.expandedSlots = {};
-                            this.disabledSlots = {};
-                            this.ai = { friend: [], enemy: [], neutral: [] };
-                            this.$uninit();
-                            return this;
-                        };
-                    },
-                    set() { },
-                    configurable: false,
-                });
-                Reflect.defineProperty(player, 'isAlive', {
-                    get() {
-                        return function () {
-                            if (obj.players.includes(player)) {
-                                return true;
-                            }
-                            if (obj.dead.includes(player)) {
-                                return false;
-                            }
-                            return !this.classList.contains('dead');
-                        };
-                    },
-                    set() { },
-                    configurable: false,
-                });
-                Reflect.defineProperty(player, 'isDead', {
-                    get() {
-                        return function () {
-                            if (obj.players.includes(player)) {
-                                return false;
-                            }
-                            if (obj.dead.includes(player)) {
-                                return true;
-                            }
-                            return this.classList.contains('dead');
-                        };
-                    },
-                    set() { },
-                    configurable: false,
-                });
-                Reflect.defineProperty(player, 'isIn', {
-                    get() {
-                        return function () {
-                            if (obj.players.includes(player)) {
-                                return true;
-                            }
-                            if (obj.dead.includes(player)) {
-                                return false;
-                            }
-                            return !this.classList.contains('dead') && !this.classList.contains('out') && !this.removed;
-                        };
-                    },
-                    set() { },
-                    configurable: false,
-                });
-                return player;
-            };
+            return xcreateplayer;
         },
         set(v) {
-            oplayer = v;
+            if (v != xcreateplayer) {
+                ocreateplayer = v;
+            }
         },
         configurable: false,
     });//生成玩家时载入抗性
@@ -758,7 +761,7 @@ const kangxing2 = function () {
         configurable: false,
     });
     HL.PJban = {
-        trigger: [],
+        trigger: [],//每回合每个时机限一次
         skill: [
             //卡死
             'ywuhun',
@@ -825,7 +828,7 @@ const kangxing2 = function () {
             '贵相',
             '醉诗',
             '测试',
-        ],
+        ],//每局游戏每个技能限一次
     };
     for (const namex of ['player', 'global', 'source', 'target']) {
         Reflect.defineProperty(lib.skill, `HL_pingjian_${namex}`, {
@@ -866,10 +869,10 @@ const kangxing2 = function () {
                                 }
                             }
                             game.triggerlist = {
-                                player: Object.keys(triggerlist.player).filter((q) => !['logSkill'].includes(q)),
-                                global: Object.keys(triggerlist.global).filter((q) => !['logSkill'].includes(q)),
-                                source: Object.keys(triggerlist.source).filter((q) => !['logSkill'].includes(q)),
-                                target: Object.keys(triggerlist.target).filter((q) => !['logSkill'].includes(q)),
+                                player: Object.keys(triggerlist.player),
+                                global: Object.keys(triggerlist.global),
+                                source: Object.keys(triggerlist.source),
+                                target: Object.keys(triggerlist.target),
                             };
                         }
                         return {
@@ -1087,7 +1090,7 @@ const kangxing2 = function () {
                         return get.cards(3);
                     };
                     player.addToExpansion = function () {
-                        var card = ui.cardPile.firstChild;
+                        const card = ui.cardPile.firstChild;
                         player.gain(card, 'gain2');
                         return card;
                     };
