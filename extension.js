@@ -2680,13 +2680,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     connect: true,
                     character: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————BOSS
-                        HL_许劭: {
-                            sex: 'male',
-                            skills: ['HL_pingjian'],
-                            isBoss: true,
-                            isBossAllowed: true,
-                            trashBin: [`ext:火灵月影/mp4/HL_许劭.mp4`],
-                        },
                         HL_amiya: {
                             sex: 'female',
                             hp: 1000,
@@ -2757,6 +2750,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_baiyujing', 'HL_manhuying', 'HL_shibusha', 'HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'],
                             hp: 12,
                             maxHp: 12,
+                        },
+                        HL_许劭: {
+                            sex: 'male',
+                            skills: ['HL_pingjian'],
+                            trashBin: [`ext:火灵月影/mp4/HL_许劭.mp4`],
                         },
                         HL_李白: {
                             sex: 'male',
