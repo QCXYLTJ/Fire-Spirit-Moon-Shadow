@@ -2916,9 +2916,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     },
                     skill: {
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
-                        //不应存在之人:
-                        //①所有技能不可失去与被动失效,免疫即死/体力上限减少与体力值调整,受到的伤害与失去的体力值减少50%【至少为1】
-                        //②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束
+                        // 不应存在之人
+                        // ①你始终拥有50%减伤
+                        // ②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束
                         HL_buyingcunzai: {
                             init(player) {
                                 let maxhp = 1000;
@@ -6273,12 +6273,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 const targets = game.players.filter((t) => trigger.player.canUse(trigger.card, t, true));
-                                trigger.targets = targets.randomGets(1);
+                                const targets1 = targets.randomGets(1);
+                                game.log(trigger.card, '目标', trigger.targets, '被改为', targets1);
+                                trigger.targets = targets1;
                             },
                         },
                         // 我辈岂是蓬蒿人
                         // 你体力值减少后,随机使用牌堆与弃牌堆各一张可使用的牌
-                        // --此技能失去时,将武将牌替换为真·李白
+                        // --此技能失去时,将武将牌替换为真✣李白
                         HL_penghaoren: {
                             onremove(player, skill) {
                                 if (!HL.fangbaozhan) {
@@ -6350,7 +6352,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白boss介绍
                         HL_libai_boss: '李白',
                         HL_libai_bossjieshao: '李白boss介绍',
-                        HL_libai_bossjieshao_info: '共四个阶段加一个隐藏阶段',
+                        HL_libai_bossjieshao_info: '此武将仅为boss展示用,其他模式均为白板<br>李白挑战模式<br>共四个阶段加一个隐藏阶段',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白通用技能
                         HL_libai1: '李白✣',
                         HL_baiyujing: '天上白玉京',
@@ -6384,7 +6386,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_wanguchou_info: '敌方角色使用牌指定目标时,改为从所有合法目标里随机选择一个',
                         HL_penghaoren: '我辈岂是蓬蒿人',
                         HL_penghaoren_info: '你体力值减少后,随机使用牌堆与弃牌堆各一张可使用的牌',
-                        HL_penghaoren_append: '--此技能失去时,将武将牌替换为真·李白',
+                        HL_penghaoren_append: '--此技能失去时,将武将牌替换为真✣李白',
                         HL_kaixinyan: '使我不得开心颜',
                         HL_kaixinyan_info: '敌方角色使用♠️️牌后,其失去一点体力;敌方角色使用♥️️牌时,你回复一点体力',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————邵
@@ -6562,8 +6564,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_pingjian: '评鉴',
                         HL_pingjian_info: '在很多时机,你都可以尝试运行一个对应时机技能的content',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————神之無雙
-                        HL_ws: '神之無雙',
-                        HL_ws_info: '神之無雙挑战模式<br>1.此模式有四个boss(無雙飞将/镇关魔将/焚城魔士/乱武毒士),每阶段抽取阶段数的boss登场,且boss按阶段解锁技能<br>2.boss体力值大于0时拒绝死亡,免疫除受伤害外扣减体力值,免疫翻面横置与移除,免疫扣减体力上限',
+                        HL_ws: '神之無雙boss介绍',
+                        HL_ws_info: '此武将仅为boss展示用,其他模式均为白板<br>神之無雙挑战模式<br>1.此模式有四个boss(無雙飞将/镇关魔将/焚城魔士/乱武毒士),每阶段抽取阶段数的boss登场,且boss按阶段解锁技能<br>2.boss体力值大于0时拒绝死亡,免疫除受伤害外扣减体力值,免疫翻面横置与移除,免疫扣减体力上限',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————無雙飞将
                         HL_lvbu: '無雙飞将',
                         HL_wushuang: '無雙',
@@ -6885,7 +6887,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 },
             };
             lib.translate.bosshp = 'boss抗性';
-            lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流,你具有翻面/横置/移除/死亡/封禁技能/移除技能抗性';
+            lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流';
             lib.translate.bossfinish = 'boss抗性';
             lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
             //—————————————————————————————————————————————————————————————————————————————gameStart
