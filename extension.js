@@ -6190,6 +6190,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 多歧路
                         // 任意牌被使用时,令所有合法目标成为此牌目标
                         HL_duoqilu: {
+                            _priority: 20,
                             trigger: {
                                 global: ['useCardBegin'],
                             },
@@ -6217,6 +6218,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const {
                                     result: { targets },
                                 } = await player.chooseTarget(`对其中任意一个目标使用${num}张【杀】`)
+                                    .set('filterTarget', (c, p, t) => trigger.targets.includes(t))
                                     .set('ai', (t) => -get.attitude(player, t));
                                 if (targets && targets[0]) {
                                     while (num-- > 0) {
@@ -6261,6 +6263,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 与尔同销万古愁
                         // 敌方角色使用牌指定目标时,改为从所有合法目标里随机选择一个
                         HL_wanguchou: {
+                            _priority: -20,
                             trigger: {
                                 global: ['useCardBegin'],
                             },
