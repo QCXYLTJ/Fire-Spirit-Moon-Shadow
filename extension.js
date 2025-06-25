@@ -6641,7 +6641,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     const info = QQQ.skill[i];
                     info.nobracket = true;
                     const trans = QQQ.translate[`${i}_info`];
-                    if (info.forced) {
+                    if (info.forced && trans) {
                         QQQ.translate[`${i}_info`] = `<span class=Qmenu>锁定技,</span>${trans}`;
                     }
                     if (!info.audio) {
