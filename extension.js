@@ -1463,7 +1463,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //深拷贝对象
             };
             numfunc();
-            HTMLElement.prototype.setBackgroundImage = function (src) {
+            HTMLDivElement.prototype.setBackgroundImage = function (src) {
                 if (Array.isArray(src)) {
                     src = src[0];
                 }
