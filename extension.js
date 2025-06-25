@@ -6373,7 +6373,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 player.storage.HL_liankui_player.push(trigger.player);
-                                const list = trigger.player.GAS().filter((s) => !player.hasSkill(s));
+                                const list = trigger.player.GAS().filter((s) => !player.storage.HL_liankui_skill.includes(s));
                                 if (list.length) {
                                     const {
                                         result: { control },
@@ -6394,7 +6394,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.recover();
                                 player.draw(2);
                             },
-                            group: ['HL_liankui_1'],
+                            group: ['HL_liankui_1', 'bosshp', 'bossfinish'],
                             subSkill: {
                                 1: {
                                     trigger: {
@@ -6501,8 +6501,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         trigger.HL_duoxing_1 = true;
                                         const npc = game.players.find((q) => q.name == 'HL_kuilei');
-                                        trigger.player = npc;
-                                        player.hp = player.maxHp;
+                                        if (npc) {
+                                            trigger.player = npc;
+                                            player.hp = player.maxHp;
+                                        }
                                     },
                                 },
                                 2: {
