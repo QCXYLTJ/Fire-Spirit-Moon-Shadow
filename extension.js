@@ -68,16 +68,16 @@ window.HL = {
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
 const kangxing1 = function () {
     //—————————————————————————————————————————————————————————————————————————————锁定几个原型方法
-    const qcontains = HTMLDivElement.prototype.contains;
-    Reflect.defineProperty(HTMLDivElement.prototype, 'contains', {
+    const qcontains = HTMLElement.prototype.contains;
+    Reflect.defineProperty(HTMLElement.prototype, 'contains', {
         get() {
             return qcontains;
         },
         set() { },
         configurable: false,
     });
-    const qappend = HTMLDivElement.prototype.appendChild;
-    Reflect.defineProperty(HTMLDivElement.prototype, 'appendChild', {
+    const qappend = HTMLElement.prototype.appendChild;
+    Reflect.defineProperty(HTMLElement.prototype, 'appendChild', {
         get() {
             return qappend;
         },
@@ -1463,7 +1463,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //深拷贝对象
             };
             numfunc();
-            HTMLDivElement.prototype.setBackgroundImage = function (src) {
+            HTMLElement.prototype.setBackgroundImage = function (src) {
                 if (Array.isArray(src)) {
                     src = src[0];
                 }
@@ -1476,7 +1476,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }
                 return this;
             }; //引入mp4新逻辑
-            HTMLDivElement.prototype.setBackgroundMp4 = function (src) {
+            HTMLElement.prototype.setBackgroundMp4 = function (src) {
                 const video = document.createElement('video');
                 video.src = src;
                 video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
@@ -1488,7 +1488,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 });
                 return video;
             }; //给父元素添加一个覆盖的背景mp4
-            HTMLDivElement.prototype.HL_BG = function (name) {
+            HTMLElement.prototype.HL_BG = function (name) {
                 const src = `extension/火灵月影/mp4/${name}.mp4`;
                 const video = this.setBackgroundMp4(src);
                 return video;
@@ -6278,7 +6278,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 我辈岂是蓬蒿人
                         // 你体力值减少后,随机使用牌堆与弃牌堆各一张可使用的牌
-                        // --此技能失去时,将武将牌替换为碎月✣李白
+                        // --此技能失去时,将武将牌替换为碎月✬李白
                         HL_penghaoren: {
                             onremove(player, skill) {
                                 if (!HL.fangbaozhan) {
@@ -6352,7 +6352,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_libai_bossjieshao: '李白boss介绍',
                         HL_libai_bossjieshao_info: '此武将仅为boss展示用,其他模式均为白板<br>李白挑战模式<br>共四个阶段加一个隐藏阶段',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白通用技能
-                        HL_libai1: '李白✣',
+                        HL_libai1: '李白✬',
                         HL_baiyujing: '天上白玉京',
                         HL_baiyujing_info: '你只能受到实体牌的伤害',
                         HL_manhuying: '赵客缦胡缨',
@@ -6363,13 +6363,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_wurenzhi: '无人知所去',
                         HL_wurenzhi_info: '全场每累计使用三张牌后,你进入无敌状态直到下个角色准备阶段',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————二阶段
-                        HL_libai2: '李白✣✣',
+                        HL_libai2: '李白✬✬',
                         HL_xujinhuan: '人生得意须尽欢',
                         HL_xujinhuan_info: '任意【酒】被使用后,你下一张伤害牌伤害+1<br>任意伤害牌被使用后,你摸等同于此牌伤害值张牌<br>任意角色进入濒死后,你结束当前回合',
                         HL_kongduiyue: '莫使金樽空对月',
                         HL_kongduiyue_info: '所有角色黑/红色手牌视作【酒】/【杀】',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————三阶段
-                        HL_libai3: '李白✣✣✣',
+                        HL_libai3: '李白✬✬✬',
                         HL_xinglunan: '行路难',
                         HL_xinglunan_info: '敌方角色每次使用技能后失去一点体力',
                         HL_duoqilu: '多歧路',
@@ -6377,14 +6377,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_changfengpolang: '长风破浪会有时',
                         HL_changfengpolang_info: '任意多目标牌被使用后,你可以视作对其中任意一个目标使用x张【杀】(x为指定的目标数)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————四阶段
-                        HL_libai4: '李白✣✣✣✣',
+                        HL_libai4: '李白✬✬✬✬',
                         HL_yirihuan: '千里江陵一日还',
                         HL_yirihuan_info: '你第三个回合开始时,重新开始三阶段',
                         HL_wanguchou: '与尔同销万古愁',
                         HL_wanguchou_info: '敌方角色使用牌指定目标时,改为从所有合法目标里随机选择一个',
                         HL_penghaoren: '我辈岂是蓬蒿人',
                         HL_penghaoren_info: '你体力值减少后,随机使用牌堆与弃牌堆各一张可使用的牌',
-                        HL_penghaoren_append: '————此技能失去时,将武将牌替换为碎月✣李白',
+                        HL_penghaoren_append: '————此技能失去时,将武将牌替换为碎月✬李白',
                         HL_kaixinyan: '使我不得开心颜',
                         HL_kaixinyan_info: '敌方角色使用♠️️牌后,其失去一点体力;敌方角色使用♥️️牌时,你回复一点体力',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————邵
@@ -6419,23 +6419,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_bili_info: '当你造成伤害时,令此伤害加X(X为场上的烧伤标记数量);当你拼点时,点数加X',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————至高烈阳
                         HL_zhigaolieyang: '至高烈阳',
-                        HL_A_zhi: '止✣长昼月之息',
+                        HL_A_zhi: '止✬长昼月之息',
                         HL_A_zhi_info: '你始终拥有1限伤,每当你触发限伤后获得一个<止>,你可以弃置一枚<止>终止一个敌方角色技能的发动',
-                        HL_A_luo: '落✣机缘月之光',
+                        HL_A_luo: '落✬机缘月之光',
                         HL_A_luo_info: '当有角色不因击杀自身而获得胜利时,取消之并斩杀该角色<br>体力上限或体力值低于3的敌方角色,所有技能失效',
-                        HL_A_ji: '击✣三千里之火',
+                        HL_A_ji: '击✬三千里之火',
                         HL_A_ji_info: '游戏开始时,将场地天气切换为<烈阳>.任意火属性伤害被造成时,将你场地天气切换为<烈阳>',
                         _HL_lieyang: '烈阳',
                         _HL_lieyang_info: '此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害',
-                        HL_A_heng: '烜✣若垂天之云',
+                        HL_A_heng: '烜✬若垂天之云',
                         HL_A_heng_info: '每轮开始时/准备阶段,你视为对所有敌方角色使用一张【火烧连营】',
-                        HL_A_nu: '怒✣焚晨昏日星',
+                        HL_A_nu: '怒✬焚晨昏日星',
                         HL_A_nu_info: '蓄力技(0/9),每受到/造成1点火焰伤害后获得1点蓄力值<br>当蓄力值达到上限时,消耗所有蓄力值,令所有敌方角色受到1～2点火焰伤害并弃置等量手牌',
-                        HL_A_zhuan: '抟✣九万里之炎',
+                        HL_A_zhuan: '抟✬九万里之炎',
                         HL_A_zhuan_info: '觉醒技,体力值低于一半时,你将武将牌替换为【至怒狂雷】',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————至怒狂雷
                         HL_zhinukuanglei: '至怒狂雷',
-                        HL_A_ming: '鸣✣三千里之雷',
+                        HL_A_ming: '鸣✬三千里之雷',
                         HL_A_ming_info: '任意<雷>/<水>属性伤害被造成时,将场地天气切换为<雷电>/<暴雨>.你登场时,为牌堆中随机加入二十分之一的<水弹>',
                         _HL_leidian: '雷电',
                         _HL_leidian_info: '此天气下,雷属性伤害翻倍,血属性伤害减半<br>所有黑桃牌均视为雷属性<br>任意牌被使用或打出时,当前角色进行一次闪电判定',
@@ -6443,21 +6443,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         _HL_baoyu_info: '此天气下,水属性伤害翻倍,冰属性伤害加一,火属性伤害减半<br>任意回合开始时,将场上所有装备牌变化为<水弹><br>每回合至多使用5-<水弹>数张牌',
                         _shuidan: '水弹',
                         _shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
-                        HL_A_ting: '霆✣如海摇山倾',
+                        HL_A_ting: '霆✬如海摇山倾',
                         HL_A_ting_info: '每轮开始时/准备阶段,你视为对所有敌方角色使用一张【水淹七军】',
-                        HL_A_fen: '愤✣破昼夜长空',
+                        HL_A_fen: '愤✬破昼夜长空',
                         HL_A_fen_info: '蓄力技(0/9),每受到/造成1点雷电伤害后获得1点蓄力值<br>当蓄力值达到上限时,消耗所有蓄力值,令所有敌方角色受到1～2点雷电伤害并弃置等量手牌',
-                        HL_A_ce: '策✣九万里之电',
+                        HL_A_ce: '策✬九万里之电',
                         HL_A_ce_info: '觉醒技,当自身即将死亡时取消之,将武将牌更换为【绝灭者】,并进行一个额外回合',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————绝灭者
                         HL_juemiezhe: '绝灭者',
-                        HL_zhianchaoxi: '自✣灰烬彼岸',
+                        HL_zhianchaoxi: '自✬灰烬彼岸',
                         HL_zhianchaoxi_info: '游戏开始时,全场角色获得技能<虹彩><br>每轮开始时或准备阶段,你令所有敌方角色选择一项:1,失去2点体力值;2,减少1点体力上限<br>任意敌方角色体力上限与体力值均为1时斩杀该角色',
                         HL_hongcai: '虹彩',
                         HL_hongcai_info: '出牌阶段限一次,你可以弃置两张牌复原武将牌,增加3点体力上限,回复3点体力值,摸七张牌,本回合造成的伤害翻倍,获得所有场地天气效果',
-                        HL_zhangbujimoyan: '张✣怖寂魔眼',
+                        HL_zhangbujimoyan: '张✬怖寂魔眼',
                         HL_zhangbujimoyan_info: '每轮开始时或准备阶段,视为你对所有敌方角色使用一张【水淹七军】和【火烧连营】',
-                        HL_jinhuisiji: '落✣灭死残星',
+                        HL_jinhuisiji: '落✬灭死残星',
                         HL_jinhuisiji_info: '蓄力技(0/18),每受到/造成1点火焰或雷电伤害后获得1点蓄力值<br>当蓄力值达到上限时,消耗所有蓄力值,对所有敌方角色造成1点火焰伤害,1点雷电伤害,受伤角色各失去1点体力值,减少1点体力上限并弃置已损失体力值数牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————丰乐亭侯  神  120体力
                         HL_fengletinghou: '丰乐亭侯',
@@ -6554,7 +6554,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_yongheng: '永恒存续',
                         HL_yongheng_info: '①自身为BOSS且死亡后若场上仍有其他角色,则令所有角色死亡随后视其胜利<br>②自身不为BOSS且进入濒死状态时令其他角色失去所有体力值,你回复等量体力值并摸等量的牌(每局限一次)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白
-                        HL_李白: '碎月✣李白',
+                        HL_李白: '碎月✬李白',
                         醉诗: '醉诗',
                         醉诗_info: '每回合限两次,每轮开始/体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,你随机使用弃牌堆或处理区中一张伤害牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————许劭
