@@ -934,7 +934,7 @@ const kangxing2 = function () {
                                 .set(
                                     'choiceList',
                                     list.map(function (i) {
-                                        return `<div class='skill'><${get.translation(lib.translate[`${i}_ab`] || get.translation(i).slice(0, 2))}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
+                                        return `<div class='skill'><${get.translation(i)}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
                                     })
                                 )
                                 .set('displayIndex', false)
@@ -2726,7 +2726,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             isBoss: true,
                             isBossAllowed: true,
                         },
+                        HL_canxin: {
+                            sex: 'female',
+                            skills: ['HL_liankui', 'HL_xuansi', 'HL_duoxing'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————普通
+                        HL_kuilei: {
+                            sex: 'female',
+                            skills: [],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
                         HL_libai1: {
                             sex: 'male',
                             skills: ['HL_baiyujing', 'HL_manhuying', 'HL_shibusha', 'HL_wurenzhi'],
@@ -4318,7 +4330,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————王者御卫  神  30体力
                         // 拂士
-                        //免疫王受到的伤害;造成伤害时,令王恢复等量体力
+                        //免疫王受到的伤害;造成伤害时,令王回复等量体力
                         HL_fushi: {
                             trigger: {
                                 global: ['damageBegin4'],
@@ -4374,7 +4386,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 蒙光
-                        //王的出牌阶段结束后,恢复一点体力
+                        //王的出牌阶段结束后,回复一点体力
                         HL_mengguang: {
                             trigger: {
                                 global: ['phaseUseEnd'],
@@ -6335,6 +6347,186 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————残心
+                        // 炼傀
+                        // 游戏开始时,你获得三个<傀>
+                        // 一名其他非傀儡角色首次受到伤害时,记录其一个技能并获得一个<傀>
+                        // 若其为主公,则不记录技能,改为获得四个<傀>,且本轮结束时,视作未对其发动过此技能
+                        // 当你获得一个<傀>时,你增加一点体力上限,回复一点体力值并摸两张牌
+                        HL_liankui: {
+                            init(player) {
+                                player.addMark('HL_liankui', 3);
+                                player.storage.HL_liankui_player = [];
+                                player.storage.HL_liankui_skill = [];
+                            },
+                            trigger: {
+                                global: ['damageEnd'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content: 'mark',
+                            },
+                            filter(event, player) {
+                                return event.player.identity != 'zhu' && event.player.name != 'HL_kuilei' && !player.storage.HL_liankui_player.includes(event.player);
+                            },
+                            async content(event, trigger, player) {
+                                player.storage.HL_liankui_player.push(trigger.player);
+                                const list = trigger.player.GAS().filter((s) => !player.hasSkill(s));
+                                if (list.length) {
+                                    const {
+                                        result: { control },
+                                    } = await player
+                                        .chooseControl(list)
+                                        .set(
+                                            'choiceList',
+                                            list.map(function (i) {
+                                                return `<div class='skill'><${get.translation(i)}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
+                                            })
+                                        )
+                                        .set('displayIndex', false)
+                                        .set('prompt', `请选择记录的技能`);
+                                    player.storage.HL_liankui_skill.push(control);
+                                }
+                                player.addMark('HL_liankui');
+                            },
+                            group: ['HL_liankui_1', 'HL_liankui_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['damageEnd'],
+                                    },
+                                    forced: true,
+                                    round: 1,
+                                    filter(event, player) {
+                                        return event.player.identity == 'zhu' && event.player.name != 'HL_kuilei';
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.addMark('HL_liankui', 4);
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['addMarkEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.markName == 'HL_liankui';
+                                    },
+                                    async content(event, trigger, player) {
+                                        await player.gainMaxHp(trigger.num);
+                                        await player.recover(trigger.num);
+                                        player.draw(trigger.num * 2);
+                                    },
+                                },
+                            },
+                        },
+                        // 悬丝
+                        // 出牌阶段开始时/受到伤害后,你可以移除至多三个<傀>生成一个友方傀儡,赋予其x个已记录的技能(x为消耗的<傀>数)
+                        // 所有角色会将傀儡视为队友,傀儡生命上限为3x,初始手牌为4x
+                        HL_xuansi: {
+                            init(player) {
+                                player.storage.HL_liankui_skill = [];
+                            },
+                            _priority: -100,
+                            trigger: {
+                                player: ['phaseUseBegin', 'damageEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return player.storage.HL_liankui > 0 && player.storage.HL_liankui_skill.length;
+                            },
+                            async content(event, trigger, player) {
+                                const num = Math.min(3, player.storage.HL_liankui);
+                                const {
+                                    result: { links },
+                                } = await player.chooseButton([`生成一个友方傀儡并赋予其至多${num}个已记录的技能`, [player.storage.HL_liankui_skill.map((i) => [i, get.translation(i)]), 'tdnodes']], [1, num])
+                                    .set('ai', (b) => Math.random());
+                                if (links && links[0]) {
+                                    const numx = links.length;
+                                    player.removeMark('HL_liankui', numx);
+                                    const npc = player.addFellow('HL_kuilei');
+                                    npc.addSkillLog(links);
+                                    npc.maxHp = numx * 3;
+                                    npc.hp = numx * 3;
+                                    npc.draw(numx * 4 - 4);
+                                    npc.ai.modAttitudeFrom = function (from, to, att) {
+                                        if (to == from.boss) return 99;
+                                        return att;
+                                    };//这里from是随从
+                                    npc.ai.modAttitudeTo = function (from, to, att) {
+                                        return 99;
+                                    };//这里to是随从//所有角色会将傀儡视为队友
+                                }
+                            },
+                        },
+                        // 夺形
+                        // 每轮开始时,你可以获得一个记录的技能直到此轮结束
+                        // 当你即将死亡时,若场上有你的傀儡,改为随机一个傀儡死亡,你将体力值回复至上限
+                        // 当你的傀儡不因此技能而死亡后,你获得一个<傀>,执行一个出牌阶段
+                        HL_duoxing: {
+                            init(player) {
+                                player.storage.HL_liankui_skill = [];
+                            },
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return player.storage.HL_liankui_skill.length;
+                            },
+                            async content(event, trigger, player) {
+                                if (player.storage.HL_duoxing) {
+                                    player.removeSkill(player.storage.HL_duoxing);
+                                }
+                                const list = player.storage.HL_liankui_skill;
+                                const {
+                                    result: { control },
+                                } = await player
+                                    .chooseControl(list)
+                                    .set(
+                                        'choiceList',
+                                        list.map(function (i) {
+                                            return `<div class='skill'><${get.translation(i)}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
+                                        })
+                                    )
+                                    .set('displayIndex', false)
+                                    .set('prompt', `获得一个记录的技能直到此轮结束`);
+                                player.storage.HL_duoxing = control;
+                                player.addSkillLog(control);
+                            },
+                            group: ['HL_duoxing_1', 'HL_duoxing_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['dieBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return game.players.some((q) => q.name == 'HL_kuilei');
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.HL_duoxing_1 = true;
+                                        const npc = game.players.find((q) => q.name == 'HL_kuilei');
+                                        trigger.player = npc;
+                                        player.hp = player.maxHp;
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        global: ['dieEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return !event.HL_duoxing_1 && event.player.name == 'HL_kuilei';
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.addMark('HL_liankui');
+                                        player.phaseUse();
+                                    },
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -6347,6 +6539,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————残心
+                        HL_canxin: '残心',
+                        HL_liankui: '炼傀',
+                        HL_liankui_info: '游戏开始时,你获得三个<傀><br>一名其他非傀儡角色首次受到伤害时,记录其一个技能并获得一个<傀><br>若其为主公,则不记录技能,改为获得四个<傀>,且本轮结束时,视作未对其发动过此技能<br>当你获得一个<傀>时,你增加一点体力上限,回复一点体力值并摸两张牌',
+                        HL_xuansi: '悬丝',
+                        HL_xuansi_info: '出牌阶段开始时/受到伤害后,你可以移除至多三个<傀>生成一个友方傀儡,赋予其x个已记录的技能(x为消耗的<傀>数)<br>所有角色会将傀儡视为队友,傀儡生命上限为3x,初始手牌为4x',
+                        HL_duoxing: '夺形',
+                        HL_duoxing_info: '每轮开始时,你可以获得一个记录的技能直到此轮结束<br>当你即将死亡时,若场上有你的傀儡,改为随机一个傀儡死亡,你将体力值回复至上限<br>当你的傀儡不因此技能而死亡后,你获得一个<傀>,执行一个出牌阶段',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————傀儡
+                        HL_kuilei: '傀儡',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白boss介绍
                         HL_libai_boss: '李白',
                         HL_libai_bossjieshao: '李白boss介绍',
@@ -6502,11 +6704,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————王者御卫  神  30体力
                         HL_yuwei: '王者御卫',
                         HL_fushi: '拂士',
-                        HL_fushi_info: '免疫王受到的伤害;造成伤害时,令王恢复等量体力',
+                        HL_fushi_info: '免疫王受到的伤害;造成伤害时,令王回复等量体力',
                         HL_zhene: '镇恶',
                         HL_zhene_info: '敌方角色结束阶段,若其本回合造成了伤害,你视作对其使用一张【杀】,期间其技能失效',
                         HL_mengguang: '蒙光',
-                        HL_mengguang_info: '王的出牌阶段结束后,恢复一点体力',
+                        HL_mengguang_info: '王的出牌阶段结束后,回复一点体力',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————封印之王座  神  500.0体力
                         HL_wangzuo: '封印之王座',
                         HL_shengzhe: '圣者荣光',
