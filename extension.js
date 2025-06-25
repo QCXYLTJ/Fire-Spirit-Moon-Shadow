@@ -2736,8 +2736,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_kuilei: {
                             sex: 'female',
                             skills: [],
-                            isBoss: true,
-                            isBossAllowed: true,
                         },
                         HL_libai1: {
                             sex: 'male',
@@ -6356,6 +6354,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_liankui: {
                             init(player) {
                                 player.addMark('HL_liankui', 3);
+                                player.gainMaxHp(3);
+                                player.recover(3);
+                                player.draw(6);
                                 player.storage.HL_liankui_player = [];
                                 player.storage.HL_liankui_skill = [];
                             },
@@ -6389,8 +6390,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.storage.HL_liankui_skill.push(control);
                                 }
                                 player.addMark('HL_liankui');
+                                await player.gainMaxHp();
+                                player.recover();
+                                player.draw(2);
                             },
-                            group: ['HL_liankui_1', 'HL_liankui_2'],
+                            group: ['HL_liankui_1'],
                             subSkill: {
                                 1: {
                                     trigger: {
@@ -6403,20 +6407,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         player.addMark('HL_liankui', 4);
-                                    },
-                                },
-                                2: {
-                                    trigger: {
-                                        player: ['addMarkEnd'],
-                                    },
-                                    forced: true,
-                                    filter(event, player) {
-                                        return event.markName == 'HL_liankui';
-                                    },
-                                    async content(event, trigger, player) {
-                                        await player.gainMaxHp(trigger.num);
-                                        await player.recover(trigger.num);
-                                        player.draw(trigger.num * 2);
+                                        await player.gainMaxHp(4);
+                                        player.recover(4);
+                                        player.draw(8);
                                     },
                                 },
                             },
@@ -6522,6 +6515,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         player.addMark('HL_liankui');
+                                        await player.gainMaxHp();
+                                        player.recover();
+                                        player.draw(2);
                                         player.phaseUse();
                                     },
                                 },
