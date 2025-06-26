@@ -5028,7 +5028,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 烈阳
-                        // 此天气下,火属性伤害翻倍,冰/水属性伤害减半
+                        // 此天气下,火属性伤害翻倍
                         // 每次火属性伤害会增加环境温度
                         // 任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃>
                         // <燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害
@@ -5040,7 +5040,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player, name) {
-                                return HL.tianqi.includes('HL_lieyang') && (event.cards?.some((q) => q.fire) || ['fire', 'ice', 'water'].includes(event.nature));
+                                return HL.tianqi.includes('HL_lieyang') && (event.cards?.some((q) => q.fire) || ['fire'].includes(event.nature));
                             },
                             async content(event, trigger, player) {
                                 if (trigger.cards?.some((q) => q.fire)) {
@@ -5049,9 +5049,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (trigger.nature == 'fire') {
                                     trigger.num *= 2;
                                     HL.temperature += numberq0(trigger.num);
-                                }
-                                else if (['ice', 'water'].includes(trigger.nature)) {
-                                    trigger.num = Math.floor(trigger.num / 2);
                                 }
                             },
                             subSkill: {
@@ -5082,7 +5079,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         if (Math.random() < (HL.temperature / 100)) {
-                                            trigger.target.damage('fire');
+                                            trigger.target.damage('fire', 'nosource');
                                         }
                                     },
                                 },
@@ -5220,7 +5217,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 雷电
-                        // 此天气下,雷属性伤害翻倍,血属性伤害减半
+                        // 此天气下,雷属性伤害翻倍
                         // 所有黑桃牌均视为雷属性
                         // 任意牌被使用或打出时,当前角色进行一次闪电判定
                         _HL_leidian: {
@@ -5230,7 +5227,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player, name) {
-                                return HL.tianqi.includes('HL_leidian') && (event.card?.suit == 'spade' || ['thunder', 'blood'].includes(event.nature));
+                                return HL.tianqi.includes('HL_leidian') && (event.card?.suit == 'spade' || ['thunder'].includes(event.nature));
                             },
                             async content(event, trigger, player) {
                                 if (trigger.card?.suit == 'spade') {
@@ -5238,9 +5235,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                                 if (trigger.nature == 'thunder') {
                                     trigger.num *= 2;
-                                }
-                                else if (trigger.nature == 'blood') {
-                                    trigger.num = Math.floor(trigger.num / 2);
                                 }
                             },
                             subSkill: {
@@ -5259,7 +5253,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 暴雨
-                        // 此天气下,水属性伤害翻倍,冰属性伤害加一,火属性伤害减半
+                        // 此天气下,水属性伤害翻倍
                         // 任意回合开始时,将场上所有装备牌变化为<水弹>
                         // 每回合至多使用5-<水弹>数张牌
                         _HL_baoyu: {
@@ -5282,18 +5276,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player, name) {
-                                return HL.tianqi.includes('HL_baoyu') && ['fire', 'ice', 'water'].includes(event.nature);
+                                return HL.tianqi.includes('HL_baoyu') && ['water'].includes(event.nature);
                             },
                             async content(event, trigger, player) {
-                                if (trigger.nature == 'fire') {
-                                    trigger.num = Math.floor(trigger.num / 2);
-                                }
-                                else if (trigger.nature == 'ice') {
-                                    trigger.num++;
-                                }
-                                else {
-                                    trigger.num *= 2;
-                                }
+                                trigger.num *= 2;
                             },
                             subSkill: {
                                 1: {
@@ -5355,7 +5341,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         for (const card of trigger.cards) {
                                             if (card.name == 'shuidan') {
-                                                player.damage('water');
+                                                player.damage('water', 'nosource');
                                             }
                                         }
                                     },
@@ -5437,7 +5423,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ②每轮开始时或准备阶段,你令所有敌方角色选择一项:1,失去2点体力值;2,减少1点体力上限
                         // ③任意敌方角色体力上限与体力值均为1时斩杀该角色
                         HL_zhianchaoxi: {
-                            global: ['HL_hongcai'],
+                            _priority: 9,
                             trigger: {
                                 global: ['roundStart'],
                                 player: ['phaseZhunbeiBegin'],
@@ -5466,6 +5452,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                             group: ['HL_zhianchaoxi_1'],
+                            global: ['HL_hongcai'],
                             subSkill: {
                                 1: {
                                     trigger: {
@@ -5535,6 +5522,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 张怖寂魔眼
                         // 每轮开始时或准备阶段,视为你对所有敌方角色使用一张【水淹七军】和【火烧连营】
                         HL_zhangbujimoyan: {
+                            _priority: 8,
                             trigger: {
                                 global: ['roundStart'],
                                 player: ['phaseZhunbeiBegin'],
@@ -6640,7 +6628,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_ji: '击✬三千里之火',
                         HL_A_ji_info: '游戏开始时,将场地天气切换为<烈阳>.任意火属性伤害被造成时,将你场地天气切换为<烈阳>',
                         _HL_lieyang: '烈阳',
-                        _HL_lieyang_info: '此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害',
+                        _HL_lieyang_info: '此天气下,火属性伤害翻倍<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害',
                         HL_A_heng: '烜✬若垂天之云',
                         HL_A_heng_info: '每轮开始时/准备阶段,你视为对所有敌方角色使用一张【火烧连营】',
                         HL_A_nu: '怒✬焚晨昏日星',
@@ -6652,9 +6640,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_ming: '鸣✬三千里之雷',
                         HL_A_ming_info: '任意<雷>/<水>属性伤害被造成时,将场地天气切换为<雷电>/<暴雨>.你登场时,为牌堆中随机加入二十分之一的<水弹>',
                         _HL_leidian: '雷电',
-                        _HL_leidian_info: '此天气下,雷属性伤害翻倍,血属性伤害减半<br>所有黑桃牌均视为雷属性<br>任意牌被使用或打出时,当前角色进行一次闪电判定',
+                        _HL_leidian_info: '此天气下,雷属性伤害翻倍<br>所有黑桃牌均视为雷属性<br>任意牌被使用或打出时,当前角色进行一次闪电判定',
                         _HL_baoyu: '暴雨',
-                        _HL_baoyu_info: '此天气下,水属性伤害翻倍,冰属性伤害加一,火属性伤害减半<br>任意回合开始时,将场上所有装备牌变化为<水弹><br>每回合至多使用5-<水弹>数张牌',
+                        _HL_baoyu_info: '此天气下,水属性伤害翻倍<br>任意回合开始时,将场上所有装备牌变化为<水弹><br>每回合至多使用5-<水弹>数张牌',
                         _shuidan: '水弹',
                         _shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
                         HL_A_ting: '霆✬如海摇山倾',
