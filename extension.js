@@ -1285,8 +1285,12 @@ const boss = function () {
     }; //添加随从
     lib.element.player.guhuo = function (target) {
         target.side = this.side;
-        target.identity = this.identity;
-        target.setIdentity(this.identity, 'blue');
+        let identity = this.identity;
+        if (this.identity == 'zhu') {
+            identity = 'zhong';
+        }// 挑战模式多个主身份,会导致boss多个回合
+        target.identity = identity;
+        target.setIdentity(identity, 'blue');
         target.boss = this;
         target.ai.modAttitudeFrom = function (from, to, att) {
             //这里from是本人
