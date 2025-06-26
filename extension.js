@@ -3153,16 +3153,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 无终:
-                        // 觉醒技,当你即将死亡时取消之并将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】
+                        // 无终
+                        // 觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】
                         HL_wuzhong: {
                             forced: true,
+                            juexingji: true,
                             trigger: {
-                                player: ['dieBefore'],
+                                player: ['changeHp'],
                             },
-                            filter: (event, player) => player.hp <= 0 && !player.HL_wuzhong,
+                            filter(event, player) {
+                                return player.hp < 1 && !player.HL_wuzhong;
+                            },
                             async content(event, trigger, player) {
-                                trigger.cancel();
+                                player.awakenSkill('HL_wuzhong');
                                 player.HL_wuzhong = true;
                                 document.body.HL_BG('HL_amiya2');
                                 player.node.avatar.HL_BG('HL_amiya1');
@@ -3199,25 +3202,25 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
-                        // 永恒存续:
-                        // ①自身为BOSS且死亡后若场上仍有其他角色,则令所有角色死亡随后视其胜利
-                        // ②自身不为BOSS且进入濒死状态时令其他角色失去所有体力值,你回复等量体力值并摸等量的牌(每局限一次)
+                        // 永恒存续
+                        // 限定技,当你死亡前,
+                        // 若你为BOSS,令所有其他角色死亡,视盟军胜利
+                        // 否则令所有其他角色失去所有体力值,你回复等量体力并摸等量的牌
                         HL_yongheng: {
                             trigger: {
-                                player: ['dieBegin', 'dying'],
+                                player: ['dieBegin'],
                             },
+                            limited: true,
                             forced: true,
                             forceDie: true,
                             filter(event, player, name) {
-                                if (player.hp <= 0 && !player.yongheng) {
-                                    if (name == 'dieBegin') {
-                                        return player == game.boss;
-                                    }
-                                    return player != game.boss;
-                                }
+                                return player.hp < 1 && !player.yongheng;
                             },
                             async content(event, trigger, player) {
-                                if (trigger.name == 'die') {
+                                player.awakenSkill('HL_yongheng');
+                                trigger.cancel();
+                                player.yongheng = true;
+                                if (game.boss == player) {
                                     game.checkResult = game.kongfunc;
                                     for (const npc of game.players.filter((q) => q != player)) {
                                         player.line(npc);
@@ -3228,7 +3231,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         await next.setContent(lib.element.content.die);
                                     }
                                     game.over('阿米娅被击败了');
-                                    player.yongheng = true;
                                 }
                                 else {
                                     let num = 0;
@@ -3238,7 +3240,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                     player.recover(num);
                                     player.draw(Math.min(num, 20));
-                                    player.yongheng = true;
                                 }
                             },
                         },
@@ -3359,7 +3360,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 军事训练:
                         // ①你视为装备【先天八卦阵】
                         // ②造成伤害时有50%替换为随机属性伤害
-                        // ③自身受到【杀】的伤害后此技能失效直到本轮结束
+                        // ③你受到【杀】的伤害后此技能失效直到本轮结束
                         HL_junshixunlian: {
                             _priority: 8,
                             trigger: {
@@ -3496,7 +3497,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
                         // 焚城:准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害
                         HL_fencheng: {
-                            group: ['bosshp', 'bossfinish'],
                             init(player) {
                                 for (const npc of player.getEnemies()) {
                                     npc.damage(3, 'fire');
@@ -3506,6 +3506,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['phaseZhunbeiBefore'],
                             },
                             forced: true,
+                            kangxing: true,
                             async content(event, trigger, player) {
                                 let num = 4;
                                 let numx = 0;
@@ -3523,6 +3524,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 }
                             },
+                            group: ['bosshp', 'bossfinish'],
                         },
                         // 绝策:二阶段解锁,每名角色结束阶段,你令所有此回合失去过牌的角色各失去一点体力
                         HL_juece: {
@@ -3662,6 +3664,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['phaseZhunbeiBegin'],
                             },
+                            kangxing: true,
                             forced: true,
                             mark: true,
                             intro: {
@@ -3815,7 +3818,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 登场时,展示所有敌方角色的手牌并弃置其中的伤害牌
                         // 耀武:敌方角色使用伤害牌时,你取消所有目标,令此牌对你结算x次(x为此牌指定的目标数)
                         HL_yaowu: {
-                            group: ['bosshp', 'bossfinish'],
                             init(player) {
                                 for (const npc of player.getEnemies()) {
                                     npc.discard(npc.getCards('h', (c) => get.tag(c, 'damage')));
@@ -3824,6 +3826,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 global: ['useCardBefore'],
                             },
+                            kangxing: true,
                             forced: true,
                             filter(event, player) {
                                 return event.player.isEnemiesOf(player) && get.tag(event.card, 'damage') && event.targets?.some((q) => q != player);
@@ -3843,6 +3846,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     await trigger.player.quseCard(trigger.card, [player]);
                                 }
                             },
+                            group: ['bosshp', 'bossfinish'],
                         },
                         // 恃勇:二阶段解锁,当你受到伤害后,你摸一张牌,可以将一张牌当做【杀】对伤害来源使用,若此【杀】造成了伤害,你弃置其一张牌
                         HL_shiyong: {
@@ -4016,6 +4020,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['useCardBefore'],
                             },
+                            kangxing: true,
                             forced: true,
                             firstDo: true,
                             filter(event, player) {
@@ -4195,6 +4200,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBegin4'],
                             },
+                            kangxing: true,
                             forced: true,
                             lastDo: true,
                             async content(event, trigger, player) {
@@ -4212,6 +4218,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     juexingji: true,
                                     async content(event, trigger, player) {
+                                        player.awakenSkill('HL_shengzhe_1');
                                         player.hp = 50;
                                         player.storage.HL_shengzhe_1 = true;
                                         const boss = game.addFellowQ('HL_fengletinghou');
@@ -4298,8 +4305,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 勠力同心
-                        // 自身回合结束后,令所有士兵依次执行一个回合
-                        // 士兵回合结束后,令自身执行一个额外的摸牌阶段与出牌阶段.
+                        // 你回合结束后,令所有士兵依次执行一个回合
+                        // 士兵回合结束后,令你执行一个额外的摸牌阶段与出牌阶段.
                         HL_tongxin: {
                             trigger: {
                                 player: ['phaseAfter'],
@@ -4655,6 +4662,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.storage.HL_pozhu = [];
                             },
                             enable: ['chooseToUse', 'chooseToRespond'],
+                            kangxing: true,
                             hiddenCard(player, name) {
                                 return player.countCards('hes') && !player.storage.HL_pozhu.includes(name);
                             },
@@ -4885,6 +4893,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBegin4'],
                             },
+                            kangxing: true,
                             forced: true,
                             lastDo: true,
                             mark: true,
@@ -4941,7 +4950,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 落————机缘月之光
-                        // 当有角色不因击杀自身而获得胜利时,取消之并斩杀该角色
+                        // 当有角色不因击杀你而获得胜利时,取消之并斩杀该角色
                         // 体力上限或体力值低于3的敌方角色,所有技能失效
                         HL_A_luo: {
                             init(player) {
@@ -4980,8 +4989,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             async content(event, trigger, player) {
                                 if (!HL.HL_A_luo) {
-                                    HL.HL_A_luo = player;
+                                    HL.HL_A_luo = [];
                                 }
+                                HL.HL_A_luo.add(player);
                                 for (const npc of player.getEnemies()) {
                                     if (!npc.storage.skill_blocker) {
                                         npc.storage.skill_blocker = [];
@@ -4990,8 +5000,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                             skillBlocker(skill, player) {
-                                const boss = HL.HL_A_luo;
-                                if (boss && player != boss && (player.hp < 3 || player.maxHp < 3)) {
+                                if (HL.HL_A_luo && !HL.HL_A_luo.includes(player) && (player.hp < 3 || player.maxHp < 3)) {
                                     const info = lib.skill[skill];
                                     return info && !info.kangxing;
                                 }
@@ -5407,19 +5416,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 策————九万里之电
-                        // 觉醒技,当自身即将死亡时取消之,将武将牌更换为【绝灭者】,并进行一个额外回合
+                        // 觉醒技,当你体力值不大于0时,将武将牌更换为【绝灭者】,并进行一个额外回合
                         HL_A_ce: {
                             trigger: {
-                                player: ['dieBefore'],
+                                player: ['changeHp'],
                             },
                             forced: true,
-                            limited: true,
+                            juexingji: true,
                             filter(event, player) {
                                 return player.hp < 1;
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_A_ce');
-                                trigger.cancel();
                                 await game.HL_VIDEO(event.name);
                                 player.qreinit('HL_juemiezhe');
                                 const remove = ['HL_A_ming', 'HL_A_ting', 'HL_A_fen', 'HL_A_ce'];
@@ -5731,6 +5739,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             filter(event, player) {
                                 return player.countMark('HL_shaoEGO') < 15;
                             },
+                            kangxing: true,
                             forced: true,
                             async content(event, trigger, player) {
                                 //QQQ
@@ -5970,6 +5979,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBefore'],
                             },
+                            kangxing: true,
                             forced: true,
                             filter(event, player) {
                                 if (event.cards?.length && event.cards[0].name == event.card.name) {
@@ -6369,6 +6379,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 global: ['damageEnd'],
                             },
+                            kangxing: true,
                             forced: true,
                             mark: true,
                             intro: {
@@ -6422,7 +6433,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 悬丝
                         // 出牌阶段开始时/受到伤害后,你可以移除至多三个<傀>生成一个友方傀儡,赋予其x个已记录的技能(x为消耗的<傀>数)
-                        // 所有角色会将傀儡视为队友,傀儡生命上限为3x,初始手牌为4x
+                        // 所有角色会将傀儡视为队友,傀儡生命上限为3x,初始手牌为4x,傀儡至多三个
                         HL_xuansi: {
                             init(player) {
                                 player.storage.HL_liankui_skill = [];
@@ -6433,7 +6444,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return player.storage.HL_liankui > 0 && player.storage.HL_liankui_skill.length;
+                                return player.storage.HL_liankui > 0 && player.storage.HL_liankui_skill.length && game.players.filter((q) => q.name == 'HL_kuilei').length < 3;
                             },
                             async content(event, trigger, player) {
                                 const num = Math.min(3, player.storage.HL_liankui);
@@ -6461,8 +6472,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 夺形
                         // 每轮开始时,你可以获得一个记录的技能直到此轮结束
-                        // 当你即将死亡时,若场上有你的傀儡,改为随机一个傀儡死亡,你将体力值回复至上限
-                        // 当你的傀儡不因此技能而死亡后,你获得一个<傀>,执行一个出牌阶段
+                        // 当你体力值不大于0时,若场上有你的傀儡,令随机一个傀儡死亡,你将体力值回复至上限
+                        // 当你的傀儡死亡后,你执行一个出牌阶段,若此傀儡体力上限大于5,你获得一个<傀>
                         HL_duoxing: {
                             init(player) {
                                 player.storage.HL_liankui_skill = [];
@@ -6471,6 +6482,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['roundStart'],
                             },
                             forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage, player) {
+                                    return `当前已记录技能${get.translation(player.storage.HL_liankui_skill)}`;
+                                },
+                            },
                             filter(event, player) {
                                 return player.storage.HL_liankui_skill.length;
                             },
@@ -6498,17 +6515,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['dieBegin'],
+                                        player: ['changeHp'],
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return game.players.some((q) => q.name == 'HL_kuilei');
+                                        return game.players.some((q) => q.name == 'HL_kuilei') && player.hp < 1;
                                     },
                                     async content(event, trigger, player) {
-                                        trigger.HL_duoxing_1 = true;
                                         const npc = game.players.find((q) => q.name == 'HL_kuilei');
                                         if (npc) {
-                                            trigger.player = npc;
+                                            npc.die();
                                             player.hp = player.maxHp;
                                         }
                                     },
@@ -6519,14 +6535,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return !event.HL_duoxing_1 && event.player.name == 'HL_kuilei';
+                                        return event.player.name == 'HL_kuilei';
                                     },
                                     async content(event, trigger, player) {
-                                        player.addMark('HL_liankui');
-                                        await player.gainMaxHp();
-                                        player.recover();
-                                        player.draw(2);
-                                        player.phaseUse();
+                                        if (trigger.player.maxHp > 5) {
+                                            player.addMark('HL_liankui');
+                                            await player.gainMaxHp();
+                                            player.recover();
+                                            player.draw(2);
+                                        }
+                                        await player.phaseUse();
                                     },
                                 },
                             },
@@ -6548,9 +6566,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_liankui: '炼傀',
                         HL_liankui_info: '游戏开始时,你获得三个<傀><br>一名其他非傀儡角色首次受到伤害时,记录其一个技能并获得一个<傀><br>若其为主公,则不记录技能,改为获得四个<傀>,且本轮结束时,视作未对其发动过此技能<br>当你获得一个<傀>时,你增加一点体力上限,回复一点体力值并摸两张牌',
                         HL_xuansi: '悬丝',
-                        HL_xuansi_info: '出牌阶段开始时/受到伤害后,你可以移除至多三个<傀>生成一个友方傀儡,赋予其x个已记录的技能(x为消耗的<傀>数)<br>所有角色会将傀儡视为队友,傀儡生命上限为3x,初始手牌为4x',
+                        HL_xuansi_info: '出牌阶段开始时/受到伤害后,你可以移除至多三个<傀>生成一个友方傀儡,赋予其x个已记录的技能(x为消耗的<傀>数)<br>所有角色会将傀儡视为队友,傀儡生命上限为3x,初始手牌为4x,傀儡至多三个',
                         HL_duoxing: '夺形',
-                        HL_duoxing_info: '每轮开始时,你可以获得一个记录的技能直到此轮结束<br>当你即将死亡时,若场上有你的傀儡,改为随机一个傀儡死亡,你将体力值回复至上限<br>当你的傀儡不因此技能而死亡后,你获得一个<傀>,执行一个出牌阶段',
+                        HL_duoxing_info: '每轮开始时,你可以获得一个记录的技能直到此轮结束<br>当你体力值不大于0时,若场上有你的傀儡,令随机一个傀儡死亡,你将体力值回复至上限<br>当你的傀儡死亡后,你执行一个出牌阶段,若此傀儡体力上限大于5,你获得一个<傀>',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————傀儡
                         HL_kuilei: '傀儡',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白boss介绍
@@ -6628,7 +6646,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_zhi: '止✬长昼月之息',
                         HL_A_zhi_info: '你始终拥有1限伤,每当你触发限伤后获得一个<止>,你可以弃置一枚<止>终止一个敌方角色技能的发动',
                         HL_A_luo: '落✬机缘月之光',
-                        HL_A_luo_info: '当有角色不因击杀自身而获得胜利时,取消之并斩杀该角色<br>体力上限或体力值低于3的敌方角色,所有技能失效',
+                        HL_A_luo_info: '当有角色不因击杀你而获得胜利时,取消之并斩杀该角色<br>体力上限或体力值低于3的敌方角色,所有技能失效',
                         HL_A_ji: '击✬三千里之火',
                         HL_A_ji_info: '游戏开始时,将场地天气切换为<烈阳>.任意火属性伤害被造成时,将你场地天气切换为<烈阳>',
                         _HL_lieyang: '烈阳',
@@ -6654,7 +6672,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_fen: '愤✬破昼夜长空',
                         HL_A_fen_info: '蓄力技(0/9),每受到/造成1点雷电伤害后获得1点蓄力值<br>当蓄力值达到上限时,消耗所有蓄力值,令所有敌方角色受到1～2点雷电伤害并弃置等量手牌',
                         HL_A_ce: '策✬九万里之电',
-                        HL_A_ce_info: '觉醒技,当自身即将死亡时取消之,将武将牌更换为【绝灭者】,并进行一个额外回合',
+                        HL_A_ce_info: '觉醒技,当你体力值不大于0时,将武将牌更换为【绝灭者】,并进行一个额外回合',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————绝灭者
                         HL_juemiezhe: '绝灭者',
                         HL_zhianchaoxi: '自✬灰烬彼岸',
@@ -6720,7 +6738,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_wangdao: '王道权御',
                         HL_wangdao_info: '每轮开始时,若场上没有士兵,随机召唤一批次士兵<br>若场上有士兵,令所有士兵自爆<br>每自爆一个士兵的一点体力,对随机敌方单位造成1点伤害<br>批次1<br>王左右出现王者御卫,玩家两侧出现王者骁勇<br>批次2<br>王左右出现铁骨铮臣,玩家两侧出现兴国志士<br>批次3<br>王左右出现国之柱石<br>批次4<br>玩家两侧出现两个凡人之愿',
                         HL_tongxin: '勠力同心',
-                        HL_tongxin_info: '自身回合结束后,令所有士兵依次执行一个回合<br>士兵回合结束后,令自身执行一个额外的摸牌阶段与出牌阶段',
+                        HL_tongxin_info: '你回合结束后,令所有士兵依次执行一个回合<br>士兵回合结束后,令你执行一个额外的摸牌阶段与出牌阶段',
                         //————————————————————————————————————————————博卓卡斯替·圣卫铳骑
                         HL_shengwei: '博卓卡斯替·圣卫铳骑',
                         HL_quanyu: '劝谕',
@@ -6738,7 +6756,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //————————————————————————————————————————————曼弗雷德
                         HL_manfuleide: '曼弗雷德',
                         HL_junshixunlian: '军事训练',
-                        HL_junshixunlian_info: '①你视为装备【先天八卦阵】<br>②造成伤害时有50%替换为随机属性伤害<br>③自身受到【杀】的伤害后此技能失效直到本轮结束',
+                        HL_junshixunlian_info: '①你视为装备【先天八卦阵】<br>②造成伤害时有50%替换为随机属性伤害<br>③你受到【杀】的伤害后此技能失效直到本轮结束',
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
                         HL_amiya: '阿米娅·炉芯终曲',
                         HL_buyingcunzai: '不应存在之人',
@@ -6752,13 +6770,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_cunxuxianzhao: '存续先兆',
                         HL_cunxuxianzhao_info: '蓄力技(0/10),结束阶段,若蓄力值已满消耗所有蓄力值随机令一名敌方角色所有技能失效并死亡.每名随从死亡时增加五点蓄力值',
                         HL_wuzhong: '无终',
-                        HL_wuzhong_info: '觉醒技,当你即将死亡时取消之并将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】',
+                        HL_wuzhong_info: '觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】',
                         HL_heiguan: '黑冠余威',
                         HL_heiguan_info: '①当体力值首次回复至上限后立即令敌方角色失去一半体力值<br>②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)',
                         HL_qipan: '无言的期盼',
                         HL_qipan_info: '结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等',
                         HL_yongheng: '永恒存续',
-                        HL_yongheng_info: '①自身为BOSS且死亡后若场上仍有其他角色,则令所有角色死亡随后视其胜利<br>②自身不为BOSS且进入濒死状态时令其他角色失去所有体力值,你回复等量体力值并摸等量的牌(每局限一次)',
+                        HL_yongheng_info: '限定技,当你死亡前,<br>若你为BOSS,令所有其他角色死亡,视盟军胜利<br>否则令所有其他角色失去所有体力值,你回复等量体力并摸等量的牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白
                         HL_李白: '碎月✬李白',
                         醉诗: '醉诗',
@@ -7023,7 +7041,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     player.update();
                     player.success = false;
                 },
-            };
+            };// 挂的主技能被封了也会跟着被封
             lib.skill.bossfinish = {
                 trigger: {
                     source: ['damageBefore'],
