@@ -3951,7 +3951,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        global: ['useCardBefore'],
+                                        global: ['useCardEnd'],//金莲珠嵌套结算
                                     },
                                     forced: true,
                                     filter(event, player) {
@@ -5024,7 +5024,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 HL.tqjs.innerHTML = "<b style='color:rgb(233, 108, 24); font-size: 25px;'>烈阳</b>";
                                 HL.tqjs.onclick = function () {
                                     const div = ui.create.div('.HL_dialog', document.body);
-                                    div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,火属性伤害翻倍,冰/水属性伤害减半<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害</b>';
+                                    div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,火属性伤害翻倍<br>每次火属性伤害会增加环境温度<br>任意出牌阶段开始时,根据当前温度点燃其随机数量手牌称为<燃><br><燃>造成的伤害视为火属性,被<燃>指定的目标根据温度受到随机火属性伤害<br>任意回合结束后,若当前角色牌中有<燃>,焚毁这些牌并对其造成等量火属性伤害</b>';
                                     setTimeout(function () {
                                         div.remove();
                                     }, 2000);
@@ -5200,7 +5200,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     HL.tqjs.innerHTML = "<b style='color:rgb(171, 22, 230); font-size: 25px;'>雷电</b>";
                                     HL.tqjs.onclick = function () {
                                         const div = ui.create.div('.HL_dialog', document.body);
-                                        div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,雷属性伤害翻倍,血属性伤害减半<br>所有黑桃牌均视为雷属性<br>任意牌被使用或打出时,当前角色进行一次闪电判定</b>';
+                                        div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,雷属性伤害翻倍<br>所有黑桃牌均视为雷属性<br>任意牌被使用或打出时,当前角色进行一次闪电判定</b>';
                                         setTimeout(function () {
                                             div.remove();
                                         }, 2000);
@@ -5212,7 +5212,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     HL.tqjs.innerHTML = "<b style='color:rgb(17, 140, 223); font-size: 25px;'>暴雨</b>";
                                     HL.tqjs.onclick = function () {
                                         const div = ui.create.div('.HL_dialog', document.body);
-                                        div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,水属性伤害翻倍,冰属性伤害加一,火属性伤害减半<br>任意回合开始时,将场上所有装备牌变化为<水弹><br>每回合至多使用5-<水弹>数张牌</b>';
+                                        div.innerHTML = '<b style="color:rgb(223, 175, 19);">此天气下,水属性伤害翻倍<br>任意回合开始时,将场上所有装备牌变化为<水弹><br>每回合至多使用5-<水弹>数张牌</b>';
                                         setTimeout(function () {
                                             div.remove();
                                         }, 2000);
