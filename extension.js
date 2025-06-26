@@ -2976,6 +2976,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_buyingcunzai_1');
                                         player.wudi = true;
+                                        player.when({ global: 'roundStart' }).then(() => player.wudi = false);
                                     },
                                 },
                             },
@@ -3002,9 +3003,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 content: '#',
                             },
                             async content(event, trigger, player) {
-                                if (trigger.name == 'phase' && player.wudi) {
-                                    player.wudi = false;
-                                }
                                 const num = numberq1(trigger.num);
                                 player.addMark('HL_chuangyi', num);
                                 player.draw(Math.min(num, 20));
@@ -4161,7 +4159,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 神威:炼狱模式解锁,其他角色准备阶段,你可以使用一张【杀】
+                        // 神威
+                        // 炼狱模式解锁,其他角色准备阶段,你获得一张【杀】并可以使用之
                         HL_shenwei: {
                             _priority: 9,
                             trigger: {
@@ -4172,13 +4171,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player != player;
                             },
                             async content(event, trigger, player) {
-                                player
-                                    .chooseToUse('使用一张【杀】', (card) => card.name == 'sha')
-                                    .set('ai2', function (target) {
-                                        if (target) {
-                                            return -get.attitude(player, target);
-                                        }
-                                    });
+                                const sha = get.cardPile((c) => c.name == 'sha', 'field');
+                                if (sha) {
+                                    player
+                                        .chooseToUse('使用此【杀】', (card) => card == sha)
+                                        .set('ai2', function (target) {
+                                            if (target) {
+                                                return -get.attitude(player, target);
+                                            }
+                                        });
+                                }
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————封印之王座  神  500.0体力
@@ -6503,8 +6505,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         const npc = game.players.find((q) => q.HL_kuilei);
                                         if (npc) {
-                                            npc.die();
                                             player.hp = player.maxHp;
+                                            await npc.die();
+                                            npc.HL_kuilei = false;
                                         }
                                     },
                                 },
@@ -6779,7 +6782,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_liyu: '利驭',
                         HL_liyu_info: '四阶段解锁,每名角色回合限一次,你使用伤害牌指定其后,摸四张牌,出牌阶段出杀次数+1,防止此牌对其造成的伤害,你下一次造成的伤害翻倍',
                         HL_shenwei: '神威',
-                        HL_shenwei_info: '炼狱模式解锁,其他角色准备阶段,你可以使用一张【杀】',
+                        HL_shenwei_info: '炼狱模式解锁,其他角色准备阶段,你获得一张【杀】并可以使用之',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————镇关魔将
                         HL_huaxiong: '镇关魔将',
                         HL_yaowu: '耀武',
