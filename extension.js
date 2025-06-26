@@ -3498,6 +3498,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             async content(event, trigger, player) {
                                 let num = 4;
                                 let numx = 0;
@@ -3656,6 +3658,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['phaseZhunbeiBegin'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             mark: true,
                             intro: {
@@ -3818,6 +3822,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['useCardBefore'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             filter(event, player) {
                                 return event.player.isEnemiesOf(player) && get.tag(event.card, 'damage') && event.targets?.some((q) => q != player);
@@ -4012,6 +4018,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['useCardBefore'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             firstDo: true,
                             filter(event, player) {
@@ -4196,6 +4204,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageBegin4'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             lastDo: true,
                             async content(event, trigger, player) {
@@ -4657,6 +4667,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             enable: ['chooseToUse', 'chooseToRespond'],
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             hiddenCard(player, name) {
                                 return player.countCards('hes') && !player.storage.HL_pozhu.includes(name);
                             },
@@ -4888,6 +4900,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageBegin4'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             lastDo: true,
                             mark: true,
@@ -5099,7 +5113,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         const cards = player.getCards('he', (c) => c.fire);
                                         for (const card of cards) {
                                             card.selfDestroy();
-                                            player.damage('fire');
+                                            player.damage('fire', 'nosource');
                                         }
                                     },
                                 },
@@ -5722,6 +5736,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return player.countMark('HL_shaoEGO') < 15;
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             async content(event, trigger, player) {
                                 //QQQ
@@ -5962,6 +5978,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageBefore'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             filter(event, player) {
                                 if (event.cards?.length && event.cards[0].name == event.card.name) {
@@ -6362,6 +6380,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['damageEnd'],
                             },
                             kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             mark: true,
                             intro: {
@@ -6507,6 +6527,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         const npc = game.players.find((q) => q.HL_kuilei);
                                         if (npc) {
+                                            game.log(`<b style='color:rgb(228, 17, 28);'>${get.translation(player)}令${get.translation(npc)}死亡,并将自身体力值回复至上限</b>`);
                                             player.hp = player.maxHp;
                                             await npc.die();
                                             npc.HL_kuilei = false;
@@ -6528,6 +6549,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             player.recover();
                                             player.draw(2);
                                         }
+                                        game.log(`<b style='color:rgb(228, 17, 28);'>${get.translation(player)}进行额外出牌阶段</b>`);
                                         await player.phaseUse();
                                     },
                                 },
