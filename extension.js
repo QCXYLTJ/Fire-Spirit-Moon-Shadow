@@ -2966,7 +2966,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['changeHp'],
+                                        player: ['changeHp', 'damageBefore'],
                                     },
                                     filter(event, player) {
                                         return player.hp < (player.maxHp / 2) && !player.storage.HL_buyingcunzai_1;
@@ -3152,7 +3152,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             juexingji: true,
                             trigger: {
-                                player: ['changeHp'],
+                                player: ['changeHp', 'damageBefore'],
                             },
                             filter(event, player) {
                                 return player.hp < 1 && !player.storage.HL_wuzhong;
@@ -4201,7 +4201,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['changeHp'],
+                                        player: ['changeHp', 'damageBefore'],
                                     },
                                     forced: true,
                                     filter(event, player) {
@@ -5148,7 +5148,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 觉醒技,体力值低于一半时,你将武将牌替换为【至怒狂雷】
                         HL_A_zhuan: {
                             trigger: {
-                                player: ['changeHp', 'damageEnd'],
+                                player: ['changeHp', 'damageBefore'],
                             },
                             _priority: 400,
                             forced: true,
@@ -5395,7 +5395,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 觉醒技,当你体力值不大于0时,将武将牌更换为【绝灭者】,并进行一个额外回合
                         HL_A_ce: {
                             trigger: {
-                                player: ['changeHp'],
+                                player: ['changeHp', 'damageBefore'],
                             },
                             forced: true,
                             juexingji: true,
@@ -6364,7 +6364,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 content: 'mark',
                             },
                             filter(event, player) {
-                                return event.player.identity != 'zhu' && event.player.name != 'HL_kuilei' && !player.storage.HL_liankui_player.includes(event.player);
+                                return event.player.identity != 'zhu' && !event.player.HL_kuilei && !player.storage.HL_liankui_player.includes(event.player);
                             },
                             async content(event, trigger, player) {
                                 player.storage.HL_liankui_player.push(trigger.player);
@@ -6398,7 +6398,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     round: 1,
                                     filter(event, player) {
-                                        return event.player.identity == 'zhu' && event.player.name != 'HL_kuilei';
+                                        return event.player.identity == 'zhu' && !event.player.HL_kuilei;
                                     },
                                     async content(event, trigger, player) {
                                         player.addMark('HL_liankui', 4);
@@ -6422,7 +6422,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return player.storage.HL_liankui > 0 && player.storage.HL_liankui_skill.length && game.players.filter((q) => q.name == 'HL_kuilei').length < 3;
+                                return player.storage.HL_liankui > 0 && player.storage.HL_liankui_skill.length && game.players.filter((q) => q.HL_kuilei).length < 3;
                             },
                             async content(event, trigger, player) {
                                 const num = Math.min(3, player.storage.HL_liankui);
@@ -6434,6 +6434,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     const numx = links.length;
                                     player.removeMark('HL_liankui', numx);
                                     const npc = player.addFellow('HL_kuilei');
+                                    npc.HL_kuilei = true;
                                     npc.addSkillLog(links);
                                     npc.maxHp = numx * 3;
                                     npc.hp = numx * 3;
@@ -6493,14 +6494,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['changeHp'],
+                                        player: ['changeHp', 'damageBefore'],
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return game.players.some((q) => q.name == 'HL_kuilei') && player.hp < 1;
+                                        return game.players.some((q) => q.HL_kuilei) && player.hp < 1;
                                     },
                                     async content(event, trigger, player) {
-                                        const npc = game.players.find((q) => q.name == 'HL_kuilei');
+                                        const npc = game.players.find((q) => q.HL_kuilei);
                                         if (npc) {
                                             npc.die();
                                             player.hp = player.maxHp;
@@ -6513,7 +6514,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return event.player.name == 'HL_kuilei';
+                                        return event.player.HL_kuilei;
                                     },
                                     async content(event, trigger, player) {
                                         if (trigger.player.maxHp > 5) {
