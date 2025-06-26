@@ -2929,47 +2929,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
                         // 不应存在之人
                         // ①你始终拥有50%减伤
-                        // ②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束
+                        // ②限定技,当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束
                         HL_buyingcunzai: {
                             init(player) {
-                                let maxhp = 1000;
-                                Reflect.defineProperty(player, 'maxHp', {
-                                    get() {
-                                        return maxhp;
-                                    },
-                                    set(value) {
-                                        if (value > maxhp) {
-                                            maxhp = value;
-                                        }
-                                    },
-                                }); //扣减体力上限抗性
-                                let qhp = 1000;
-                                Reflect.defineProperty(player, 'hp', {
-                                    get() {
-                                        return qhp;
-                                    },
-                                    set(value) {
-                                        if (value > qhp) {
-                                            qhp = value;
-                                        } else {
-                                            if (player.success && !player.wudi) {
-                                                qhp = value;
-                                                if (qhp < (maxhp / 2) && !player.wudix) {
-                                                    player.wudi = true;
-                                                    player.wudix = true; //防止多次发动
-                                                }
-                                            }
-                                        }
-                                    },
-                                });
                                 ui.background.style.backgroundImage = `url(extension/火灵月影/image/HL_amiya1.jpg)`;
                                 ui.backgroundMusic.src = `extension/火灵月影/BGM/HL_amiya.mp3`;
                                 ui.backgroundMusic.loop = true;
                             },
                             trigger: {
-                                player: ['loseHpEnd', 'damageEnd'],
+                                player: ['damageBegin4'],
                             },
                             forced: true,
+                            lastDo: true,
                             mark: true,
                             intro: {
                                 name: '无敌',
@@ -2980,11 +2951,33 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     return '当前阿米娅未处于无敌状态';
                                 },
                             },
+                            filter(event, player) {
+                                return player.wudi || event.num > 1;
+                            },
                             async content(event, trigger, player) {
-                                player.success = true;
-                                player.hp = player.hp - Math.ceil(trigger.num / 2);
-                                player.update();
-                                player.success = false;
+                                if (player.wudi) {
+                                    trigger.cancel();
+                                }
+                                else {
+                                    trigger.num = Math.ceil(trigger.num / 2);
+                                }
+                            },
+                            group: ['bosshp', 'bossfinish', 'HL_buyingcunzai_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['changeHp'],
+                                    },
+                                    filter(event, player) {
+                                        return player.hp < (player.maxHp / 2) && !player.storage.HL_buyingcunzai_1;
+                                    },
+                                    forced: true,
+                                    limited: true,
+                                    async content(event, trigger, player) {
+                                        player.awakenSkill('HL_buyingcunzai_1');
+                                        player.wudi = true;
+                                    },
+                                },
                             },
                         },
                         //仅剩的创意:
@@ -3154,7 +3147,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 无终
-                        // 觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】
+                        // 觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】,重置技能【不应存在之人】
                         HL_wuzhong: {
                             forced: true,
                             juexingji: true,
@@ -3162,16 +3155,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['changeHp'],
                             },
                             filter(event, player) {
-                                return player.hp < 1 && !player.HL_wuzhong;
+                                return player.hp < 1 && !player.storage.HL_wuzhong;
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_wuzhong');
-                                player.HL_wuzhong = true;
                                 document.body.HL_BG('HL_amiya2');
                                 player.node.avatar.HL_BG('HL_amiya1');
                                 player.hp = player.maxHp;
                                 player.wudi = true;
-                                player.wudix = false;
+                                player.restoreSkill('HL_buyingcunzai_1');
                                 lib.character.HL_amiya.skills.addArray(['HL_heiguan', 'HL_qipan', 'HL_yongheng']);
                                 game.skangxing(player);
                                 for (const npc of player.getEnemies()) {
@@ -3214,12 +3206,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             forceDie: true,
                             filter(event, player, name) {
-                                return player.hp < 1 && !player.yongheng;
+                                return player.hp < 1 && !player.storage.yongheng;
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_yongheng');
                                 trigger.cancel();
-                                player.yongheng = true;
                                 if (game.boss == player) {
                                     game.checkResult = game.kongfunc;
                                     for (const npc of game.players.filter((q) => q != player)) {
@@ -4220,7 +4211,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_shengzhe_1');
                                         player.hp = 50;
-                                        player.storage.HL_shengzhe_1 = true;
                                         const boss = game.addFellowQ('HL_fengletinghou');
                                         game.nkangxing(boss, 'HL_fengletinghou');
                                         game.skangxing(boss);
@@ -5167,7 +5157,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             limited: true,
                             filter(event, player) {
-                                return player.hp < (player.maxHp / 2);
+                                return player.hp < (player.maxHp / 2) && !player.storage.HL_A_zhuan;
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_A_zhuan');
@@ -5424,7 +5414,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             juexingji: true,
                             filter(event, player) {
-                                return player.hp < 1;
+                                return player.hp < 1 && !player.storage.HL_A_ce;
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_A_ce');
@@ -6770,7 +6760,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_cunxuxianzhao: '存续先兆',
                         HL_cunxuxianzhao_info: '蓄力技(0/10),结束阶段,若蓄力值已满消耗所有蓄力值随机令一名敌方角色所有技能失效并死亡.每名随从死亡时增加五点蓄力值',
                         HL_wuzhong: '无终',
-                        HL_wuzhong_info: '觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】',
+                        HL_wuzhong_info: '觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】,重置技能【不应存在之人】',
                         HL_heiguan: '黑冠余威',
                         HL_heiguan_info: '①当体力值首次回复至上限后立即令敌方角色失去一半体力值<br>②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)',
                         HL_qipan: '无言的期盼',
@@ -6990,7 +6980,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             lib.skill.bosshp = {
                 init(player) {
                     const info = lib.character[player.name];
-                    let maxhp = info.maxHp;
+                    let maxhp = Math.max(info.maxHp, player.maxHp);
                     Reflect.defineProperty(player, 'maxHp', {
                         get() {
                             return maxhp;
@@ -7001,7 +6991,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             }
                         },
                     }); //扣减体力上限抗性
-                    let qhp = info.hp;
+                    let qhp = Math.max(info.hp, player.hp);
                     Reflect.defineProperty(player, 'hp', {
                         get() {
                             return qhp;
