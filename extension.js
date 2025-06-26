@@ -2030,7 +2030,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     hookTrigger: {
                         block: (event, player, triggername, skill) => true,
                     },
-                    skillBlocker: (skill, player) => true,
+                    skillBlocker(skill, player) {
+                        const info = lib.skill[skill];
+                        return info && !info.kangxing;
+                    },
                 };
             }; //技能相关自创函数
             jineng();
@@ -4036,7 +4039,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }).vars({ targets: targets });
                             },
                             skillBlocker(skill, player) {
-                                return true;
+                                const info = lib.skill[skill];
+                                return info && !info.kangxing;
                             },
                             group: ['HL_wushuang_2', 'bosshp', 'bossfinish'],
                             subSkill: {
@@ -4380,7 +4384,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 trigger.player.storage.skill_blocker?.remove('HL_zhene');
                             },
                             skillBlocker(skill, player) {
-                                return true;
+                                const info = lib.skill[skill];
+                                return info && !info.kangxing;
                             },
                         },
                         // 蒙光
@@ -4987,7 +4992,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skillBlocker(skill, player) {
                                 const boss = HL.HL_A_luo;
                                 if (boss && player != boss && (player.hp < 3 || player.maxHp < 3)) {
-                                    return true;
+                                    const info = lib.skill[skill];
+                                    return info && !info.kangxing;
                                 }
                             },
                         },
@@ -7005,6 +7011,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 popup: false,
                 firstDo: true,
                 forced: true,
+                charlotte: true,
+                fixed: true,
+                kangxing: true,
                 filter(event, player) {
                     return event.num > 0;
                 },
