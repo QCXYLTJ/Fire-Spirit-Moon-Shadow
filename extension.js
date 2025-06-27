@@ -7076,6 +7076,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         });
+                        const npc = trigger.player;
+                        Reflect.defineProperty(trigger, 'player', {
+                            get() {
+                                return npc;
+                            },
+                            set() { },
+                        });
                     }
                     if (trigger.name == 'useCard') {
                         Reflect.defineProperty(trigger, 'finished', {
