@@ -4183,6 +4183,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const sha = get.cardPile((c) => c.name == 'sha', 'field');
                                 if (sha) {
+                                    await player.gain(sha, 'gain2');
                                     player
                                         .chooseToUse('使用此【杀】', (card) => card == sha)
                                         .set('ai2', function (target) {
