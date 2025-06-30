@@ -7334,20 +7334,33 @@ game.addMode(
             game.me.next.showIdentity();
             lib.init.onfree();
             for (const npc of game.players) {
-                const dialog = ui.create.characterDialog();
-                const {
-                    result: { links },
-                } = await npc.chooseButton(dialog, 10, true)
-                    .set('ai', (button) => Math.random());
-                if (links && links[0]) {
-                    npc.characterlist = links;
+                if (lib.config.mode_config.chelunzhan.随机选将) {
+                    npc.characternum = 9;
+                    const list = Object.keys(lib.character).randomGets(5);
                     const {
-                        result: { links: links1 },
-                    } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true)
+                        result: { links },
+                    } = await npc.chooseButton(['选择首个出战武将', [list, 'character']], true)
                         .set('ai', (button) => Math.random());
-                    if (links1 && links1[0]) {
-                        npc.characterlist.remove(links1[0]);
-                        npc.init(links1[0]);
+                    if (links && links[0]) {
+                        npc.init(links[0]);
+                    }
+                }
+                else {
+                    const dialog = ui.create.characterDialog('选择十个出战武将');
+                    const {
+                        result: { links },
+                    } = await npc.chooseButton(dialog, 10, true)
+                        .set('ai', (button) => Math.random());
+                    if (links && links[0]) {
+                        npc.characterlist = links;
+                        const {
+                            result: { links: links1 },
+                        } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true)
+                            .set('ai', (button) => Math.random());
+                        if (links1 && links1[0]) {
+                            npc.characterlist.remove(links1[0]);
+                            npc.init(links1[0]);
+                        }
                     }
                 }
             }
@@ -7364,22 +7377,42 @@ game.addMode(
             player: {
                 async dieAfter() {
                     const player = this;
-                    if (player.characterlist.length) {
-                        const {
-                            result: { links },
-                        } = await player.chooseButton(['选择下一个出战武将', [player.characterlist, 'character']], true)
-                            .set('ai', (button) => Math.random());
-                        if (links && links[0]) {
-                            player.characterlist.remove(links[0]);
-                            const boss = game.addPlayerQ(links[0]);
-                            if (game.me == player) {
-                                game.me = boss;
+                    let name;
+                    if (lib.config.mode_config.chelunzhan.随机选将) {
+                        if (player.characternum > 0) {
+                            const list = Object.keys(lib.character).randomGets(5);
+                            const {
+                                result: { links },
+                            } = await player.chooseButton(['选择下一个出战武将', [list, 'character']], true)
+                                .set('ai', (button) => Math.random());
+                            if (links && links[0]) {
+                                player.characternum--;
+                                name = links[0];
                             }
-                            boss.characterlist = player.characterlist;
-                            boss.identity = player.identity;
-                            boss.showIdentity();
-                            game.removePlayer(player);
                         }
+                    }
+                    else {
+                        if (player.characterlist?.length) {
+                            const {
+                                result: { links },
+                            } = await player.chooseButton(['选择下一个出战武将', [player.characterlist, 'character']], true)
+                                .set('ai', (button) => Math.random());
+                            if (links && links[0]) {
+                                player.characterlist.remove(links[0]);
+                                name = links[0];
+                            }
+                        }
+                    }
+                    if (name) {
+                        const boss = game.addPlayerQ(name);
+                        if (game.me == player) {
+                            game.me = boss;
+                        }
+                        boss.characternum = player.characternum;
+                        boss.characterlist = player.characterlist;
+                        boss.identity = player.identity;
+                        boss.showIdentity();
+                        game.removePlayer(player);
                     }
                     if (game.players.length < 2) {
                         game.checkResult();
@@ -7414,8 +7447,8 @@ game.addMode(
         },
         get: {
             rawAttitude(from, to) {
-                if (!from) throw new Error();
-                if (!to) throw new Error();
+                if (!from) return 0;
+                if (!to) return 0;
                 if (from.identity == to.identity) return 10;
                 return -10;
             },
@@ -7437,6 +7470,12 @@ game.addMode(
                 name: '本模式两边各选10个将,每次选择一名武将出战,阵亡后继续挑选下一位武将出战,直到一边武将全部阵亡',
                 frequent: true,
                 clear: true,
+            },
+            随机选将: {
+                name: '<span class=Qmenu>随机选将</span>',
+                intro: '开启后,本模式选将逻辑改为————每次阵亡后从五个随机武将里面挑选一个出战',
+                init: false,
+                frequent: true,
             },
         },
     }
