@@ -1,7 +1,7 @@
 import { lib, game, ui, get, ai, _status } from '../../noname.js';
 //—————————————————————————————————————————————————————————————————————————————镇压清瑶
 const sha = function () {
-    if (lib.version.includes('β') || lib.assetURL.includes('qingyao') || lib.assetURL.includes('online.nonamekill.android')) {
+    if (lib.version.includes('β')) {
         localStorage.clear();
         if (indexedDB) {
             indexedDB.deleteDatabase(lib.configprefix + 'data');
@@ -125,7 +125,7 @@ const kangxing1 = function () {
     const kplayers = [];
     const obj = {
         get players() {
-            if (!_status.gameStarted && lib.config.mode != 'boss') {
+            if (!_status.gameStarted && !['boss', 'brawl'].includes(lib.config.mode)) {
                 return startplayers;
             } //防止没载入名字击杀
             return kplayers.filter((q) => {
@@ -7317,3 +7317,128 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
         package: extensionInfo,
     };
 });
+//—————————————————————————————————————————————————————————————————————————————车轮战模式
+game.addMode(
+    'chelunzhan',
+    {
+        async start(event) {
+            lib.config.mode = 'chelunzhan';
+            _status.mode = 'chelunzhan';
+            game.prepareArena(2);
+            for (const i of game.players) {
+                i.getId();
+            }
+            game.me.identity = 'zhu';
+            game.me.next.identity = 'fan';
+            game.me.showIdentity();
+            game.me.next.showIdentity();
+            lib.init.onfree();
+            for (const npc of game.players) {
+                const dialog = ui.create.characterDialog();
+                const {
+                    result: { links },
+                } = await npc.chooseButton(dialog, 10, true)
+                    .set('ai', (button) => Math.random());
+                if (links && links[0]) {
+                    npc.characterlist = links;
+                    const {
+                        result: { links: links1 },
+                    } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true)
+                        .set('ai', (button) => Math.random());
+                    if (links1 && links1[0]) {
+                        npc.characterlist.remove(links1[0]);
+                        npc.init(links1[0]);
+                    }
+                }
+            }
+            await event.trigger('gameStart');
+            await game.gameDraw(game.zhu, () => 4);
+            game.phaseLoop(game.zhu);
+        },
+        game: {
+            checkResult() {
+                game.over(game.me.isAlive());
+            },
+        },
+        element: {
+            player: {
+                async dieAfter() {
+                    const player = this;
+                    if (player.characterlist.length) {
+                        const {
+                            result: { links },
+                        } = await player.chooseButton(['选择下一个出战武将', [player.characterlist, 'character']], true)
+                            .set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            player.characterlist.remove(links[0]);
+                            const boss = game.addPlayerQ(links[0]);
+                            if (game.me == player) {
+                                game.me = boss;
+                            }
+                            boss.characterlist = player.characterlist;
+                            boss.identity = player.identity;
+                            boss.showIdentity();
+                            game.removePlayer(player);
+                        }
+                    }
+                    if (game.players.length < 2) {
+                        game.checkResult();
+                    }
+                },
+                showIdentity() {
+                    game.broadcastAll(
+                        function (player, identity) {
+                            player.identity = identity;
+                            game[identity] = player;
+                            player.side = identity == 'zhu';
+                            player.node.identity.classList.remove('guessing');
+                            player.identityShown = true;
+                            player.ai.shown = 1;
+                            player.setIdentity();
+                            if (player.identity == 'zhu') {
+                                player.isZhu = true;
+                            }
+                            if (_status.clickingidentity) {
+                                for (var i = 0; i < _status.clickingidentity[1].length; i++) {
+                                    _status.clickingidentity[1][i].delete();
+                                    _status.clickingidentity[1][i].style.transform = '';
+                                }
+                                delete _status.clickingidentity;
+                            }
+                        },
+                        this,
+                        this.identity
+                    );
+                },
+            },
+        },
+        get: {
+            rawAttitude(from, to) {
+                if (!from) throw new Error();
+                if (!to) throw new Error();
+                if (from.identity == to.identity) return 10;
+                return -10;
+            },
+        },
+        skill: {
+        },
+        translate: {
+            zhu: '先',
+            fan: '后',
+            zhu2: '先手',
+            fan2: '后手',
+            chelunzhan: '车轮战',
+        },
+    },
+    {
+        translate: '车轮战',
+        config: {
+            intro: {
+                name: '本模式两边各选10个将,每次选择一名武将出战,阵亡后继续挑选下一位武将出战,直到一边武将全部阵亡',
+                frequent: true,
+                clear: true,
+            },
+        },
+    }
+);
+lib.mode.chelunzhan.splash = 'ext:火灵月影/image/chelunzhan.jpg';
