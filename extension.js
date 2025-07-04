@@ -3915,7 +3915,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return 5 - val;
                                     },
                                     ai: {
-                                        skillTagFilter(player) {
+                                        skillTagFilter(player, tag) {
                                             if (get.zhu(player, 'shouyue')) {
                                                 if (!player.countCards('hes')) return false;
                                             } else {
@@ -4501,6 +4501,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 fireAttack: true,
                                 respondSha: true,
                                 respondShan: true,
+                                skillTagFilter(player, tag, arg) {
+                                    return Boolean(player.countCards('he', { type: 'basic' }));
+                                },
                                 order: 10,
                                 result: {
                                     player: 1,
@@ -4715,10 +4718,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             ai: {
                                 fireAttack: true,
                                 save: true,
-                                respondTao: true,
-                                respondwuxie: true,
                                 respondSha: true,
                                 respondShan: true,
+                                skillTagFilter(player, tag, arg) {
+                                    if (player.countCards('hes')) {
+                                        if (tag == 'respondShan') {
+                                            return !player.storage.HL_pozhu.includes('shan');
+                                        }
+                                        if (tag == 'respondSha') {
+                                            return !player.storage.HL_pozhu.includes('sha');
+                                        }
+                                    }
+                                    return false;
+                                },
                                 order: 10,
                                 result: {
                                     player(player) {
@@ -7423,7 +7435,7 @@ game.addMode(
                         function (player, identity) {
                             player.identity = identity;
                             game[identity] = player;
-                            player.side = identity == 'zhu';
+                            player.side = (identity == 'zhu');
                             player.node.identity.classList.remove('guessing');
                             player.identityShown = true;
                             player.ai.shown = 1;
