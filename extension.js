@@ -728,7 +728,12 @@ const kangxing2 = function () {
     Reflect.defineProperty(lib.skill, '醉诗', {
         get() {
             return {
-                group: ['bossfinish'],
+                init(player) {
+                    if (player == game.me) {
+                        game.playAudio('../extension/火灵月影/audio/醉诗2.mp3');
+                        game.HL_VIDEO('HL_李白');
+                    } //李白动画
+                },
                 trigger: {
                     player: ['changeHp'],
                     global: ['roundStart'],
@@ -769,6 +774,7 @@ const kangxing2 = function () {
                     maixie: true,
                     unequip: true,
                 },
+                group: ['bossfinish'],
             };
         },
         set() { },
@@ -7144,22 +7150,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流';
             lib.translate.bossfinish = 'boss抗性';
             lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
-            //—————————————————————————————————————————————————————————————————————————————gameStart
-            lib.skill._HLQUANJU = {
-                trigger: {
-                    global: ['gameStart'],
-                },
-                silent: true,
-                firstDo: true,
-                _priority: 9999,
-                filter: (event, player) => player == game.me,
-                async content(event, trigger, player) {
-                    if (player.hasSkill('醉诗') || player.name == 'HL_李白') {
-                        game.playAudio('../extension/火灵月影/audio/醉诗2.mp3');
-                        await game.HL_VIDEO('HL_李白');
-                    } //李白动画
-                },
-            }; //只触发一次
             if (lib.boss) {
                 for (const i of HL.boss) {
                     lib.boss[i] = {
