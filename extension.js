@@ -4268,7 +4268,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                     if (numx) {
                                         while (num > 0) {
-                                            const num1 = Math.floor(5 * Math.random());
+                                            const num1 = Math.ceil(9 * Math.random());
                                             num -= num1;
                                             const npc = player.getEnemies().randomGet();
                                             if (npc) {
