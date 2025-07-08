@@ -6370,7 +6370,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 for (const bool of [true, false]) {
                                     const cards = bool ? Array.from(ui.cardPile.childNodes) : Array.from(ui.discardPile.childNodes).concat(Array.from(ui.ordering.childNodes));
-                                    const card = cards.filter((q) => player.hasUseTarget(q, true, true)).randomGet();
+                                    const card = cards.randomGets(20).filter((q) => player.hasUseTarget(q, true, true)).randomGet();
                                     if (card) {
                                         await player.chooseUseTarget(card, true, false, 'nodistance');
                                     }
