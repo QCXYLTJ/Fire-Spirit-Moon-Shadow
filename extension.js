@@ -7208,10 +7208,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player, name) {
-                                return player.getEnemies().some((q) => q.xiedu);
+                                return player.getEnemies().some((q) => q.xiedujilu);
                             },
                             async content(event, trigger, player) {
-                                for (const npc of player.getEnemies().filter((q) => q.xiedu)) {
+                                for (const npc of player.getEnemies().filter((q) => q.xiedujilu)) {
                                     npc.xiedujilu = false;
                                     let num = 0;
                                     for (const i of player.storage.HL_tianqi) {
