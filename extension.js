@@ -6804,7 +6804,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             kangxing: true,
                             async content(event, trigger, player) {
-                                player.addSkill('xiedu_HL_shengming');
+                                trigger.cancel();
                             },
                             group: ['xiedu_HL_shengming_1'],
                             subSkill: {
