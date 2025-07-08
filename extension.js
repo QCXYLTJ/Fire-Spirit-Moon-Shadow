@@ -6803,6 +6803,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `生命亵渎剩余${storage}轮`;
+                                },
+                            },
                             async content(event, trigger, player) {
                                 trigger.cancel();
                             },
@@ -6883,6 +6889,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `智慧亵渎剩余${storage}轮`;
+                                },
+                            },
                             filter(event, player) {
                                 return player.hasCard((c) => c.gaintag.includes('xiedu_HL_zhihui'), 'he');
                             },
@@ -6986,6 +6998,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `战争亵渎剩余${storage}轮`;
+                                },
+                            },
                             async content(event, trigger, player) {
                                 trigger.cancel();
                             },
@@ -7086,6 +7104,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `威严亵渎剩余${storage}轮`;
+                                },
+                            },
                             filter(event, player) {
                                 return !get.tag(event.card, 'recover') && _status.currentPhase == player;
                             },
