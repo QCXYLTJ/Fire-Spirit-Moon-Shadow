@@ -63,6 +63,7 @@ sha();
 window.HL = {
     boss: [],
     tianqi: [],
+    lvfa: [],
     temperature: 0,
 };
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
@@ -2685,6 +2686,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     set() { },
                 }); //选将列表修改
             } //武将全部可选
+            lib.element.player.xiedu = function (yinji) {
+                const player = this;
+                player.xiedujilu = true;
+                if (!player.storage[yinji]) {
+                    player.storage[yinji] = 0;
+                }
+                player.storage[yinji] += 2;
+                player.addSkill(yinji);
+            };
             game.import('character', function (lib, game, ui, get, ai, _status) {
                 const QQQ = {
                     name: '火灵月影',
@@ -2740,6 +2750,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_canxin: {
                             sex: 'female',
                             skills: ['HL_liankui', 'HL_xuansi', 'HL_duoxing'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
+                        HL_jielv: {
+                            sex: 'male',
+                            hp: 7,
+                            maxHp: 7,
+                            skills: ['HL_tianqi', 'HL_wanshen', 'HL_jieming', 'HL_wanlv'],
                             isBoss: true,
                             isBossAllowed: true,
                         },
@@ -2932,6 +2950,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_zhigaolieyang: `<b style='color:rgb(235, 20, 56); font-size: 25px;'>天空的化身</b>`,
                         HL_zhinukuanglei: `<b style='color: #00FFFF; font-size: 25px;'>天空的化身</b>`,
                         HL_juemiezhe: `<b style='color:rgb(47, 27, 224); font-size: 25px;'>阳雷的业果 晨昏之眼</b>`,
+                        HL_jielv: `<b style='color:rgba(197, 209, 209, 1); font-size: 25px;'>太初弈无终</b>`,
                     },
                     skill: {
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
@@ -6574,6 +6593,634 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————太初弈无终·戒律    神      7/7
+                        // 天启拈作劫
+                        // ①每轮开始时,你从四项律法中选择获得其中两项律法(覆盖之前)
+                        // ②敌方角色亵渎对应律法时,其所有技能失效,并获得持续2轮的对应律法的亵渎印记
+                        // ③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮
+                        HL_tianqi: {
+                            init(player) {
+                                player.storage.HL_tianqi = [
+                                    'HL_shengming',
+                                    'HL_zhihui',
+                                    'HL_zhanzheng',
+                                    'HL_weiyan',
+                                ];
+                            },
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage, player) {
+                                    return `当前律法${get.translation(HL.lvfa)}`;
+                                },
+                            },
+                            async content(event, trigger, player) {
+                                if (HL.zhenlicaijue) {
+                                    HL.zhenlicaijue--;
+                                    if (HL.zhenlicaijue > 0) {
+                                        return;
+                                    }
+                                    else {
+                                        HL.zhenlicaijue = false;
+                                    }
+                                }
+                                HL.lvfa = [];
+                                const {
+                                    result: { links },
+                                } = await player.chooseButton(['从四项律法中选择获得其中两项律法', [player.storage.HL_tianqi.map((i) => [i, get.translation(i)]), 'tdnodes']], 2, true)
+                                    .set('ai', (b) => Math.random());
+                                if (links && links[0]) {
+                                    game.log(player, '加入律法', links);
+                                    HL.lvfa = links;
+                                    if (!HL.jielvboss) {
+                                        HL.jielvboss = player;
+                                    }
+                                }
+                            },
+                            group: ['HL_tianqi_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['phaseZhunbeiBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return player.getEnemies().some((npc) => {
+                                            let num = 0;
+                                            for (const i of player.storage.HL_tianqi) {
+                                                if (npc.storage[`xiedu_${i}`]) {
+                                                    num++;
+                                                }
+                                            }
+                                            return num > 1;
+                                        });
+                                    },
+                                    async content(event, trigger, player) {
+                                        HL.zhenlicaijue = 3;
+                                        HL.lvfa = player.storage.HL_tianqi.slice();
+                                        if (!HL.jielvboss) {
+                                            HL.jielvboss = player;
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 真理裁决
+                        // 你视为拥有全部律法,且律法增加强化效果
+                        // 生命:你回复牌的回复量翻倍
+                        // 智慧:摸牌阶段外,你摸牌数翻倍
+                        // 战争:你伤害牌的伤害翻倍
+                        // 威严:你使用牌时额外结算一次,重铸牌时摸一张牌
+                        _HL_zhenlicaijue: {
+                            trigger: {
+                                player: ['recoverBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return HL.zhenlicaijue > 0 && HL.jielvboss == player && event.card && get.tag(event.card, 'recover');
+                            },
+                            async content(event, trigger, player) {
+                                trigger.num *= 2;
+                            },
+                            group: ['_HL_zhenlicaijue_1', '_HL_zhenlicaijue_2', '_HL_zhenlicaijue_3', '_HL_zhenlicaijue_4'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['drawBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.zhenlicaijue > 0 && HL.jielvboss == player;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num *= 2;
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        source: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.zhenlicaijue > 0 && HL.jielvboss == player && event.card && get.tag(event.card, 'damage');
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num *= 2;
+                                    },
+                                },
+                                3: {
+                                    trigger: {
+                                        player: ['useCard'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.zhenlicaijue > 0 && HL.jielvboss == player && event.targets?.length;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.effectCount++;
+                                    },
+                                },
+                                4: {
+                                    trigger: {
+                                        player: ['recastEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.zhenlicaijue > 0 && HL.jielvboss == player;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.draw();
+                                    },
+                                },
+                            },
+                        },
+                        // 生命律法
+                        // 准备阶段和结束阶段,你回复7点体力值
+                        // 若回复值溢出,则摸溢出数量的牌,并增加等量上限
+                        // 生命亵渎
+                        // 敌方角色回复量大于1时,视为亵渎生命律法
+                        // 持有此印记时,无法使用回复牌,无法回复体力值
+                        _HL_shengming: {
+                            trigger: {
+                                player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player;
+                            },
+                            async content(event, trigger, player) {
+                                const num = 7 - (player.maxHp - player.hp);
+                                if (num > 0) {
+                                    await player.gainMaxHp(num);
+                                    await player.draw(num);
+                                }
+                                player.recover(7);
+                            },
+                            skillBlocker(skill, player) {
+                                const info = lib.skill[skill];
+                                return info && !info.kangxing;
+                            },
+                            group: ['_HL_shengming_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['recoverEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.lvfa.includes('HL_shengming') && HL.jielvboss?.isEnemiesOf(player) && event.num > 1;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.xiedu('xiedu_HL_shengming');
+                                    },
+                                },
+                            },
+                        },
+                        xiedu_HL_shengming: {
+                            init(player) {
+                                if (!player.storage.skill_blocker) {
+                                    player.storage.skill_blocker = [];
+                                }
+                                player.storage.skill_blocker.add('_HL_shengming');
+                            },
+                            onremove(player) {
+                                if (player.storage.skill_blocker) {
+                                    player.storage.skill_blocker.remove('_HL_shengming');
+                                }
+                            },
+                            mod: {
+                                cardEnabled2(card, player) {
+                                    if (get.tag(card, 'recover')) {
+                                        return false;
+                                    }
+                                },
+                            },
+                            trigger: {
+                                player: ['recoverBegin'],
+                            },
+                            forced: true,
+                            kangxing: true,
+                            async content(event, trigger, player) {
+                                player.addSkill('xiedu_HL_shengming');
+                            },
+                            group: ['xiedu_HL_shengming_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['roundStart'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.xiedu_HL_shengming--;
+                                        if (player.storage.xiedu_HL_shengming < 1) {
+                                            player.removeSkill('xiedu_HL_shengming');
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 智慧律法
+                        // 准备阶段和结束阶段,你摸七张牌
+                        // 智慧亵渎
+                        // 敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法
+                        // 持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌
+                        _HL_zhihui: {
+                            trigger: {
+                                player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return HL.lvfa.includes('HL_zhihui') && HL.jielvboss == player;
+                            },
+                            async content(event, trigger, player) {
+                                player.draw(7);
+                            },
+                            skillBlocker(skill, player) {
+                                const info = lib.skill[skill];
+                                return info && !info.kangxing;
+                            },
+                            group: ['_HL_zhihui_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['gainEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.lvfa.includes('HL_zhihui') && HL.jielvboss?.isEnemiesOf(player) && !event.getParent('phaseDraw', true) && event.cards?.length;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.xiedu('xiedu_HL_zhihui');
+                                        player.addGaintag(trigger.cards, 'xiedu_HL_zhihui');
+                                    },
+                                },
+                            },
+                        },
+                        xiedu_HL_zhihui: {
+                            init(player) {
+                                if (!player.storage.skill_blocker) {
+                                    player.storage.skill_blocker = [];
+                                }
+                                player.storage.skill_blocker.add('_HL_zhihui');
+                            },
+                            onremove(player) {
+                                if (player.storage.skill_blocker) {
+                                    player.storage.skill_blocker.remove('_HL_zhihui');
+                                }
+                            },
+                            mod: {
+                                cardEnabled2(card, player) {
+                                    if (card.gaintag && card.gaintag.includes('xiedu_HL_zhihui')) {
+                                        return false;
+                                    }
+                                },
+                            },
+                            trigger: {
+                                player: ['phaseEnd'],
+                            },
+                            forced: true,
+                            kangxing: true,
+                            filter(event, player) {
+                                return player.hasCard((c) => c.gaintag.includes('xiedu_HL_zhihui'), 'he');
+                            },
+                            async content(event, trigger, player) {
+                                player.discard(player.getCards('he', (c) => c.gaintag.includes('xiedu_HL_zhihui')));
+                            },
+                            group: ['xiedu_HL_zhihui_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['roundStart'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.xiedu_HL_zhihui--;
+                                        if (player.storage.xiedu_HL_zhihui < 1) {
+                                            player.removeSkill('xiedu_HL_zhihui');
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 战争律法
+                        // 你使用伤害牌后,摸造成伤害数张牌或回复等量体力值
+                        // 战争亵渎
+                        // 敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法
+                        // 持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害
+                        _HL_zhanzheng: {
+                            trigger: {
+                                player: ['useCardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                const his = player.actionHistory;
+                                const evt = his[his.length - 1];
+                                return HL.lvfa.includes('HL_zhanzheng') && HL.jielvboss == player && get.tag(event.card, 'damage') && evt.sourceDamage.some((e) => e.card == event.card);
+                            },
+                            async content(event, trigger, player) {
+                                let num = 0;
+                                const his = player.actionHistory;
+                                const evt = his[his.length - 1];
+                                for (const i of evt.sourceDamage) {
+                                    if (i.card == trigger.card) {
+                                        num += i.num;
+                                    }
+                                }
+                                const controllist = ['选项一', '选项二'];
+                                const choiceList = [`摸${num}张牌`, `回复${num}点体力`];
+                                const { result: { index } } = await player
+                                    .chooseControl(controllist)
+                                    .set('prompt', '选择一项')
+                                    .set('choiceList', choiceList)
+                                    .set('ai', function (event, player) {
+                                        return controllist.randomGet();
+                                    });
+                                switch (index) {
+                                    case 0:
+                                        player.draw(num);
+                                        break;
+                                    case 1:
+                                        player.recover(num);
+                                        break;
+                                }
+                            },
+                            skillBlocker(skill, player) {
+                                const info = lib.skill[skill];
+                                return info && !info.kangxing;
+                            },
+                            group: ['_HL_zhanzheng_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['useCardBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        const his = player.actionHistory;
+                                        const evt = his[his.length - 1];
+                                        return HL.lvfa.includes('HL_zhanzheng') && HL.jielvboss?.isEnemiesOf(player) && get.tag(event.card, 'damage') && evt.useCard.some((e) => get.tag(e.card, 'damage'));
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.xiedu('xiedu_HL_zhanzheng');
+                                    },
+                                },
+                            },
+                        },
+                        xiedu_HL_zhanzheng: {
+                            init(player) {
+                                if (!player.storage.skill_blocker) {
+                                    player.storage.skill_blocker = [];
+                                }
+                                player.storage.skill_blocker.add('_HL_zhanzheng');
+                            },
+                            onremove(player) {
+                                if (player.storage.skill_blocker) {
+                                    player.storage.skill_blocker.remove('_HL_zhanzheng');
+                                }
+                            },
+                            trigger: {
+                                source: ['damageBefore'],
+                            },
+                            forced: true,
+                            kangxing: true,
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['xiedu_HL_zhanzheng_1', 'xiedu_HL_zhanzheng_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['roundStart'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.xiedu_HL_zhanzheng--;
+                                        if (player.storage.xiedu_HL_zhanzheng < 1) {
+                                            player.removeSkill('xiedu_HL_zhanzheng');
+                                        }
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['phaseEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        const his = player.actionHistory;
+                                        const evt = his[his.length - 1];
+                                        return evt.sourceDamage.length;
+                                    },
+                                    async content(event, trigger, player) {
+                                        let num = 0;
+                                        const his = player.actionHistory;
+                                        const evt = his[his.length - 1];
+                                        for (const i of evt.sourceDamage) {
+                                            num += i.num;
+                                        }
+                                        player.damage(num);
+                                    },
+                                },
+                            },
+                        },
+                        // 威严律法
+                        // 你成为牌的目标/受到伤害/失去体力时,你摸一张牌
+                        // 威严亵渎
+                        // 敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法
+                        // 持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段
+                        _HL_weiyan: {
+                            trigger: {
+                                target: ['useCardToPlayer'],
+                                player: ['loseHpEnd', 'damageEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return HL.lvfa.includes('HL_weiyan') && HL.jielvboss == player;
+                            },
+                            async content(event, trigger, player) {
+                                player.draw();
+                            },
+                            skillBlocker(skill, player) {
+                                const info = lib.skill[skill];
+                                return info && !info.kangxing;
+                            },
+                            group: ['_HL_weiyan_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['useCardToPlayer'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.lvfa.includes('HL_weiyan') && HL.jielvboss?.isEnemiesOf(player) && !get.tag(event.card, 'recover') && event.target == HL.jielvboss;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.xiedu('xiedu_HL_weiyan');
+                                    },
+                                },
+                            },
+                        },
+                        xiedu_HL_weiyan: {
+                            init(player) {
+                                if (!player.storage.skill_blocker) {
+                                    player.storage.skill_blocker = [];
+                                }
+                                player.storage.skill_blocker.add('_HL_weiyan');
+                            },
+                            onremove(player) {
+                                if (player.storage.skill_blocker) {
+                                    player.storage.skill_blocker.remove('_HL_weiyan');
+                                }
+                            },
+                            mod: {
+                                playerEnabled(card, player, target) {
+                                    if (target == HL.jielvboss) {
+                                        return false;
+                                    }
+                                },
+                            },
+                            trigger: {
+                                player: ['useCardEnd'],
+                            },
+                            forced: true,
+                            kangxing: true,
+                            filter(event, player) {
+                                return !get.tag(event.card, 'recover') && _status.currentPhase == player;
+                            },
+                            async content(event, trigger, player) {
+                                const evt = _status.event.getParent('phaseUse', true);
+                                if (evt) {
+                                    evt.skipped = true;
+                                }
+                            },
+                            group: ['xiedu_HL_weiyan_1', 'xiedu_HL_weiyan_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['roundStart'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.xiedu_HL_weiyan--;
+                                        if (player.storage.xiedu_HL_weiyan < 1) {
+                                            player.removeSkill('xiedu_HL_weiyan');
+                                        }
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['phaseEnd'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        const controllist = ['选项一', '选项二'];
+                                        const choiceList = ['翻面', '跳过下个出牌阶段'];
+                                        const { result: { index } } = await player
+                                            .chooseControl(controllist)
+                                            .set('prompt', '选择一项')
+                                            .set('choiceList', choiceList)
+                                            .set('ai', function (event, player) {
+                                                return controllist.randomGet();
+                                            });
+                                        switch (index) {
+                                            case 0:
+                                                player.turnOver(true);
+                                                break;
+                                            case 1:
+                                                player.skip('phaseUse');
+                                                break;
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 万神镇诸天
+                        // 你无视超出一点的伤害,终止你的判定
+                        HL_wanshen: {
+                            trigger: {
+                                player: ['damageBefore'],
+                            },
+                            kangxing: true,
+                            charlotte: true,
+                            fixed: true,
+                            forced: true,
+                            filter(event, player) {
+                                return event.num > 1;
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['bosshp', 'bossfinish', 'HL_wanshen_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['judgeBefore'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                    },
+                                },
+                            },
+                        },
+                        // 劫命归一子
+                        // 当你对敌方角色造成伤害/成为敌方角色牌的目标后,你令其获得随机一个亵渎印记持续2轮【优先获得已持有律法所对应的亵渎印记】
+                        HL_jieming: {
+                            trigger: {
+                                target: ['useCardToPlayer'],
+                                source: ['damageEnd'],
+                            },
+                            forced: true,
+                            filter(event, player, name) {
+                                return event.player.isEnemiesOf(player);
+                            },
+                            async content(event, trigger, player) {
+                                const yinji = `xiedu_${HL.lvfa.randomGet()}`;
+                                if (yinji) {
+                                    trigger.player.xiedu(yinji);
+                                }
+                            },
+                        },
+                        // 一子定万律
+                        // 每回合结束时,对该回合内获得过亵渎印记的敌方角色造成2点伤害.若其亵渎印记种类数大于1,则改为失去你持有律法数的体力值
+                        // 若其失去的体力值小于你持有律法数,则重复此流程,直到其脱离濒死状态
+                        HL_wanlv: {
+                            trigger: {
+                                global: ['phaseEnd'],
+                            },
+                            forced: true,
+                            filter(event, player, name) {
+                                return player.getEnemies().some((q) => q.xiedu);
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of player.getEnemies().filter((q) => q.xiedu)) {
+                                    npc.xiedujilu = false;
+                                    let num = 0;
+                                    for (const i of player.storage.HL_tianqi) {
+                                        if (npc.storage[`xiedu_${i}`]) {
+                                            num++;
+                                        }
+                                    }
+                                    if (num > 1) {
+                                        HL.wanlv = true;
+                                        npc.when({ player: ['dyingEnd', 'phaseAfter'] }).then(() => HL.wanlv = false);
+                                        let numx = 99;
+                                        while (HL.wanlv && numx-- > 0) {
+                                            const num1 = npc.hp;
+                                            await npc.loseHp(HL.lvfa.length);
+                                            if (num1 - npc.hp >= HL.lvfa.length) {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        npc.damage(2);
+                                    }
+                                }
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -6586,6 +7233,39 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————太初弈无终·戒律    神      7/7
+                        HL_jielv: '戒律',
+                        HL_tianqi: '天启拈作劫',
+                        HL_tianqi_info: '①每轮开始时,你从四项律法中选择获得其中两项律法(覆盖之前)<br>②敌方角色亵渎对应律法时,其所有技能失效,并获得持续2轮的对应律法的亵渎印记<br>③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮',
+                        HL_tianqi_append: '真理裁决<br><b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b><br>生命律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>若回复值溢出,则摸溢出数量的牌,并增加等量上限</b><br>生命亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b><br>智慧律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b><br>智慧亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b><br>战争律法<br><b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b><br>战争亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b><br>威严律法<br><b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b><br>威严亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
+                        _HL_zhenlicaijue: '真理裁决',
+                        _HL_zhenlicaijue_info: '<b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b>',
+                        HL_shengming: '生命律法',
+                        _HL_shengming: '生命律法',
+                        _HL_shengming_info: '<b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>若回复值溢出,则摸溢出数量的牌,并增加等量上限</b>',
+                        xiedu_HL_shengming: '生命亵渎',
+                        xiedu_HL_shengming_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b>',
+                        HL_zhihui: '智慧律法',
+                        _HL_zhihui: '智慧律法',
+                        _HL_zhihui_info: '<b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b>',
+                        xiedu_HL_zhihui: '智慧亵渎',
+                        xiedu_HL_zhihui_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b>',
+                        HL_zhanzheng: '战争律法',
+                        _HL_zhanzheng: '战争律法',
+                        _HL_zhanzheng_info: '<b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b>',
+                        xiedu_HL_zhanzheng: '战争亵渎',
+                        xiedu_HL_zhanzheng_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b>',
+                        HL_weiyan: '威严律法',
+                        _HL_weiyan: '威严律法',
+                        _HL_weiyan_info: '<b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b>',
+                        xiedu_HL_weiyan: '威严亵渎',
+                        xiedu_HL_weiyan_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
+                        HL_wanshen: '万神镇诸天',
+                        HL_wanshen_info: '你无视超出一点的伤害,终止你的判定',
+                        HL_jieming: '劫命归一子',
+                        HL_jieming_info: '当你对敌方角色造成伤害/成为敌方角色牌的目标后,你令其获得随机一个亵渎印记持续2轮【优先获得已持有律法所对应的亵渎印记】',
+                        HL_wanlv: '一子定万律',
+                        HL_wanlv_info: '每回合结束时,对该回合内获得过亵渎印记的敌方角色造成2点伤害.若其亵渎印记种类数大于1,则改为失去你持有律法数的体力值<br>若其失去的体力值小于你持有律法数,则重复此流程,直到其脱离濒死状态',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————残心
                         HL_canxin: '残心',
                         HL_liankui: '炼傀',
