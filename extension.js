@@ -6651,7 +6651,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return player.getEnemies().some((npc) => {
                                             let num = 0;
                                             for (const i of player.storage.HL_tianqi) {
-                                                if (npc.storage[`xiedu_${i}`]) {
+                                                if (npc.storage[`xiedu_${i}`] > 0) {
                                                     num++;
                                                 }
                                             }
@@ -7168,6 +7168,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 劫命归一子
                         // 当你对敌方角色造成伤害/成为敌方角色牌的目标后,你令其获得随机一个亵渎印记持续2轮【优先获得已持有律法所对应的亵渎印记】
                         HL_jieming: {
+                            init(player) {
+                                player.storage.HL_tianqi = [
+                                    'HL_shengming',
+                                    'HL_zhihui',
+                                    'HL_zhanzheng',
+                                    'HL_weiyan',
+                                ];
+                            },
                             trigger: {
                                 target: ['useCardToPlayer'],
                                 source: ['damageEnd'],
@@ -7177,9 +7185,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player.isEnemiesOf(player);
                             },
                             async content(event, trigger, player) {
-                                const yinji = `xiedu_${HL.lvfa.randomGet()}`;
+                                const yinji = HL.lvfa.length ? HL.lvfa.randomGet() : player.storage.HL_tianqi.randomGet();
                                 if (yinji) {
-                                    trigger.player.xiedu(yinji);
+                                    trigger.player.xiedu(`xiedu_${yinji}`);
                                 }
                             },
                         },
@@ -7187,6 +7195,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每回合结束时,对该回合内获得过亵渎印记的敌方角色造成2点伤害.若其亵渎印记种类数大于1,则改为失去你持有律法数的体力值
                         // 若其失去的体力值小于你持有律法数,则重复此流程,直到其脱离濒死状态
                         HL_wanlv: {
+                            init(player) {
+                                player.storage.HL_tianqi = [
+                                    'HL_shengming',
+                                    'HL_zhihui',
+                                    'HL_zhanzheng',
+                                    'HL_weiyan',
+                                ];
+                            },
                             trigger: {
                                 global: ['phaseEnd'],
                             },
@@ -7199,7 +7215,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     npc.xiedujilu = false;
                                     let num = 0;
                                     for (const i of player.storage.HL_tianqi) {
-                                        if (npc.storage[`xiedu_${i}`]) {
+                                        if (npc.storage[`xiedu_${i}`] > 0) {
                                             num++;
                                         }
                                     }
