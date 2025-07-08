@@ -6717,7 +6717,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return HL.zhenlicaijue > 0 && HL.jielvboss == player && event.targets?.length;
+                                        return HL.zhenlicaijue > 0 && HL.jielvboss == player && event.targets?.length && !['equip', 'delay'].includes(get.type(event.card));
                                     },
                                     async content(event, trigger, player) {
                                         trigger.effectCount++;
@@ -7222,7 +7222,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (num > 1) {
                                         HL.wanlv = true;
                                         npc.when({ player: ['dyingEnd', 'phaseAfter'] }).then(() => HL.wanlv = false);
-                                        let numx = 99;
+                                        let numx = 24;
                                         while (HL.wanlv && numx-- > 0) {
                                             const num1 = npc.hp;
                                             await npc.loseHp(HL.lvfa.length);
