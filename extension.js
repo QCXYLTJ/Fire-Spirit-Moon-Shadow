@@ -6739,7 +6739,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 生命律法
                         // 准备阶段和结束阶段,你回复7点体力值
-                        // 若回复值溢出,则摸溢出数量的牌,并增加等量上限
+                        // 你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限
                         // 生命亵渎
                         // 敌方角色回复量大于1时,视为亵渎生命律法
                         // 持有此印记时,无法使用回复牌,无法回复体力值
@@ -6752,18 +6752,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player;
                             },
                             async content(event, trigger, player) {
-                                const num = 7 - (player.maxHp - player.hp);
-                                if (num > 0) {
-                                    await player.gainMaxHp(num);
-                                    await player.draw(num);
-                                }
                                 player.recover(7);
                             },
                             skillBlocker(skill, player) {
                                 const info = lib.skill[skill];
                                 return info && !info.kangxing;
                             },
-                            group: ['_HL_shengming_1'],
+                            group: ['_HL_shengming_1', '_HL_shengming_2'],
                             subSkill: {
                                 1: {
                                     trigger: {
@@ -6775,6 +6770,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         player.xiedu('xiedu_HL_shengming');
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['recoverBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player && event.num > (player.maxHp - player.hp);
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = trigger.num - (player.maxHp - player.hp);
+                                        player.gainMaxHp(num);
+                                        player.draw(num);
                                     },
                                 },
                             },
