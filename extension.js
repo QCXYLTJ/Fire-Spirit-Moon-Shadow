@@ -4245,7 +4245,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_shengzhe_1');
                                         player.hp = 50;
-                                        const boss = player.addFellow('HL_fengletinghou').shibing = true;
+                                        const boss = player.addFellow('HL_fengletinghou');
+                                        boss.shibing = true;
                                         game.nkangxing(boss, 'HL_fengletinghou');
                                         game.skangxing(boss);
                                         boss.bosskangxing = true;
