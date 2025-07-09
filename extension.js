@@ -151,19 +151,19 @@ const kangxing1 = function () {
             allplayers = [...new Set([...allplayers.filter((player) => !obj.dead.includes(player)), ...obj.players])];
             return new Proxy(allplayers, {
                 set(target, property, value) {
-                    const result = Reflect.set(target, property, value);//先执行移除,不然里面有个undefined元素
+                    const result = Reflect.set(target, property, value); //先执行移除,不然里面有个undefined元素
                     if (property === 'length') {
                         game.sort();
                     }
-                    return result;//不能与上面合并
-                },//防代理,但是不防前面的代理,如果放第一位,那么前面添加player就不会被set方法检测到
+                    return result; //不能与上面合并
+                }, //防代理,但是不防前面的代理,如果放第一位,那么前面添加player就不会被set方法检测到
             }); //直接赋值不会触发set方法
         },
         configurable: false,
         set(value) {
             allplayers = value;
         },
-    });//锁定玩家列表
+    }); //锁定玩家列表
     let alldead = [];
     const kdead = [];
     Reflect.defineProperty(game, 'dead', {
@@ -171,11 +171,11 @@ const kangxing1 = function () {
             alldead = [...new Set([...alldead.filter((player) => !obj.players.includes(player)), ...obj.dead])];
             return new Proxy(alldead, {
                 set(target, property, value) {
-                    const result = Reflect.set(target, property, value);//先执行移除,不然里面有个undefined元素
+                    const result = Reflect.set(target, property, value); //先执行移除,不然里面有个undefined元素
                     if (property === 'length') {
                         game.sort();
                     }
-                    return result;//不能与上面合并
+                    return result; //不能与上面合并
                 },
             }); //直接赋值不会触发set方法
         },
@@ -183,7 +183,7 @@ const kangxing1 = function () {
         set(value) {
             alldead = value;
         },
-    });//锁定死亡列表
+    }); //锁定死亡列表
     //—————————————————————————————————————————————————————————————————————————————生成玩家时载入抗性
     const kname = new Map();
     let ocreateplayer = ui.create.player;
@@ -336,12 +336,12 @@ const kangxing1 = function () {
                         contains(q) {
                             if (ui.restart) {
                                 ui.restart.remove();
-                            }//重新开始按钮
-                            player.node.hp.classList.remove('hidden');//隐藏体力条
-                            player.node.avatar.style.transform = '';//翻转
-                            player.node.avatar.style.filter = '';//黑白滤镜
-                            player.style.transform = '';//翻转
-                            player.style.filter = '';//黑白滤镜
+                            } //重新开始按钮
+                            player.node.hp.classList.remove('hidden'); //隐藏体力条
+                            player.node.avatar.style.transform = ''; //翻转
+                            player.node.avatar.style.filter = ''; //黑白滤镜
+                            player.style.transform = ''; //翻转
+                            player.style.filter = ''; //黑白滤镜
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             for (const style of classq) {
                                 if (!list.includes(style)) {
@@ -494,7 +494,7 @@ const kangxing1 = function () {
             }
         },
         configurable: false,
-    });//生成玩家时载入抗性
+    }); //生成玩家时载入抗性
     //—————————————————————————————————————————————————————————————————————————————锁定技能与钩子
     let allskill = lib.skill;
     const kskill = {};
@@ -588,13 +588,13 @@ const kangxing1 = function () {
                         },
                         set() { },
                         configurable: false,
-                    });//只加了技能和hook,但是没init
+                    }); //只加了技能和hook,但是没init
                 }
             };
         },
         set() { },
         configurable: false,
-    });//临时技能锁定,技能钩子锁定,lib.skill锁定
+    }); //临时技能锁定,技能钩子锁定,lib.skill锁定
     Reflect.defineProperty(game, 'nkangxing', {
         get() {
             return function (player, name) {
@@ -610,12 +610,12 @@ const kangxing1 = function () {
                         if (obj.players.includes(player)) {
                             if (ui.restart) {
                                 ui.restart.remove();
-                            }//重新开始按钮
-                            player.node.hp.classList.remove('hidden');//隐藏体力条
-                            player.node.avatar.style.transform = '';//翻转
-                            player.node.avatar.style.filter = '';//黑白滤镜
-                            player.style.transform = '';//翻转
-                            player.style.filter = '';//黑白滤镜
+                            } //重新开始按钮
+                            player.node.hp.classList.remove('hidden'); //隐藏体力条
+                            player.node.avatar.style.transform = ''; //翻转
+                            player.node.avatar.style.filter = ''; //黑白滤镜
+                            player.style.transform = ''; //翻转
+                            player.style.filter = ''; //黑白滤镜
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             for (const style of classq) {
                                 if (!list.includes(style)) {
@@ -632,7 +632,7 @@ const kangxing1 = function () {
         },
         set() { },
         configurable: false,
-    });//名字抗性加入,类列表节点监听
+    }); //名字抗性加入,类列表节点监听
     //—————————————————————————————————————————————————————————————————————————————可有可无的部分,但是防止某些人强制胜利就自以为赢了
     let ocheckresult = game.checkResult;
     const xcheckresult = function () {
@@ -649,7 +649,7 @@ const kangxing1 = function () {
             }
         },
         configurable: false,
-    });//禁止强制结束游戏
+    }); //禁止强制结束游戏
     let over = false;
     Reflect.defineProperty(_status, 'over', {
         get() {
@@ -660,18 +660,17 @@ const kangxing1 = function () {
                 if (obj.players.some((q) => q.getEnemies().length)) {
                     if (!_status.auto) {
                         ui.click.auto();
-                    }//托管
+                    } //托管
                     setTimeout(function () {
                         const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
-                        elements.forEach(el => {
+                        elements.forEach((el) => {
                             el.remove();
-                        });//移除结算框
+                        }); //移除结算框
                         while (ui.control.firstChild) {
                             ui.control.firstChild.remove();
-                        }//移除重开再战按钮
+                        } //移除重开再战按钮
                     }, 500);
-                }
-                else {
+                } else {
                     over = true;
                     _status.pauseManager.waitPause = async function () {
                         await new Promise(() => { });
@@ -680,7 +679,7 @@ const kangxing1 = function () {
             }
         },
         configurable: false,
-    });//禁止强制结束游戏
+    }); //禁止强制结束游戏
     lib.arenaReady.push(function () {
         new MutationObserver(function () {
             for (const player of obj.players) {
@@ -693,7 +692,7 @@ const kangxing1 = function () {
         });
         new MutationObserver((mutationsList) => {
             for (let mutation of mutationsList) {
-                mutation.addedNodes.forEach(node => {
+                mutation.addedNodes.forEach((node) => {
                     const string = node.innerHTML;
                     for (const player of obj.players) {
                         if (string.includes(`${get.translation(player)}</span>被`) || string.includes(`${get.translation(player)}</span>阵亡`)) {
@@ -703,11 +702,11 @@ const kangxing1 = function () {
                 });
             }
         }).observe(ui.sidebar, {
-            childList: true
+            childList: true,
         });
         new MutationObserver((mutationsList) => {
             for (let mutation of mutationsList) {
-                mutation.addedNodes.forEach(node => {
+                mutation.addedNodes.forEach((node) => {
                     const string = node.innerHTML;
                     for (const player of obj.players) {
                         if (string.includes(`${get.translation(player)}</span>被`) || string.includes(`${get.translation(player)}</span>阵亡`)) {
@@ -717,9 +716,9 @@ const kangxing1 = function () {
                 });
             }
         }).observe(ui.arenalog, {
-            childList: true
+            childList: true,
         });
-    });//禁止弹出死亡播报
+    }); //禁止弹出死亡播报
 };
 kangxing1();
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
@@ -782,7 +781,7 @@ const kangxing2 = function () {
         configurable: false,
     });
     HL.PJban = {
-        trigger: [],//每回合每个时机限一次
+        trigger: [], //每回合每个时机限一次
         skill: [
             //卡死
             'ywuhun',
@@ -844,12 +843,15 @@ const kangxing2 = function () {
             'sksn_yunjing',
             //火灵月影
             'HL_pingjian',
-            'HL_pingjian_player', 'HL_pingjian_target', 'HL_pingjian_source', 'HL_pingjian_global',
+            'HL_pingjian_player',
+            'HL_pingjian_target',
+            'HL_pingjian_source',
+            'HL_pingjian_global',
             '阵亡',
             '贵相',
             '醉诗',
             '测试',
-        ],//每局游戏每个技能限一次
+        ], //每局游戏每个技能限一次
     };
     for (const namex of ['player', 'global', 'source', 'target']) {
         Reflect.defineProperty(lib.skill, `HL_pingjian_${namex}`, {
@@ -1153,14 +1155,14 @@ const boss = function () {
         set(v) {
             _me = v;
             if (game.players.includes(v) && game.players[0] != v) {
-                game.sort();//因为李白最先进入players,挑战模式不管选什么挑战李白,都会变成game.me是李白
+                game.sort(); //因为李白最先进入players,挑战模式不管选什么挑战李白,都会变成game.me是李白
             } //如果数组target[meIndex]是李白,那么替换掉的一瞬间,接下来调用就会再添加一个李白,导致数组两个李白
         }, //更换game.me之后第一时间排序
     });
     game.sort = function () {
         const players = game.players.filter(Boolean);
         const deads = game.dead.filter(Boolean);
-        const allPlayers = deads.concat(players);//先移除players后面玩家会前移,再添加入dead需要同排序取前
+        const allPlayers = deads.concat(players); //先移除players后面玩家会前移,再添加入dead需要同排序取前
         const bool = lib.config.dieremove;
         const playerx = bool ? players : allPlayers;
         ui.arena.setNumber(playerx.length);
@@ -1168,14 +1170,14 @@ const boss = function () {
             deads.forEach((player) => {
                 player.classList.add('removing', 'hidden');
             });
-        }//隐藏死亡角色
+        } //隐藏死亡角色
         playerx.sort((a, b) => Number(a.dataset.position) - Number(b.dataset.position));
         if (playerx.includes(game.me) && playerx[0] != game.me) {
             while (playerx[0] != game.me) {
                 const start = playerx.shift();
                 playerx.push(start);
             }
-        }//将玩家排至数组首位
+        } //将玩家排至数组首位
         playerx.forEach((player, index, array) => {
             player.dataset.position = index;
             const zhu = _status.roundStart || game.zhu || game.boss || array.find((p) => p.seatNum == 1) || array[0];
@@ -1186,7 +1188,7 @@ const boss = function () {
             } else {
                 player.seatNum = num;
             }
-        });//修改dataset.position与seatNum
+        }); //修改dataset.position与seatNum
         players.sort((a, b) => Number(a.dataset.position) - Number(b.dataset.position));
         players.forEach((player, index, array) => {
             if (bool) {
@@ -1205,12 +1207,12 @@ const boss = function () {
             }
             player.previous = array[index === 0 ? array.length - 1 : index - 1];
             player.next = array[index === array.length - 1 ? 0 : index + 1];
-        });//展示零号位手牌/修改previous/显示元素
+        }); //展示零号位手牌/修改previous/显示元素
         allPlayers.sort((a, b) => Number(a.dataset.position) - Number(b.dataset.position));
         allPlayers.forEach((player, index, array) => {
             player.previousSeat = array[index === 0 ? array.length - 1 : index - 1];
             player.nextSeat = array[index === array.length - 1 ? 0 : index + 1];
-        });//修改previousSeat
+        }); //修改previousSeat
         game.players.sort((a, b) => Number(a.dataset.position) - Number(b.dataset.position));
         return true;
     };
@@ -1286,7 +1288,7 @@ const boss = function () {
         let identity = this.identity;
         if (this.identity == 'zhu') {
             identity = 'zhong';
-        }// 挑战模式多个主身份,会导致boss多个回合
+        } // 挑战模式多个主身份,会导致boss多个回合
         target.identity = identity;
         target.setIdentity(identity, 'blue');
         target.boss = this;
@@ -1426,23 +1428,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 window.sgn = function (bool) {
                     if (bool) return 1;
                     return -1;
-                };//true转为1,false转为-1
+                }; //true转为1,false转为-1
                 window.numberq0 = function (num) {
                     if (isNaN(Number(num))) return 0;
                     return Math.abs(Number(num));
-                };//始终返回正数(取绝对值)
+                }; //始终返回正数(取绝对值)
                 window.numberq1 = function (num) {
                     if (isNaN(Number(num))) return 1;
                     return Math.max(Math.abs(Number(num)), 1);
-                };//始终返回正数且至少为1(取绝对值)
+                }; //始终返回正数且至少为1(取绝对值)
                 window.number0 = function (num) {
                     if (isNaN(Number(num))) return 0;
                     return Math.max(Number(num), 0);
-                };//始终返回正数
+                }; //始终返回正数
                 window.number1 = function (num) {
                     if (isNaN(Number(num))) return 1;
                     return Math.max(Number(num), 1);
-                };//始终返回正数且至少为1
+                }; //始终返回正数且至少为1
                 window.deepClone = function (obj) {
                     const clone = {};
                     for (const key in obj) {
@@ -1470,8 +1472,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 if (src.includes('.mp4')) {
                     this.style.backgroundImage = 'none';
                     this.setBackgroundMp4(src);
-                }
-                else {
+                } else {
                     this.style.backgroundImage = `url(${src})`;
                 }
                 return this;
@@ -2977,8 +2978,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (player.wudi) {
                                     trigger.cancel();
-                                }
-                                else {
+                                } else {
                                     trigger.num = Math.ceil(trigger.num / 2);
                                 }
                             },
@@ -2989,14 +2989,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['changeHp', 'damageBefore'],
                                     },
                                     filter(event, player) {
-                                        return player.hp < (player.maxHp / 2) && !player.storage.HL_buyingcunzai_1;
+                                        return player.hp < player.maxHp / 2 && !player.storage.HL_buyingcunzai_1;
                                     },
                                     forced: true,
                                     limited: true,
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_buyingcunzai_1');
                                         player.wudi = true;
-                                        player.when({ global: 'roundStart' }).then(() => player.wudi = false);
+                                        player.when({ global: 'roundStart' }).then(() => (player.wudi = false));
                                     },
                                 },
                             },
@@ -3181,7 +3181,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.node.avatar.HL_BG('HL_amiya1');
                                 player.hp = player.maxHp;
                                 player.wudi = true;
-                                player.when({ global: 'roundStart' }).then(() => player.wudi = false);
+                                player.when({ global: 'roundStart' }).then(() => (player.wudi = false));
                                 player.restoreSkill('HL_buyingcunzai_1');
                                 lib.character.HL_amiya.skills.addArray(['HL_heiguan', 'HL_qipan', 'HL_yongheng']);
                                 game.skangxing(player);
@@ -3241,8 +3241,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         await next.setContent(lib.element.content.die);
                                     }
                                     game.over('阿米娅被击败了');
-                                }
-                                else {
+                                } else {
                                     let num = 0;
                                     for (const npc of game.players.filter((q) => q != player)) {
                                         num += npc.hp;
@@ -3501,8 +3500,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————HL_ws_bossjieshao
-                        HL_ws_bossjieshao: {
-                        },
+                        HL_ws_bossjieshao: {},
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
                         // 焚城:准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害
@@ -3976,7 +3974,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        global: ['useCardEnd'],//金莲珠嵌套结算
+                                        global: ['useCardEnd'], //金莲珠嵌套结算
                                     },
                                     forced: true,
                                     filter(event, player) {
@@ -4059,7 +4057,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         for (const npc of targets) {
                                             npc.storage.skill_blocker?.remove('HL_wushuang');
                                         }
-                                    }).vars({ targets: targets });
+                                    })
+                                    .vars({ targets: targets });
                             },
                             skillBlocker(skill, player) {
                                 const info = lib.skill[skill];
@@ -5005,7 +5004,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             }
                                             if (!_status.auto) {
                                                 ui.click.auto();
-                                            }//托管
+                                            } //托管
                                             for (const npc of players) {
                                                 player.line(npc);
                                                 game.log(player, '惩罚直接结束游戏的角色', npc);
@@ -5014,14 +5013,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 next.player = npc;
                                                 next._triggered = null;
                                                 next.setContent(lib.element.content.die);
-                                            }//即死
+                                            } //即死
                                             if (player.hp > 0 && player.getEnemies().length) {
                                                 return;
                                             }
                                         }
                                         return oover(result, bool);
                                     };
-                                }//挑战模式适配
+                                } //挑战模式适配
                             },
                             trigger: {
                                 global: ['gameStart', 'phaseBegin'],
@@ -5128,7 +5127,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return HL.tianqi.includes('HL_lieyang') && event.cards?.some((q) => q.fire) && HL.temperature > 0;
                                     },
                                     async content(event, trigger, player) {
-                                        if (Math.random() < (HL.temperature / 100)) {
+                                        if (Math.random() < HL.temperature / 100) {
                                             trigger.target.damage('fire', 'nosource');
                                         }
                                     },
@@ -5204,7 +5203,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             limited: true,
                             filter(event, player) {
-                                return player.hp < (player.maxHp / 2) && !player.storage.HL_A_zhuan;
+                                return player.hp < player.maxHp / 2 && !player.storage.HL_A_zhuan;
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_A_zhuan');
@@ -5251,8 +5250,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             div.remove();
                                         }, 2000);
                                     };
-                                }
-                                else {
+                                } else {
                                     HL.tianqi = ['HL_baoyu'];
                                     ui.background.style.backgroundImage = `url(extension/火灵月影/image/HL_baoyu.jpg)`;
                                     HL.tqjs.innerHTML = "<b style='color:rgb(17, 140, 223); font-size: 25px;'>暴雨</b>";
@@ -5395,8 +5393,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             }
                                         }
                                     },
-                                }
-                            }
+                                },
+                            },
                         },
                         // 霆————如海摇山倾
                         // 每轮开始时/准备阶段,你视为对所有敌方角色使用一张【水淹七军】
@@ -5482,7 +5480,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 for (const npc of player.getEnemies()) {
                                     const choiceList = ['失去2点体力值', '减少1点体力上限'];
-                                    const { result: { index } } = await npc.chooseControl()
+                                    const {
+                                        result: { index },
+                                    } = await npc
+                                        .chooseControl()
                                         .set('prompt', '选择一项')
                                         .set('choiceList', choiceList)
                                         .set('ai', function (event, player) {
@@ -5999,9 +6000,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白  唐  3/6/9/12体力
-                        HL_libai_bossjieshao: {
-
-                        },
+                        HL_libai_bossjieshao: {},
                         // 天上白玉京
                         // 你只能受到实体牌的伤害
                         HL_baiyujing: {
@@ -6110,7 +6109,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (player.storage.HL_wurenzhi > 2) {
                                     player.storage.HL_wurenzhi = 0;
                                     player.storage.HL_wurenzhi_1 = true;
-                                    player.when({ global: 'phaseZhunbeiBegin' }).then(() => player.storage.HL_wurenzhi_1 = false);
+                                    player.when({ global: 'phaseZhunbeiBegin' }).then(() => (player.storage.HL_wurenzhi_1 = false));
                                 }
                             },
                             group: ['HL_wurenzhi_1'],
@@ -6168,8 +6167,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (trigger.card.name == 'jiu') {
                                     player.storage.HL_xujinhuan++;
-                                }
-                                else {
+                                } else {
                                     const his = trigger.player.actionHistory;
                                     const evt = his[his.length - 1];
                                     for (const i of evt.sourceDamage) {
@@ -6272,7 +6270,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 let num = trigger.targets.length;
                                 const {
                                     result: { targets },
-                                } = await player.chooseTarget(`对其中任意一个目标使用${num}张【杀】`)
+                                } = await player
+                                    .chooseTarget(`对其中任意一个目标使用${num}张【杀】`)
                                     .set('filterTarget', (c, p, t) => trigger.targets.includes(t))
                                     .set('ai', (t) => -get.attitude(player, t));
                                 if (targets && targets[0]) {
@@ -6363,7 +6362,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 for (const bool of [true, false]) {
                                     const cards = bool ? Array.from(ui.cardPile.childNodes) : Array.from(ui.discardPile.childNodes).concat(Array.from(ui.ordering.childNodes));
-                                    const card = cards.randomGets(20).filter((q) => player.hasUseTarget(q, true, true)).randomGet();
+                                    const card = cards
+                                        .randomGets(20)
+                                        .filter((q) => player.hasUseTarget(q, true, true))
+                                        .randomGet();
                                     if (card) {
                                         await player.chooseUseTarget(card, true, false, 'nodistance');
                                     }
@@ -6386,8 +6388,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (trigger.card.suit == 'heart') {
                                     player.recover();
-                                }
-                                else {
+                                } else {
                                     trigger.player.loseHp();
                                 }
                             },
@@ -6483,8 +6484,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const num = Math.min(3, player.storage.HL_liankui);
                                 const {
                                     result: { links },
-                                } = await player.chooseButton([`生成一个友方傀儡并赋予其至多${num}个已记录的技能`, [player.storage.HL_liankui_skill.map((i) => [i, get.translation(i)]), 'tdnodes']], [1, num])
-                                    .set('ai', (b) => Math.random());
+                                } = await player.chooseButton([`生成一个友方傀儡并赋予其至多${num}个已记录的技能`, [player.storage.HL_liankui_skill.map((i) => [i, get.translation(i)]), 'tdnodes']], [1, num]).set('ai', (b) => Math.random());
                                 if (links && links[0]) {
                                     const numx = links.length;
                                     player.removeMark('HL_liankui', numx);
@@ -6497,10 +6497,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     npc.ai.modAttitudeFrom = function (from, to, att) {
                                         if (to == from.boss) return 99;
                                         return att;
-                                    };//这里from是随从
+                                    }; //这里from是随从
                                     npc.ai.modAttitudeTo = function (from, to, att) {
                                         return 99;
-                                    };//这里to是随从//所有角色会将傀儡视为队友
+                                    }; //这里to是随从//所有角色会将傀儡视为队友
                                 }
                             },
                         },
@@ -6593,12 +6593,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮
                         HL_tianqi: {
                             init(player) {
-                                player.storage.HL_tianqi = [
-                                    'HL_shengming',
-                                    'HL_zhihui',
-                                    'HL_zhanzheng',
-                                    'HL_weiyan',
-                                ];
+                                player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
                             trigger: {
                                 global: ['roundStart'],
@@ -6615,16 +6610,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     HL.zhenlicaijue--;
                                     if (HL.zhenlicaijue > 0) {
                                         return;
-                                    }
-                                    else {
+                                    } else {
                                         HL.zhenlicaijue = false;
                                     }
                                 }
                                 HL.lvfa = [];
                                 const {
                                     result: { links },
-                                } = await player.chooseButton(['从四项律法中选择获得其中两项律法', [player.storage.HL_tianqi.map((i) => [i, get.translation(i)]), 'tdnodes']], 2, true)
-                                    .set('ai', (b) => Math.random());
+                                } = await player.chooseButton(['从四项律法中选择获得其中两项律法', [player.storage.HL_tianqi.map((i) => [i, get.translation(i)]), 'tdnodes']], 2, true).set('ai', (b) => Math.random());
                                 if (links && links[0]) {
                                     game.log(player, '加入律法', links);
                                     HL.lvfa = links;
@@ -6771,7 +6764,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player && event.num > (player.maxHp - player.hp);
+                                        return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player && event.num > player.maxHp - player.hp;
                                     },
                                     async content(event, trigger, player) {
                                         const num = trigger.num - (player.maxHp - player.hp);
@@ -6945,7 +6938,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                                 const controllist = ['选项一', '选项二'];
                                 const choiceList = [`摸${num}张牌`, `回复${num}点体力`];
-                                const { result: { index } } = await player
+                                const {
+                                    result: { index },
+                                } = await player
                                     .chooseControl(controllist)
                                     .set('prompt', '选择一项')
                                     .set('choiceList', choiceList)
@@ -7143,7 +7138,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         const controllist = ['选项一', '选项二'];
                                         const choiceList = ['翻面', '跳过下个出牌阶段'];
-                                        const { result: { index } } = await player
+                                        const {
+                                            result: { index },
+                                        } = await player
                                             .chooseControl(controllist)
                                             .set('prompt', '选择一项')
                                             .set('choiceList', choiceList)
@@ -7195,12 +7192,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 当你对敌方角色造成伤害/成为敌方角色牌的目标后,你令其获得随机一个亵渎印记持续2轮【优先获得已持有律法所对应的亵渎印记】
                         HL_jieming: {
                             init(player) {
-                                player.storage.HL_tianqi = [
-                                    'HL_shengming',
-                                    'HL_zhihui',
-                                    'HL_zhanzheng',
-                                    'HL_weiyan',
-                                ];
+                                player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
                             trigger: {
                                 target: ['useCardToPlayer'],
@@ -7222,12 +7214,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 若其失去的体力值小于你持有律法数,则重复此流程,直到其脱离濒死状态
                         HL_wanlv: {
                             init(player) {
-                                player.storage.HL_tianqi = [
-                                    'HL_shengming',
-                                    'HL_zhihui',
-                                    'HL_zhanzheng',
-                                    'HL_weiyan',
-                                ];
+                                player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
                             trigger: {
                                 global: ['phaseEnd'],
@@ -7247,7 +7234,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                     if (num > 1) {
                                         HL.wanlv = true;
-                                        npc.when({ player: ['dyingEnd', 'phaseAfter'] }).then(() => HL.wanlv = false);
+                                        npc.when({ player: ['dyingEnd', 'phaseAfter'] }).then(() => (HL.wanlv = false));
                                         let numx = 24;
                                         while (HL.wanlv && numx-- > 0) {
                                             const num1 = npc.hp;
@@ -7256,8 +7243,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 break;
                                             }
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         npc.damage(2);
                                     }
                                 }
@@ -7789,7 +7775,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     player.update();
                     player.success = false;
                 },
-            };// 挂的主技能被封了也会跟着被封
+            }; // 挂的主技能被封了也会跟着被封
             lib.skill.bossfinish = {
                 trigger: {
                     source: ['damageBefore'],
@@ -7996,7 +7982,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             if (lib.config.extension_火灵月影_关闭本体BOSS) {
                 for (const i of ['boss_hundun', 'boss_qiongqi', 'boss_taotie', 'boss_taowu', 'boss_zhuyin', 'boss_xiangliu', 'boss_zhuyan', 'boss_bifang', 'boss_yingzhao', 'boss_qingmushilian', 'boss_qinglong', 'boss_mushengoumang', 'boss_shujing', 'boss_taihao', 'boss_chiyanshilian', 'boss_zhuque', 'boss_huoshenzhurong', 'boss_yanling', 'boss_yandi', 'boss_baimangshilian', 'boss_baihu', 'boss_jinshenrushou', 'boss_mingxingzhu', 'boss_shaohao', 'boss_xuanlinshilian', 'boss_xuanwu', 'boss_shuishengonggong', 'boss_shuishenxuanming', 'boss_zhuanxu', 'boss_zhuoguiquxie', 'boss_nianshou_heti', 'boss_nianshou_jingjue', 'boss_nianshou_renxing', 'boss_nianshou_ruizhi', 'boss_nianshou_baonu', 'boss_baiwuchang', 'boss_heiwuchang', 'boss_luocha', 'boss_yecha', 'boss_niutou', 'boss_mamian', 'boss_chi', 'boss_mo', 'boss_wang', 'boss_liang', 'boss_qinguangwang', 'boss_chujiangwang', 'boss_songdiwang', 'boss_wuguanwang', 'boss_yanluowang', 'boss_bianchengwang', 'boss_taishanwang', 'boss_dushiwang', 'boss_pingdengwang', 'boss_zhuanlunwang', 'boss_mengpo', 'boss_dizangwang', 'boss_lvbu1', 'boss_lvbu2', 'boss_lvbu3', 'boss_caocao', 'boss_guojia', 'boss_zhangchunhua', 'boss_zhenji', 'boss_liubei', 'boss_zhugeliang', 'boss_huangyueying', 'boss_pangtong', 'boss_zhouyu', 'boss_caiwenji', 'boss_zhangjiao', 'boss_zuoci', 'boss_diaochan', 'boss_huatuo', 'boss_dongzhuo', 'boss_sunce']) {
                     lib.config.mode_config.boss[`${i}_boss_config`] = false;
-                };
+                }
                 game.saveConfig(`mode_config`, lib.config.mode_config);
             }
         },
@@ -8064,24 +8050,19 @@ game.addMode(
                     const list = Object.keys(lib.character).randomGets(5);
                     const {
                         result: { links },
-                    } = await npc.chooseButton(['选择首个出战武将', [list, 'character']], true)
-                        .set('ai', (button) => Math.random());
+                    } = await npc.chooseButton(['选择首个出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
                     if (links && links[0]) {
                         npc.init(links[0]);
                     }
-                }
-                else {
-                    const dialog = ui.create.characterDialog('选择十个出战武将');
+                } else {
                     const {
                         result: { links },
-                    } = await npc.chooseButton(dialog, 10, true)
-                        .set('ai', (button) => Math.random());
+                    } = await npc.chooseButton(ui.create.characterDialog('选择十个出战武将'), 10, true).set('ai', (button) => Math.random());
                     if (links && links[0]) {
                         npc.characterlist = links;
                         const {
                             result: { links: links1 },
-                        } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true)
-                            .set('ai', (button) => Math.random());
+                        } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true).set('ai', (button) => Math.random());
                         if (links1 && links1[0]) {
                             npc.characterlist.remove(links1[0]);
                             npc.init(links1[0]);
@@ -8108,20 +8089,17 @@ game.addMode(
                             const list = Object.keys(lib.character).randomGets(5);
                             const {
                                 result: { links },
-                            } = await player.chooseButton(['选择下一个出战武将', [list, 'character']], true)
-                                .set('ai', (button) => Math.random());
+                            } = await player.chooseButton(['选择下一个出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
                             if (links && links[0]) {
                                 player.characternum--;
                                 name = links[0];
                             }
                         }
-                    }
-                    else {
+                    } else {
                         if (player.characterlist?.length) {
                             const {
                                 result: { links },
-                            } = await player.chooseButton(['选择下一个出战武将', [player.characterlist, 'character']], true)
-                                .set('ai', (button) => Math.random());
+                            } = await player.chooseButton(['选择下一个出战武将', [player.characterlist, 'character']], true).set('ai', (button) => Math.random());
                             if (links && links[0]) {
                                 player.characterlist.remove(links[0]);
                                 name = links[0];
@@ -8148,7 +8126,7 @@ game.addMode(
                         function (player, identity) {
                             player.identity = identity;
                             game[identity] = player;
-                            player.side = (identity == 'zhu');
+                            player.side = identity == 'zhu';
                             player.node.identity.classList.remove('guessing');
                             player.identityShown = true;
                             player.ai.shown = 1;
@@ -8178,8 +8156,7 @@ game.addMode(
                 return -10;
             },
         },
-        skill: {
-        },
+        skill: {},
         translate: {
             zhu: '先',
             fan: '后',
@@ -8206,3 +8183,272 @@ game.addMode(
     }
 );
 lib.mode.chelunzhan.splash = 'ext:火灵月影/image/chelunzhan.jpg';
+//—————————————————————————————————————————————————————————————————————————————灵气复苏模式
+game.addMode(
+    'lingqifusu',
+    {
+        async start(event) {
+            lib.config.mode = 'lingqifusu';
+            _status.mode = 'lingqifusu';
+            const num = Number(lib.config.mode_config.lingqifusu.单阵营人数) || 3;
+            game.prepareArena(num * 3);
+            const player1 = game.players.slice(0, num);
+            const player2 = game.players.slice(num, num * 2);
+            const player3 = game.players.slice(num * 2, num * 3);
+            game.zhu = game.players[0];
+            game.me = game.players.randomGet();
+            for (const i of player1) {
+                i.identity = 'xian';
+                i.side = 'xian';
+            }
+            for (const i of player2) {
+                i.identity = 'mo';
+                i.side = 'mo';
+            }
+            for (const i of player3) {
+                i.identity = 'ling';
+                i.side = 'ling';
+            }
+            lib.init.onfree();
+            for (const npc of game.players) {
+                npc.getId();
+                npc.node.identity.classList.remove('guessing');
+                npc.identityShown = true;
+                npc.ai.shown = 1;
+                npc.setIdentity();
+                if (lib.config.mode_config.lingqifusu.随机选将) {
+                    const list = Object.keys(lib.character).randomGets(5);
+                    const {
+                        result: { links },
+                    } = await npc.chooseButton(['选择出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
+                    if (links && links[0]) {
+                        npc.init(links[0]);
+                    }
+                } else {
+                    const {
+                        result: { links },
+                    } = await npc.chooseButton(ui.create.characterDialog('选择出战武将'), true).set('ai', (button) => Math.random());
+                    if (links && links[0]) {
+                        npc.init(links[0]);
+                    }
+                }
+                npc.maxHp = 10 * npc.maxHp;
+                npc.hp = 10 * npc.hp;
+            }
+            await event.trigger('gameStart');
+            await game.gameDraw(game.zhu, () => 4);
+            game.phaseLoop(game.zhu);
+        },
+        game: {
+            checkResult() {
+                game.over(game.players[0]?.identity == game.me.identity);
+            },
+        },
+        element: {
+            player: {
+                dieAfter() {
+                    if (game.players.map((q) => q.identity).unique().length > 1) {
+                        return;
+                    }
+                    game.checkResult();
+                },
+                maxlingli() {
+                    const player = this;
+                    const jingjie = ['lianqi', 'zhuji', 'jindan', 'yuanying', 'huashen', 'lianxu', 'heti', 'dacheng', 'dujie', 'feisheng'];
+                    const list = {
+                        lianqi: 10,
+                        zhuji: 30,
+                        jindan: 60,
+                        yuanying: 100,
+                        huashen: 150,
+                        lianxu: 210,
+                        heti: 280,
+                        dacheng: 360,
+                        dujie: 450,
+                        feisheng: 550,
+                    };
+                    if (!player.jingjie) {
+                        player.jingjie = 'lianqi';
+                    }
+                    return list[player.jingjie];
+                },
+                async pojing() {
+                    const player = this;
+                    if (!player.jingjie) {
+                        player.jingjie = 'lianqi';
+                    }
+                    if (player.jingjie == 'feisheng') {
+                        return 'feisheng';
+                    }
+                    const jingjie = ['lianqi', 'zhuji', 'jindan', 'yuanying', 'huashen', 'lianxu', 'heti', 'dacheng', 'dujie', 'feisheng'];
+                    const index = jingjie.indexOf(player.jingjie);
+                    const skills = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]);
+                    const list = skills.randomGets(3);
+                    const {
+                        result: { control },
+                    } = await player.chooseControl(list)
+                        .set(
+                            'choiceList',
+                            list.map(function (i) {
+                                return `<div class='skill'><${get.translation(i)}></div><div>${get.skillInfoTranslation(i, player)}</div>`;
+                            })
+                        )
+                        .set('displayIndex', false)
+                        .set('prompt', `破境:请选择获得的技能`);
+                    player.addSkillLog(control);
+                    player.jingjie = jingjie[index + 1];
+                    return player.jingjie;
+                },
+                jingjiechaochu(target) {
+                    const player = this;
+                    if (!player.jingjie) {
+                        player.jingjie = 'lianqi';
+                    }
+                    if (!target.jingjie) {
+                        target.jingjie = 'lianqi';
+                    }
+                    const jingjie = ['lianqi', 'zhuji', 'jindan', 'yuanying', 'huashen', 'lianxu', 'heti', 'dacheng', 'dujie', 'feisheng'];
+                    const index1 = jingjie.indexOf(player.jingjie);
+                    const index2 = jingjie.indexOf(target.jingjie);
+                    return index1 - index2;
+                },
+            },
+        },
+        get: {
+            rawAttitude(from, to) {
+                if (!from) return 0;
+                if (!to) return 0;
+                if (from.identity == to.identity) return 10;
+                return -10;
+            },
+        },
+        skill: {
+            // 任意角色体力值每增加1获得2灵力,体力值每扣减1失去1灵力,每获得1牌获得1灵力,每失去1牌失去0.5灵力,每造成一点伤害获得2灵力
+            // 灵力可以增幅攻击力与防御力,境界低的攻击对境界高的修士会大幅衰减
+            // 若当前灵力达到当前境界上限,则无法继续获得灵力
+            // 出牌阶段限一次,你可以获得一个技能来突破瓶颈
+            _lingqifusu: {
+                trigger: {
+                    player: ['gainEnd', 'loseEnd', 'changeHpEnd'],
+                    source: ['damageEnd'],
+                },
+                filter(event, player) {
+                    return player.countMark('_lingqifusu') < player.maxlingli();
+                },
+                forced: true,
+                intro: {
+                    content(storage, player) {
+                        return `当前境界${get.translation(player.jingjie)}<br>当前灵力${storage}`;
+                    },
+                },
+                async content(event, trigger, player) {
+                    if (trigger.name == 'gain') {
+                        player.addMark('_lingqifusu', trigger.cards.length);
+                    } else if (trigger.name == 'lose') {
+                        player.removeMark('_lingqifusu', trigger.cards.length * 0.5);
+                    } else if (trigger.name == 'damage') {
+                        player.addMark('_lingqifusu', trigger.num * 2);
+                    } else {
+                        if (trigger.num > 0) {
+                            player.addMark('_lingqifusu', trigger.num * 2);
+                        } else {
+                            player.removeMark('_lingqifusu', -trigger.num);
+                        }
+                    }
+                },
+                subSkill: {
+                    1: {
+                        enable: 'phaseUse',
+                        usable: 1,
+                        filter(event, player) {
+                            return player.countMark('_lingqifusu') >= player.maxlingli();
+                        },
+                        async content(event, trigger, player) {
+                            player.pojing();
+                        },
+                        ai: {
+                            order: 99,
+                            result: {
+                                player: 99,
+                            },
+                        },
+                    },
+                    2: {
+                        trigger: {
+                            player: ['damageBefore'],
+                        },
+                        forced: true,
+                        async content(event, trigger, player) {
+                            let num = 100;
+                            if (trigger.source && trigger.source.countMark('_lingqifusu')) {
+                                num + trigger.source.countMark('_lingqifusu');
+                            }
+                            num - player.countMark('_lingqifusu');
+                            if (num <= 0) {
+                                trigger.cancel();
+                            }
+                            if (trigger.source) {
+                                const chaochu = player.jingjiechaochu(trigger.source);
+                                if (chaochu > 0) {
+                                    num = num / Math.pow(2, chaochu);
+                                }
+                                if (chaochu < 0) {
+                                    num = num * Math.pow(2, -chaochu);
+                                }
+                            }
+                            trigger.num = Math.round(trigger.num * (num / 100));
+                        },
+                    },
+                },
+            },
+        },
+        translate: {
+            xian: '仙',
+            mo: '魔',
+            ling: '灵',
+            lingqifusu: '灵气复苏',
+            _lingqifusu: '灵气复苏',
+            _lingqifusu_info: '任意角色体力值每增加1获得2灵力,体力值每扣减1获得1灵力,每获得1牌获得1灵力,每失去1牌获得0.5灵力,每造成一点伤害获得2灵力<br>灵力可以增幅攻击力与防御力,境界低的攻击对境界高的修士会大幅衰减<br>若当前灵力达到当前境界上限,则无法继续获得灵力<br>出牌阶段限一次,你可以获得一个技能来突破瓶颈',
+            lianqi: '炼气',
+            zhuji: '筑基',
+            jindan: '金丹',
+            yuanying: '元婴',
+            huashen: '化神',
+            lianxu: '炼虚',
+            heti: '合体',
+            dacheng: '大乘',
+            dujie: '渡劫',
+            feisheng: '飞升',
+        },
+    },
+    {
+        translate: '灵气复苏',
+        config: {
+            intro: {
+                name: '本模式有三个阵营<仙/魔/灵>,存活至最后的阵营获得胜利<br>本模式引入灵气机制,所有角色体力上限翻十倍<br>任意角色体力值每增加1获得2灵力,体力值每扣减1获得1灵力,每获得1牌获得1灵力,每失去1牌获得0.5灵力,每造成一点伤害获得2灵力<br>灵力可以增幅攻击力与防御力,境界低的攻击对境界高的修士会大幅衰减<br>若当前灵力达到当前境界上限,则无法继续获得灵力<br>出牌阶段限一次,你可以获得一个技能来突破瓶颈<br>以下为境界与灵力上限对照表<br>境界 当前最大灵力<br>炼气——10<br>筑基——30<br>金丹——60<br>元婴——100<br>化神——150<br>炼虚——210<br>合体——280<br>大乘——360<br>渡劫——450<br>飞升——550',
+                frequent: true,
+                clear: true,
+            },
+            随机选将: {
+                name: '<span class=Qmenu>随机选将</span>',
+                intro: '开启后,本模式选将逻辑改为随机选将',
+                init: false,
+                frequent: true,
+            },
+            单阵营人数: {
+                name: '<span class=Qmenu>单阵营人数</span>',
+                intro: '控制单个阵营人员数量',
+                init: '3',
+                item: {
+                    2: '<span class=Qmenu>2</span>',
+                    3: '<span class=Qmenu>3</span>',
+                    4: '<span class=Qmenu>4</span>',
+                    5: '<span class=Qmenu>5</span>',
+                    6: '<span class=Qmenu>6</span>',
+                },
+                frequent: true,
+            },
+        },
+    }
+);
+lib.mode.lingqifusu.splash = 'ext:火灵月影/image/lingqifusu.jpg';
