@@ -1868,10 +1868,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         });
                     }
                 }; //删除次数限制//filter决定有无次数距离限制//viewAs的技能会修改chooseToUse事件的filterCard
-                game.qcard = (player, type, filter, range) => {
-                    if (range !== false) {
-                        range = true;
-                    }
+                lib.element.player.qcard = function (type, filter, range) {
                     const list = [];
                     for (const i in lib.card) {
                         const info = lib.card[i];
@@ -1888,6 +1885,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             continue;
                         }
                         if (filter !== false) {
+                            const player = this;
+                            if (range !== false) {
+                                range = true;
+                            }
                             if (!player.filterCard(i, range)) {
                                 continue;
                             }
@@ -4489,7 +4490,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             chooseButton: {
                                 dialog(event, player) {
-                                    return ui.create.dialog('金枪', [game.qcard(player).filter((q) => ['sha', 'shan'].includes(q[2])), 'vcard']);
+                                    return ui.create.dialog('金枪', [player.qcard().filter((q) => ['sha', 'shan'].includes(q[2])), 'vcard']);
                                 },
                                 check(button) {
                                     const player = _status.event.player;
@@ -4702,10 +4703,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             hiddenCard(player, name) {
                                 return player.countCards('hes') && !player.storage.HL_pozhu.includes(name);
                             },
-                            filter: (event, player) => player.countCards('hes') && game.qcard(player).some((q) => !player.storage.HL_pozhu.includes(q[2])),
+                            filter: (event, player) => player.countCards('hes') && player.qcard().some((q) => !player.storage.HL_pozhu.includes(q[2])),
                             chooseButton: {
                                 dialog(event, player) {
-                                    return ui.create.dialog('破竹', [game.qcard(player).filter((q) => !player.storage.HL_pozhu.includes(q[2])), 'vcard']);
+                                    return ui.create.dialog('破竹', [player.qcard().filter((q) => !player.storage.HL_pozhu.includes(q[2])), 'vcard']);
                                 },
                                 check(button) {
                                     const player = _status.event.player;
@@ -7287,12 +7288,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jielv: '戒律',
                         HL_tianqi: '天启拈作劫',
                         HL_tianqi_info: '①每轮开始时,你从四项律法中选择获得其中两项律法(覆盖之前)<br>②敌方角色亵渎对应律法时,其所有技能失效,并获得持续2轮的对应律法的亵渎印记<br>③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮',
-                        HL_tianqi_append: '真理裁决<br><b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b><br>生命律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>若回复值溢出,则摸溢出数量的牌,并增加等量上限</b><br>生命亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b><br>智慧律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b><br>智慧亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b><br>战争律法<br><b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b><br>战争亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b><br>威严律法<br><b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b><br>威严亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
+                        HL_tianqi_append: '真理裁决<br><b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b><br>生命律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限</b><br>生命亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b><br>智慧律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b><br>智慧亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b><br>战争律法<br><b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b><br>战争亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b><br>威严律法<br><b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b><br>威严亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
                         _HL_zhenlicaijue: '真理裁决',
                         _HL_zhenlicaijue_info: '<b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b>',
                         HL_shengming: '生命律法',
                         _HL_shengming: '生命律法',
-                        _HL_shengming_info: '<b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>若回复值溢出,则摸溢出数量的牌,并增加等量上限</b>',
+                        _HL_shengming_info: '<b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限</b>',
                         xiedu_HL_shengming: '生命亵渎',
                         xiedu_HL_shengming_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b>',
                         HL_zhihui: '智慧律法',
