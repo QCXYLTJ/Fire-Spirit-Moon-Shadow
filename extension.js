@@ -1276,15 +1276,6 @@ const boss = function () {
         player.draw(Math.min(player.maxHp, 20));
         return player;
     };
-    game.addFellowQ = function (name) {
-        game.log('boss增加了随从', name);
-        const player = game.addPlayerQ(name);
-        player.side = true;
-        player.identity = 'zhong';
-        player.setIdentity('zhong');
-        game.addVideo('setIdentity', player, 'zhong');
-        return player;
-    };
     lib.element.player.addFellow = function (name) {
         const npc = game.addPlayerQ(name);
         this.guhuo(npc);
@@ -3190,6 +3181,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.node.avatar.HL_BG('HL_amiya1');
                                 player.hp = player.maxHp;
                                 player.wudi = true;
+                                player.when({ global: 'roundStart' }).then(() => player.wudi = false);
                                 player.restoreSkill('HL_buyingcunzai_1');
                                 lib.character.HL_amiya.skills.addArray(['HL_heiguan', 'HL_qipan', 'HL_yongheng']);
                                 game.skangxing(player);
@@ -4253,7 +4245,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_shengzhe_1');
                                         player.hp = 50;
-                                        const boss = game.addFellowQ('HL_fengletinghou');
+                                        const boss = player.addFellow('HL_fengletinghou').shibing = true;
                                         game.nkangxing(boss, 'HL_fengletinghou');
                                         game.skangxing(boss);
                                         boss.bosskangxing = true;
@@ -4266,20 +4258,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 若场上有士兵,令所有士兵自爆
                         // 每自爆一个士兵的一点体力,对随机敌方单位造成1点伤害
                         // 批次1
-                        //王左右出现王者御卫,玩家两侧出现王者骁勇
+                        // 王左右出现王者御卫,玩家两侧出现王者骁勇
                         // 批次2
-                        //王左右出现铁骨铮臣,玩家两侧出现兴国志士
+                        // 王左右出现铁骨铮臣,玩家两侧出现兴国志士
                         // 批次3
-                        //王左右出现国之柱石(国之柱石标记数计三枚)
+                        // 王左右出现国之柱石(国之柱石标记数计三枚)
                         // 批次4
-                        //玩家两侧出现两个凡人之愿
+                        // 玩家两侧出现两个凡人之愿
                         HL_wangdao: {
                             trigger: {
                                 global: ['roundStart'],
                             },
                             forced: true,
                             async content(event, trigger, player) {
-                                const shibing = game.players.filter((q) => q.identity == 'zhong');
+                                if (!HL.wangzuoboss) {
+                                    HL.wangzuoboss = player;
+                                }
+                                const shibing = game.players.filter((q) => q.shibing);
                                 let numx = player.getEnemies().length;
                                 if (shibing.length) {
                                     let num = 0;
@@ -4302,33 +4297,33 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     switch (num) {
                                         case 1:
                                             {
-                                                game.addFellowQ('HL_yuwei');
-                                                game.addFellowQ('HL_yuwei');
+                                                player.addFellow('HL_yuwei').shibing = true;
+                                                player.addFellow('HL_yuwei').shibing = true;
                                                 while (numx-- > 0) {
-                                                    game.addFellowQ(`HL_xiaoyong${[1, 2, 3].randomGet()}`);
+                                                    player.addFellow(`HL_xiaoyong${[1, 2, 3].randomGet()}`).shibing = true;
                                                 }
                                             }
                                             break;
                                         case 2:
                                             {
-                                                game.addFellowQ('HL_zhengchen');
-                                                game.addFellowQ('HL_zhengchen');
+                                                player.addFellow('HL_zhengchen').shibing = true;
+                                                player.addFellow('HL_zhengchen').shibing = true;
                                                 while (numx-- > 0) {
-                                                    game.addFellowQ('HL_zhishi');
+                                                    player.addFellow('HL_zhishi').shibing = true;
                                                 }
                                             }
                                             break;
                                         case 3:
                                             {
-                                                game.addFellowQ('HL_zhushi');
-                                                game.addFellowQ('HL_zhushi');
+                                                player.addFellow('HL_zhushi').shibing = true;
+                                                player.addFellow('HL_zhushi').shibing = true;
                                             }
                                             break;
                                         case 4:
                                             {
                                                 let numq = 2 * numx;
                                                 while (numq-- > 0) {
-                                                    game.addFellowQ('HL_fanren');
+                                                    player.addFellow('HL_fanren').shibing = true;
                                                 }
                                             }
                                             break;
@@ -4345,10 +4340,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return game.players.some((q) => q.identity == 'zhong');
+                                return game.players.some((q) => q.shibing);
                             },
                             async content(event, trigger, player) {
-                                for (const npc of game.players.filter((q) => q.identity == 'zhong')) {
+                                for (const npc of game.players.filter((q) => q.shibing)) {
                                     await npc.phase();
                                 }
                             },
@@ -4360,7 +4355,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return event.player.identity == 'zhong';
+                                        return event.player.shibing;
                                     },
                                     async content(event, trigger, player) {
                                         await player.phaseDraw();
@@ -4378,7 +4373,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return event.player.identity == 'zhu';
+                                return event.player == HL.wangzuoboss;
                             },
                             async content(event, trigger, player) {
                                 trigger.cancel();
@@ -4391,13 +4386,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return game.players.some((q) => q.identity == 'zhu');
+                                        return HL.wangzuoboss;
                                     },
                                     async content(event, trigger, player) {
                                         const num = numberq1(trigger.num);
-                                        for (const i of game.players.filter((q) => q.identity == 'zhu')) {
-                                            i.recover(num);
-                                        }
+                                        HL.wangzuoboss.recover(num);
                                     },
                                 },
                             },
@@ -4435,7 +4428,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return event.player.identity == 'zhu';
+                                return event.player == HL.wangzuoboss;
                             },
                             async content(event, trigger, player) {
                                 trigger.player.recover();
@@ -4599,7 +4592,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return game.players.some((q) => q.identity == 'zhu');
+                                return HL.wangzuoboss;
                             },
                             async content(event, trigger, player) {
                                 const cards = Array.from(ui.cardPile.childNodes)
@@ -4608,12 +4601,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (cards.length) {
                                     game.cardsGotoOrdering(cards);
                                     player.showCards(cards);
-                                    const boss = game.players.find((q) => q.identity == 'zhu');
                                     const {
                                         result: { links },
-                                    } = await boss.chooseButton(['选择其中一张使用之', cards]).set('ai', (button) => get.value(button.link));
+                                    } = await HL.wangzuoboss.chooseButton(['选择其中一张使用之', cards]).set('ai', (button) => get.value(button.link));
                                     if (links && links[0]) {
-                                        boss.chooseUseTarget(links[0], true, false, 'nodistance');
+                                        HL.wangzuoboss.chooseUseTarget(links[0], true, false, 'nodistance');
                                     } else {
                                         player.loseHp();
                                     }
@@ -4628,7 +4620,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return event.player.identity == 'zhu';
+                                return event.player == HL.wangzuoboss;
                             },
                             async content(event, trigger, player) {
                                 for (const npc of player.getEnemies()) {
@@ -4663,7 +4655,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return event.source?.identity == 'zhu' && event.player.isEnemiesOf(player);
+                                return event.source == HL.wangzuoboss && event.player.isEnemiesOf(player);
                             },
                             async content(event, trigger, player) {
                                 trigger.num = numberq1(trigger.num) * 2;
@@ -4881,7 +4873,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                return event.player.identity == 'zhu';
+                                return event.player == HL.wangzuoboss;
                             },
                             async content(event, trigger, player) {
                                 trigger.cancel();
@@ -4904,11 +4896,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     forceDie: true,
                                     filter(event, player) {
-                                        return game.players.some((q) => q.identity == 'zhu');
+                                        return HL.wangzuoboss;
                                     },
                                     async content(event, trigger, player) {
-                                        const boss = game.players.find((q) => q.identity == 'zhu');
-                                        boss.addSkill('HL_dingli_3');
+                                        HL.wangzuoboss.addSkill('HL_dingli_3');
                                         for (const i of ['HL_fanren', 'HL_zhushi', 'HL_zhishi', 'HL_zhengchen', 'HL_xiaoyong1', 'HL_xiaoyong2', 'HL_xiaoyong3', 'HL_yuwei']) {
                                             const info = lib.character[i];
                                             info.maxHp = info.maxHp * 2;
@@ -4922,7 +4913,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return event.source?.identity == 'zhong' && event.player.isEnemiesOf(player);
+                                        return event.source?.shibing && event.player.isEnemiesOf(player);
                                     },
                                     async content(event, trigger, player) {
                                         trigger.num = numberq1(trigger.num) * 2;
@@ -5770,7 +5761,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_shaoEGO: {
                             trigger: {
                                 player: ['useCard', 'respond'],
-                                source: 'damageSource',
+                                source: ['damageEnd'],
                             },
                             filter(event, player) {
                                 return player.countMark('HL_shaoEGO') < 15;
@@ -5780,9 +5771,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             fixed: true,
                             forced: true,
                             async content(event, trigger, player) {
-                                //QQQ
                                 if (trigger.name == 'damage') {
-                                    player.addMark('HL_shaoEGO', Math.min(3, 15 - player.countMark('HL_shaoEGO')));
+                                    player.addMark('HL_shaoEGO', 3);
                                 } else {
                                     player.addMark('HL_shaoEGO', 1);
                                 }
@@ -6432,7 +6422,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 player.storage.HL_liankui_player.push(trigger.player);
-                                const list = trigger.player.GAS().filter((s) => !player.storage.HL_liankui_skill.includes(s));
+                                const list = trigger.player.GAS().filter((s) => !player.storage.HL_liankui_skill.includes(s) && s != 'HL_liankui');
                                 if (list.length) {
                                     const {
                                         result: { control },
@@ -6462,7 +6452,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     round: 1,
                                     filter(event, player) {
-                                        return event.player.identity == 'zhu' && !event.player.HL_kuilei;
+                                        return event.player == HL.wangzuoboss && !event.player.HL_kuilei;
                                     },
                                     async content(event, trigger, player) {
                                         player.addMark('HL_liankui', 4);
@@ -7383,6 +7373,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_shaoEGO_info: '你每使用或打出一张牌/造成一次伤害,获得一枚/三枚『情感』标记(上限为15);你每拥有三枚此标记,你使用杀的次数+1.',
                         HL_shaoEGO_1: '邵E·G·O',
                         HL_shaoEGO_1_info: '任意角色的回合开始或结束,若情感标记大于12,获得以下技能',
+                        HL_shaoEGO_1_append: '椒图镇邪<br>当你成为敌方角色使用牌的目标时,若此牌有点数且为实体牌:(你与其使用的牌拼点,若你赢,令此牌无效,令其获得三枚烧伤标记).否则令此牌无效<br>狴犴争讼<br>敌方角色的回合开始时,令拥有烧伤标记的敌方角色受到x点伤害(x为其烧伤标记数量),你回复等量体力(若体力已达到上限,则改为获得等量护甲)<br>螭吻吞脊<br>当你成为敌方角色使用牌的目标时,进行一次判定,若判定牌不为黑色,你令其流失一点体力,否则你流失一点体力<br>睚眦雪恨<br>当你使用牌指定敌方角色成为目标时,进行一次判定,若判定牌的点数与你的体力上限不同,令其获得两枚烧伤标记<br>狻猊腾云<br>你的回合开始或回合结束时,若场上敌方角色拥有烧伤标记,令其受到六次x点伤害(x为场上烧伤标记数量×你的情感标记数)<br>饕餮饗食<br>当你受到伤害时,你弃置一张牌,令此伤害减x(x为场上烧伤标记数量);当你流失体力时,令其无效,你增加一点体力上限<br>赑屃负礎<br>当你造成伤害时,令此伤害加X(X为场上的烧伤标记数量);当你拼点时,点数加X',
                         HL_jiaotu: '椒图镇邪',
                         HL_jiaotu_info: '当你成为敌方角色使用牌的目标时,若此牌有点数且为实体牌:(你与其使用的牌拼点,若你赢,令此牌无效,令其获得三枚烧伤标记).否则令此牌无效',
                         HL_bian: '狴犴争讼',
@@ -7918,7 +7909,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 first = true;
                                 bossx = game.changeBossQ(name);
                             } else {
-                                bossx = game.addFellowQ(name);
+                                bossx = game.boss.addFellow(name);
                             }
                             HL.HL_ws_boss.boss.add(bossx);
                             bossx.skills = [];
