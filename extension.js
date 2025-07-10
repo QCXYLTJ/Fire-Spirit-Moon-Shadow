@@ -8672,8 +8672,8 @@ game.addMode(
             lib.config.mode = 'jiguchuanhua';
             _status.mode = 'jiguchuanhua';
             game.prepareArena(8);
-            const player1 = game.players.slice(0, 4);
-            const player2 = game.players.slice(4, 8);
+            const player1 = game.players.randomGets(4);
+            const player2 = game.players.filter((q) => !player1.includes(q));//随机座位
             _status.chuanhua = [player1[0], player2[0]];
             _status.long = 0;
             _status.hu = 0;
@@ -8831,6 +8831,7 @@ game.addMode(
                     if (_status.chuanhua.includes(event.target)) {
                         const identity = event.target.identity;
                         _status[identity]++;
+                        player.$skill(`${get.translation(identity)}队传花${_status[identity]}次`);
                         if (_status[identity] > 2) {
                             game.over(game.me.identity == identity);
                         }
