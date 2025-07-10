@@ -6117,12 +6117,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                             async content(event, trigger, player) {
-                                if (HL.zhenlicaijue) {
+                                if (HL.zhenlicaijue > 0) {
                                     HL.zhenlicaijue--;
                                     if (HL.zhenlicaijue > 0) {
                                         return;
-                                    } else {
-                                        HL.zhenlicaijue = false;
                                     }
                                 }
                                 HL.lvfa = [];
@@ -6156,7 +6154,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         });
                                     },
                                     async content(event, trigger, player) {
-                                        HL.zhenlicaijue = 3;
+                                        if (!HL.zhenlicaijue) {
+                                            HL.zhenlicaijue = 0;
+                                        }
+                                        HL.zhenlicaijue += 3;
+                                        player.markSkill('_HL_zhenlicaijue');
                                         HL.lvfa = player.storage.HL_tianqi.slice();
                                         if (!HL.jielvboss) {
                                             HL.jielvboss = player;
@@ -6176,6 +6178,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['recoverBegin'],
                             },
                             forced: true,
+                            intro: {
+                                content(storage, player) {
+                                    return `真理裁决剩余${HL.zhenlicaijue}轮`;
+                                },
+                            },
                             filter(event, player) {
                                 return HL.zhenlicaijue > 0 && HL.jielvboss == player && event.card && get.tag(event.card, 'recover');
                             },
@@ -6695,6 +6702,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     async content(event, trigger, player) {
                                         trigger.cancel();
+                                        trigger.result = {};
                                     },
                                 },
                             },
