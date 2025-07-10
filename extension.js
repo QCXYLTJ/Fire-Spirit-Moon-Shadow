@@ -1416,6 +1416,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 },
                 true
             ); //火灵月影
+            if (lib.config.extension_火灵月影_扑克牌模式) {
+                const list = [];
+                for (const num of lib.number) {
+                    for (const suit of lib.suit) {
+                        list.push([suit, num, 'pukepai']);
+                    }
+                }
+                list.push(['none', 14, 'pukepai']);
+                list.push(['none', 15, 'pukepai']);
+                Reflect.defineProperty(lib.card, 'list', {
+                    get() {
+                        return list.randomSort().slice();//每次生成新数组,不加slice的话每次都是原数组,修改会被映射进去
+                    },
+                    configurable: false,
+                    set() { },
+                });
+            }
         },
         precontent() {
             const numfunc = function () {
@@ -1791,18 +1808,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //真实伤害
             };
             mogai();
-            if (lib.config.extension_火灵月影_文字闪烁) {
-                const style = document.createElement('style');
-                style.innerHTML = '@keyframes QQQ{';
-                for (var i = 1; i <= 20; i++) {
-                    let rand1 = Math.floor(Math.random() * 255),
-                        rand2 = Math.floor(Math.random() * 255),
-                        rand3 = Math.floor(Math.random() * 255);
-                    style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
-                }
-                style.innerHTML += '}';
-                document.head.appendChild(style);
-            }
             const shiwei = function () {
                 lib.element.player.filterCardx = function (card, filter) {
                     if (typeof card == 'string') {
@@ -2039,646 +2044,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 };
             }; //技能相关自创函数
             jineng();
-            if (lib.config.extension_火灵月影_武将全部可选) {
-                Reflect.defineProperty(lib.filter, 'characterDisabled', {
-                    get: () =>
-                        function (i) {
-                            return !lib.character[i];
-                        },
-                    set() { },
-                }); //取消禁将
-                lib.filter.characterDisabled2 = function (i) {
-                    return !lib.character[i];
-                }; //取消禁将
-                get.gainableSkills = function (func, player) {
-                    var list = [];
-                    for (var i in lib.character) {
-                        for (var j = 0; j < lib.character[i][3].length; j++) {
-                            list.add(lib.character[i][3][j]);
-                        }
-                    }
-                    return list;
-                }; //BOSS选将
-                get.gainableSkillsName = function (name, func) {
-                    var list = [];
-                    if (name && lib.character[name]) {
-                        for (var j = 0; j < lib.character[name][3].length; j++) {
-                            list.add(lib.character[name][3][j]);
-                        }
-                    }
-                    return list;
-                }; //BOSS选将
-                Reflect.defineProperty(ui.create, 'characterDialog', {
-                    get() {
-                        return function () {
-                            var filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
-                            for (var i = 0; i < arguments.length; i++) {
-                                if (arguments[i] === 'thisiscard') {
-                                    thisiscard = true;
-                                } else if (arguments[i] === 'expandall') {
-                                    expandall = true;
-                                } else if (arguments[i] === 'heightset') {
-                                    heightset = true;
-                                } else if (arguments[i] == 'precharacter') {
-                                    precharacter = true;
-                                } else if (arguments[i] == 'characterx') {
-                                    characterx = true;
-                                } else if (typeof arguments[i] == 'string' && arguments[i].startsWith('onlypack:')) {
-                                    onlypack = arguments[i].slice(9);
-                                } else if (typeof arguments[i] == 'object' && typeof arguments[i].seperate == 'function') {
-                                    seperate = arguments[i].seperate;
-                                } else if (typeof arguments[i] === 'string') {
-                                    str = arguments[i];
-                                } else if (typeof arguments[i] === 'function') {
-                                    filter = arguments[i];
-                                } else if (typeof arguments[i] == 'boolean') {
-                                    noclick = arguments[i];
-                                }
-                            }
-                            var list = [];
-                            const groups = [];
-                            var dialog;
-                            var node = ui.create.div('.caption.pointerspan');
-                            if (get.is.phoneLayout()) {
-                                node.style.fontSize = '30px';
-                            }
-                            var namecapt = [];
-                            var getCapt = function (str) {
-                                var capt;
-                                if (str.indexOf('_') == -1) {
-                                    capt = str[0];
-                                } else {
-                                    capt = str[str.lastIndexOf('_') + 1];
-                                }
-                                capt = capt.toLowerCase();
-                                if (!/[a-z]/i.test(capt)) {
-                                    capt = '自定义';
-                                }
-                                return capt;
-                            };
-                            if (thisiscard) {
-                                for (var i in lib.card) {
-                                    if (!lib.translate[`${i}_info`]) continue;
-                                    if (filter && filter(i)) continue;
-                                    list.push(['', get.translation(lib.card[i].type), i]);
-                                    if (namecapt.indexOf(getCapt(i)) == -1) {
-                                        namecapt.push(getCapt(i));
-                                    }
-                                }
-                            } else {
-                                var groupnum = {};
-                                for (var i in lib.character) {
-                                    list.push(i);
-                                    if (get.is.double(i)) {
-                                        groups.add('double');
-                                    } else {
-                                        const Q = lib.character[i][1];
-                                        if (!groupnum[Q]) groupnum[Q] = 0;
-                                        groupnum[Q]++;
-                                        if (groupnum[Q] > 20) {
-                                            groups.add(lib.character[i][1]);
-                                        } //删除多余势力
-                                    }
-                                    if (namecapt.indexOf(getCapt(i)) == -1) {
-                                        namecapt.push(getCapt(i));
-                                    }
-                                }
-                            }
-                            namecapt.sort(function (a, b) {
-                                return a > b ? 1 : -1;
-                            });
-                            groups.sort(lib.sort.group);
-                            if (!thisiscard) {
-                                namecapt.remove('自定义');
-                                namecapt.push('newline');
-                                for (var i in lib.characterDialogGroup) {
-                                    namecapt.push(i);
-                                }
-                            }
-                            var newlined = false;
-                            var newlined2;
-                            var packsource;
-                            var clickCapt = function (e) {
-                                if (_status.dragged) return;
-                                if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
-                                    dialog.currentcapt2 = null;
-                                    dialog.currentcaptnode2.classList.remove('thundertext');
-                                    dialog.currentcaptnode2.inited = true;
-                                    dialog.currentcaptnode2 = null;
-                                }
-                                if (this.alphabet) {
-                                    if (this.classList.contains('thundertext')) {
-                                        dialog.currentcapt = null;
-                                        dialog.currentcaptnode = null;
-                                        this.classList.remove('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.remove('active');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    } else {
-                                        if (dialog.currentcaptnode) {
-                                            dialog.currentcaptnode.classList.remove('thundertext');
-                                            if (dialog.currentcaptnode.touchlink) {
-                                                dialog.currentcaptnode.touchlink.classList.remove('active');
-                                            }
-                                        }
-                                        dialog.currentcapt = this.link;
-                                        dialog.currentcaptnode = this;
-                                        this.classList.add('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.add('active');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if (newlined2) {
-                                        newlined2.style.display = 'none';
-                                        if (!packsource.onlypack) {
-                                            packsource.classList.remove('thundertext');
-                                            if (!get.is.phoneLayout() || !lib.config.filternode_button) {
-                                                packsource.innerHTML = '武将包';
-                                            }
-                                        }
-                                    }
-                                    if (this.classList.contains('thundertext')) {
-                                        dialog.currentcapt2 = null;
-                                        dialog.currentcaptnode2 = null;
-                                        this.classList.remove('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.remove('active');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    } else {
-                                        if (dialog.currentcaptnode2) {
-                                            dialog.currentcaptnode2.classList.remove('thundertext');
-                                            if (dialog.currentcaptnode2.touchlink) {
-                                                dialog.currentcaptnode2.touchlink.classList.remove('active');
-                                            }
-                                        }
-                                        dialog.currentcapt2 = this.link;
-                                        dialog.currentcaptnode2 = this;
-                                        this.classList.add('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.add('active');
-                                        } else if (this.parentNode == newlined2) {
-                                            packsource.innerHTML = this.innerHTML;
-                                            packsource.classList.add('thundertext');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                if (dialog.buttons[i].activate) {
-                                                    dialog.buttons[i].activate();
-                                                }
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    }
-                                }
-                                if (dialog.seperate) {
-                                    for (var i = 0; i < dialog.seperate.length; i++) {
-                                        if (!dialog.seperate[i].nextSibling.querySelector('.button:not(.nodisplay)')) {
-                                            dialog.seperate[i].style.display = 'none';
-                                            dialog.seperate[i].nextSibling.style.display = 'none';
-                                        } else {
-                                            dialog.seperate[i].style.display = '';
-                                            dialog.seperate[i].nextSibling.style.display = '';
-                                        }
-                                    }
-                                }
-                                if (filternode) {
-                                    if (filternode.querySelector('.active')) {
-                                        packsource.classList.add('thundertext');
-                                    } else {
-                                        packsource.classList.remove('thundertext');
-                                    }
-                                }
-                                if (e) e.stopPropagation();
-                            };
-                            for (var i = 0; i < namecapt.length; i++) {
-                                if (namecapt[i] == 'newline') {
-                                    newlined = document.createElement('div');
-                                    newlined.style.marginTop = '5px';
-                                    newlined.style.display = 'block';
-                                    if (get.is.phoneLayout()) {
-                                        newlined.style.fontSize = '32px';
-                                    } else {
-                                        newlined.style.fontSize = '22px';
-                                    }
-                                    newlined.style.textAlign = 'center';
-                                    node.appendChild(newlined);
-                                } else if (newlined) {
-                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius');
-                                    span.style.margin = '3px';
-                                    span.style.width = 'auto';
-                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
-                                    span.link = namecapt[i];
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                    newlined.appendChild(span);
-                                    node[namecapt[i]] = span;
-                                    if (namecapt[i] == '收藏') {
-                                        span._nature = 'fire';
-                                    } else {
-                                        span._nature = 'wood';
-                                    }
-                                } else {
-                                    var span = document.createElement('span');
-                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
-                                    span.link = namecapt[i];
-                                    span.alphabet = true;
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                    node.appendChild(span);
-                                }
-                            }
-                            if (!thisiscard) {
-                                var natures = ['water', 'soil', 'wood', 'metal'];
-                                var span = document.createElement('span');
-                                newlined.appendChild(span);
-                                span.style.margin = '8px';
-                                var clickGroup = function () {
-                                    if (_status.dragged) return;
-                                    if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
-                                        dialog.currentcapt2 = null;
-                                        dialog.currentcaptnode2.classList.remove('thundertext');
-                                        dialog.currentcaptnode2.inited = true;
-                                        dialog.currentcaptnode2 = null;
-                                    }
-                                    var node = this,
-                                        link = this.link;
-                                    if (node.classList.contains('thundertext')) {
-                                        dialog.currentgroup = null;
-                                        dialog.currentgroupnode = null;
-                                        node.classList.remove('thundertext');
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    } else {
-                                        if (dialog.currentgroupnode) {
-                                            dialog.currentgroupnode.classList.remove('thundertext');
-                                        }
-                                        dialog.currentgroup = link;
-                                        dialog.currentgroupnode = node;
-                                        node.classList.add('thundertext');
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup == 'double') {
-                                                if (dialog.buttons[i]._changeGroup) dialog.buttons[i].classList.remove('nodisplay');
-                                                else dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup == 'ye') {
-                                                if (dialog.buttons[i].group == 'ye') dialog.buttons[i].classList.remove('nodisplay');
-                                                else dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                if (dialog.buttons[i]._changeGroup || dialog.buttons[i].group != dialog.currentgroup) {
-                                                    dialog.buttons[i].classList.add('nodisplay');
-                                                } else {
-                                                    dialog.buttons[i].classList.remove('nodisplay');
-                                                }
-                                            }
-                                        }
-                                    }
-                                };
-                                for (var i = 0; i < groups.length; i++) {
-                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
-                                    span.style.margin = '3px';
-                                    newlined.appendChild(span);
-                                    span.innerHTML = get.translation(groups[i]);
-                                    span.link = groups[i];
-                                    span._nature = natures[i];
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickGroup);
-                                }
-                                var span = document.createElement('span');
-                                newlined.appendChild(span);
-                                span.style.margin = '8px';
-                                packsource = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
-                                packsource.style.margin = '3px';
-                                newlined.appendChild(packsource);
-                                var filternode = null;
-                                var clickCaptNode = function (e) {
-                                    delete _status.filterCharacter;
-                                    ui.window.classList.remove('shortcutpaused');
-                                    filternode.delete();
-                                    filternode.classList.remove('shown');
-                                    clickCapt.call(this.link, e);
-                                };
-                                if (get.is.phoneLayout() && lib.config.filternode_button) {
-                                    newlined.style.marginTop = '';
-                                    packsource.innerHTML = '筛选';
-                                    filternode = ui.create.div('.popup-container.filter-character.modenopause');
-                                    ui.create.div(filternode);
-                                    filternode.listen(function (e) {
-                                        if (this.classList.contains('removing')) return;
-                                        delete _status.filterCharacter;
-                                        ui.window.classList.remove('shortcutpaused');
-                                        this.delete();
-                                        this.classList.remove('shown');
-                                        e.stopPropagation();
-                                    });
-                                    for (var i = 0; i < node.childElementCount; i++) {
-                                        if (node.childNodes[i].tagName.toLowerCase() == 'span') {
-                                            node.childNodes[i].style.display = 'none';
-                                            node.childNodes[i].touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large.capt', node.childNodes[i].innerHTML);
-                                            node.childNodes[i].touchlink.link = node.childNodes[i];
-                                        }
-                                    }
-                                    ui.create.node('br', filternode.firstChild);
-                                } else {
-                                    if (onlypack) {
-                                        packsource.onlypack = true;
-                                        packsource.innerHTML = get.translation(onlypack + '_character_config');
-                                        packsource.style.display = 'none';
-                                        packsource.previousSibling.style.display = 'none';
-                                    } else {
-                                        packsource.innerHTML = '武将包';
-                                    }
-                                }
-                                newlined2 = document.createElement('div');
-                                newlined2.style.marginTop = '5px';
-                                newlined2.style.display = 'none';
-                                newlined2.style.fontFamily = 'xinwei';
-                                newlined2.classList.add('pointernode');
-                                if (get.is.phoneLayout()) {
-                                    newlined2.style.fontSize = '32px';
-                                } else {
-                                    newlined2.style.fontSize = '22px';
-                                }
-                                newlined2.style.textAlign = 'center';
-                                node.appendChild(newlined2);
-                                packsource.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                                    if (packsource.onlypack) return;
-                                    if (_status.dragged) return;
-                                    if (get.is.phoneLayout() && lib.config.filternode_button && filternode) {
-                                        _status.filterCharacter = true;
-                                        ui.window.classList.add('shortcutpaused');
-                                        ui.window.appendChild(filternode);
-                                        ui.refresh(filternode);
-                                        filternode.classList.add('shown');
-                                        var dh = filternode.offsetHeight - filternode.firstChild.offsetHeight;
-                                        if (dh > 0) {
-                                            filternode.firstChild.style.top = dh / 2 + 'px';
-                                        } else {
-                                            filternode.firstChild.style.top = '';
-                                        }
-                                    } else {
-                                        if (newlined2.style.display == 'none') {
-                                            newlined2.style.display = 'block';
-                                        } else {
-                                            newlined2.style.display = 'none';
-                                        }
-                                    }
-                                });
-                                var packlist = [];
-                                for (var i = 0; i < lib.config.all.characters.length; i++) {
-                                    if (!lib.config.characters.includes(lib.config.all.characters[i])) continue;
-                                    packlist.push(lib.config.all.characters[i]);
-                                }
-                                for (var i in lib.characterPack) {
-                                    if (lib.config.characters.includes(i) && !lib.config.all.characters.includes(i)) {
-                                        packlist.push(i);
-                                    }
-                                }
-                                for (var i = 0; i < packlist.length; i++) {
-                                    var span = document.createElement('div');
-                                    span.style.display = 'inline-block';
-                                    span.style.width = 'auto';
-                                    span.style.margin = '5px';
-                                    if (get.is.phoneLayout()) {
-                                        span.style.fontSize = '32px';
-                                    } else {
-                                        span.style.fontSize = '22px';
-                                    }
-                                    span.innerHTML = lib.translate[packlist[i] + '_character_config'];
-                                    span.link = packlist[i];
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                    newlined2.appendChild(span);
-                                    if (filternode && !onlypack) {
-                                        span.touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large', span.innerHTML);
-                                        span.touchlink.link = span;
-                                    }
-                                }
-                            }
-                            var groupSort;
-                            if (thisiscard) {
-                                groupSort = function (name) {
-                                    var type = lib.card[name[2]].type;
-                                    if (lib.cardType[type]) {
-                                        return lib.cardType[type];
-                                    }
-                                    switch (type) {
-                                        case 'basic':
-                                            return 0;
-                                        case 'chess':
-                                            return 1.5;
-                                        case 'trick':
-                                            return 2;
-                                        case 'delay':
-                                            return 3;
-                                        case 'equip':
-                                            return 4;
-                                        case 'zhenfa':
-                                            return 5;
-                                        default:
-                                            return 6;
-                                    }
-                                };
-                                list.sort(function (a, b) {
-                                    var del = groupSort(a) - groupSort(b);
-                                    if (del != 0) return del;
-                                    var aa = a,
-                                        bb = b;
-                                    if (a.includes('_')) {
-                                        a = a.slice(a.lastIndexOf('_') + 1);
-                                    }
-                                    if (b.includes('_')) {
-                                        b = b.slice(b.lastIndexOf('_') + 1);
-                                    }
-                                    if (a != b) {
-                                        return a > b ? 1 : -1;
-                                    }
-                                    return aa > bb ? 1 : -1;
-                                });
-                            } else {
-                                list.sort(lib.sort.character);
-                            }
-                            dialog = ui.create.dialog('hidden');
-                            dialog.classList.add('noupdate');
-                            dialog.classList.add('scroll1');
-                            dialog.classList.add('scroll2');
-                            dialog.classList.add('scroll3');
-                            dialog.addEventListener(lib.config.touchscreen ? 'touchend' : 'mouseup', function () {
-                                _status.clicked2 = true;
-                            });
-                            if (heightset) {
-                                dialog.style.height = (game.layout == 'long2' || game.layout == 'nova' ? 380 : 350) + 'px';
-                                dialog._scrollset = true;
-                            }
-                            dialog.getCurrentCapt = function (link, capt, noalph) {
-                                var currentcapt = noalph ? this.currentcapt2 : this.currentcapt;
-                                if (this.seperatelist && noalph) {
-                                    if (this.seperatelist[currentcapt].includes(link)) return capt;
-                                    return null;
-                                }
-                                if (lib.characterDialogGroup[currentcapt]) {
-                                    return lib.characterDialogGroup[currentcapt](link, capt);
-                                }
-                                if (lib.characterPack[currentcapt]) {
-                                    if (lib.characterPack[currentcapt][link]) {
-                                        return capt;
-                                    }
-                                    return null;
-                                }
-                                return this.currentcapt;
-                            };
-                            if (str) {
-                                dialog.add(str);
-                            }
-                            dialog.add(node);
-                            if (thisiscard) {
-                                if (seperate) {
-                                    seperate = seperate(list);
-                                    dialog.seperate = [];
-                                    dialog.seperatelist = seperate.list;
-                                    if (dialog.seperatelist) {
-                                        newlined = document.createElement('div');
-                                        newlined.style.marginTop = '5px';
-                                        newlined.style.display = 'block';
-                                        newlined.style.fontFamily = 'xinwei';
-                                        if (get.is.phoneLayout()) {
-                                            newlined.style.fontSize = '32px';
-                                        } else {
-                                            newlined.style.fontSize = '22px';
-                                        }
-                                        newlined.style.textAlign = 'center';
-                                        node.appendChild(newlined);
-                                        for (var i in dialog.seperatelist) {
-                                            var span = document.createElement('span');
-                                            span.style.margin = '3px';
-                                            span.innerHTML = i;
-                                            span.link = i;
-                                            span.seperate = true;
-                                            span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                            newlined.appendChild(span);
-                                        }
-                                    }
-                                    for (var i in seperate) {
-                                        if (i == 'list') continue;
-                                        var link = '';
-                                        var linkcontent = seperate[i];
-                                        if (i.includes('_link:')) {
-                                            link = i.slice(i.indexOf('_link:') + 6);
-                                            i = i.slice(0, i.indexOf('_link:'));
-                                        }
-                                        var nodesep = dialog.add(i);
-                                        nodesep.link = link;
-                                        dialog.seperate.push(nodesep);
-                                        dialog.add([linkcontent, 'vcard'], noclick);
-                                    }
-                                } else {
-                                    dialog.add([list, 'vcard'], noclick);
-                                }
-                            } else {
-                                if (precharacter) {
-                                    dialog.add([list, 'precharacter'], noclick);
-                                } else if (characterx) {
-                                    dialog.add([list, 'characterx'], noclick);
-                                } else {
-                                    dialog.add([list, 'character'], noclick);
-                                }
-                            }
-                            dialog.add(ui.create.div('.placeholder'));
-                            for (var i = 0; i < dialog.buttons.length; i++) {
-                                if (thisiscard) {
-                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link[2]);
-                                } else {
-                                    dialog.buttons[i].group = lib.character[dialog.buttons[i].link][1];
-                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link);
-                                }
-                            }
-                            if (!expandall) {
-                                if (!thisiscard && (lib.characterDialogGroup[lib.config.character_dialog_tool] || lib.config.character_dialog_tool == '自创')) {
-                                    clickCapt.call(node[lib.config.character_dialog_tool]);
-                                }
-                            }
-                            //仅仅下面是新加的,by Curpond
-                            let container = dialog.querySelector('.content-container>.content');
-                            let Searcher = ui.create.div('.searcher.caption');
-                            let input = document.createElement('input');
-                            input.style.textAlign = 'center';
-                            input.style.border = 'solid 2px #294510';
-                            input.style.borderRadius = '6px';
-                            input.style.fontWeight = 'bold';
-                            input.style.fontSize = '21px';
-                            let find = ui.create.button(['find', '搜索'], 'tdnodes');
-                            find.style.display = 'inline';
-                            let clickfind = function (e) {
-                                e.stopPropagation();
-                                let value = input.value;
-                                if (value == '') {
-                                    game.alert('搜索不能为空');
-                                    input.focus();
-                                    return;
-                                }
-                                let list = [];
-                                for (let btn of dialog.buttons) {
-                                    if (new RegExp(value, 'g').test(get.translation(btn.link))) {
-                                        btn.classList.remove('nodisplay');
-                                    } else {
-                                        btn.classList.add('nodisplay');
-                                    }
-                                }
-                            };
-                            input.addEventListener('keyup', (e) => {
-                                if (e.key == 'Enter') clickfind(e);
-                            });
-                            find.listen(clickfind);
-                            Searcher.appendChild(input);
-                            Searcher.appendChild(find);
-                            container.prepend(Searcher);
-                            return dialog;
-                        };
-                    },
-                    set() { },
-                }); //选将列表修改
-            } //武将全部可选
             lib.element.player.xiedu = function (yinji) {
                 const player = this;
                 player.xiedujilu = true;
@@ -2947,6 +2312,148 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jielv: `<b style='color:rgba(197, 209, 209, 1); font-size: 25px;'>太初弈无终</b>`,
                     },
                     skill: {
+                        //————————————————————————————————————————————扑克牌
+                        // 将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌
+                        // 直到某一方打出失败,此人受到1点伤害
+                        pukepai_duizi: {
+                            enable: 'phaseUse',
+                            filterCard(c, p) {
+                                if (ui.selected.cards.length) {
+                                    return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
+                                }
+                                const cards = p.getCards('hs', { name: 'pukepai' });
+                                const counts = {};
+                                for (const card of cards) {
+                                    counts[card.number] = (counts[card.number] || 0) + 1;
+                                }
+                                const duplicates = cards.filter(card => counts[card.number] > 1);
+                                return c.name == 'pukepai' && duplicates.includes(c);
+                            },
+                            selectCard: 2,
+                            position: 'hs',
+                            filterTarget(card, player, target) {
+                                return target != player;
+                            },
+                            selectTarget: 1,
+                            filter(event, player) {
+                                const numbers = player.getCards('hs', { name: 'pukepai' }).map(card => card.number);
+                                return new Set(numbers).size < numbers.length;
+                            },//set的长度小于原数组,就说明有点数相同的牌
+                            prompt: '将两张同点数扑克牌一起对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',
+                            async content(event, trigger, player) {
+                                let num = event.cards[0].number;
+                                const players = [event.target, player];
+                                let index = 0;
+                                while (true) {
+                                    const npc = players[index];
+                                    const { result } = await npc.chooseToRespond('打出两张更大的同点数扑克牌,否则受到2点伤害', 2, (c) => {
+                                        if (ui.selected.cards.length) {
+                                            return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
+                                        }
+                                        return c.name == 'pukepai' && c.number > num;
+                                    }).set('complexCard', true);//filtercard里面调用ui.selected.cards,需要这个complexCard来刷新ui.selected.cards
+                                    if (result?.cards?.length) {
+                                        index = (index + 1) % 2;
+                                        num = result.cards[0].number;
+                                    } else {
+                                        npc.damage();
+                                        break;
+                                    }
+                                }
+                            },
+                            ai: {
+                                order: 15,
+                                result: {
+                                    target: -2,
+                                },
+                            },
+                        },
+                        // 将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害
+                        pukepai_zhadan: {
+                            enable: 'phaseUse',
+                            filterCard(c, p) {
+                                if (ui.selected.cards.length) {
+                                    return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
+                                }
+                                const cards = p.getCards('hs', { name: 'pukepai' });
+                                const counts = {};
+                                for (const card of cards) {
+                                    counts[card.number] = (counts[card.number] || 0) + 1;
+                                }
+                                const duplicates = cards.filter(card => counts[card.number] > 3);
+                                return c.name == 'pukepai' && duplicates.includes(c);
+                            },
+                            selectCard: 4,
+                            position: 'hs',
+                            filterTarget(card, player, target) {
+                                return target != player;
+                            },
+                            selectTarget: 1,
+                            filter(event, player) {
+                                const counts = {};
+                                for (const card of player.getCards('hs', { name: 'pukepai' })) {
+                                    const num = card.number;
+                                    counts[num] = (counts[num] || 0) + 1;
+                                    if (counts[num] >= 4) {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            },
+                            prompt: '将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害',
+                            async content(event, trigger, player) {
+                                event.target.damage(2);
+                            },
+                            ai: {
+                                order: 20,
+                                result: {
+                                    target: -4,
+                                },
+                            },
+                        },
+                        // 将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害
+                        pukepai_wangzha: {
+                            enable: 'phaseUse',
+                            filterCard(c) {
+                                return c.name == 'pukepai' && [14, 15].includes(c.number);
+                            },
+                            selectCard: 2,
+                            position: 'hs',
+                            filterTarget(card, player, target) {
+                                return target != player;
+                            },
+                            selectTarget: 1,
+                            filter(event, player) {
+                                const cards = player.getCards('hs', { name: 'pukepai' });
+                                return [14, 15].every((num) => cards.some((c) => c.number == num));
+                            },
+                            prompt: '将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
+                            async content(event, trigger, player) {
+                                event.target.damage(4);
+                                if (event.target.next) {
+                                    event.target.next.damage();
+                                }
+                                if (event.target.previous) {
+                                    event.target.previous.damage();
+                                }
+                            },
+                            ai: {
+                                order: 30,
+                                result: {
+                                    player(player, target, card) {
+                                        let num = 0;
+                                        if (target.next) {
+                                            num += 2 * sgn(target.next.isEnemiesOf(player));
+                                        }
+                                        if (target.previous) {
+                                            num += 2 * sgn(target.previous.isEnemiesOf(player));
+                                        }
+                                        return num;
+                                    },
+                                    target: -8,
+                                },
+                            },
+                        },
                         //————————————————————————————————————————————阿米娅·炉芯终曲 血量:1000/1000 势力:神
                         // 不应存在之人
                         // ①你始终拥有50%减伤
@@ -7261,6 +6768,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //————————————————————————————————————————————扑克牌
+                        pukepai_duizi: '对子',
+                        pukepai_duizi_info: '将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',
+                        pukepai_zhadan: '炸弹',
+                        pukepai_zhadan_info: '将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害',
+                        pukepai_wangzha: '王炸',
+                        pukepai_wangzha_info: '将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————太初弈无终·戒律    神      7/7
                         HL_jielv: '戒律',
                         HL_tianqi: '天启拈作劫',
@@ -7634,10 +7148,54 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        // 回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌
+                        // 直到某一方打出失败,此人受到1点伤害
+                        pukepai: {
+                            fullskin: true,
+                            type: 'pukepai',
+                            enable: true,
+                            usable: 1,
+                            filterTarget(card, player, target) {
+                                return target != player;
+                            },
+                            selectTarget: 1,
+                            async content(event, trigger, player) {
+                                let num = event.card.number;
+                                const players = [event.target, player];
+                                let index = 0;
+                                while (true) {
+                                    const npc = players[index];
+                                    const { result } = await npc.chooseToRespond('打出一张更大的扑克牌,否则受到1点伤害', (c) => c.name == 'pukepai' && c.number > num);
+                                    if (result?.cards?.length) {
+                                        index = (index + 1) % 2;
+                                        num = result.cards[0].number;
+                                    } else {
+                                        npc.damage();
+                                        break;
+                                    }
+                                }
+                            },
+                            ai: {
+                                order: 10,
+                                result: {
+                                    target: -2,
+                                },
+                                tag: {
+                                    damage: 1,
+                                },
+                                basic: {
+                                    useful: 1,
+                                    value: 5,
+                                },
+                            },
+                            global: ['pukepai_duizi', 'pukepai_zhadan', 'pukepai_wangzha'],
+                        },
                     },
                     translate: {
                         shuidan: '水弹',
                         shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
+                        pukepai: '扑克牌',
+                        pukepai_info: '回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌<br>直到某一方打出失败,此人受到1点伤害',
                     },
                 };
                 for (const i in QQQ.card) {
@@ -7985,6 +7543,658 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }
                 game.saveConfig(`mode_config`, lib.config.mode_config);
             }
+            if (lib.config.extension_火灵月影_文字闪烁) {
+                const style = document.createElement('style');
+                style.innerHTML = '@keyframes QQQ{';
+                for (var i = 1; i <= 20; i++) {
+                    let rand1 = Math.floor(Math.random() * 255),
+                        rand2 = Math.floor(Math.random() * 255),
+                        rand3 = Math.floor(Math.random() * 255);
+                    style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
+                }
+                style.innerHTML += '}';
+                document.head.appendChild(style);
+            }
+            if (lib.config.extension_火灵月影_武将全部可选) {
+                Reflect.defineProperty(lib.filter, 'characterDisabled', {
+                    get: () =>
+                        function (i) {
+                            return !lib.character[i];
+                        },
+                    set() { },
+                }); //取消禁将
+                lib.filter.characterDisabled2 = function (i) {
+                    return !lib.character[i];
+                }; //取消禁将
+                get.gainableSkills = function (func, player) {
+                    var list = [];
+                    for (var i in lib.character) {
+                        for (var j = 0; j < lib.character[i][3].length; j++) {
+                            list.add(lib.character[i][3][j]);
+                        }
+                    }
+                    return list;
+                }; //BOSS选将
+                get.gainableSkillsName = function (name, func) {
+                    var list = [];
+                    if (name && lib.character[name]) {
+                        for (var j = 0; j < lib.character[name][3].length; j++) {
+                            list.add(lib.character[name][3][j]);
+                        }
+                    }
+                    return list;
+                }; //BOSS选将
+                Reflect.defineProperty(ui.create, 'characterDialog', {
+                    get() {
+                        return function () {
+                            var filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
+                            for (var i = 0; i < arguments.length; i++) {
+                                if (arguments[i] === 'thisiscard') {
+                                    thisiscard = true;
+                                } else if (arguments[i] === 'expandall') {
+                                    expandall = true;
+                                } else if (arguments[i] === 'heightset') {
+                                    heightset = true;
+                                } else if (arguments[i] == 'precharacter') {
+                                    precharacter = true;
+                                } else if (arguments[i] == 'characterx') {
+                                    characterx = true;
+                                } else if (typeof arguments[i] == 'string' && arguments[i].startsWith('onlypack:')) {
+                                    onlypack = arguments[i].slice(9);
+                                } else if (typeof arguments[i] == 'object' && typeof arguments[i].seperate == 'function') {
+                                    seperate = arguments[i].seperate;
+                                } else if (typeof arguments[i] === 'string') {
+                                    str = arguments[i];
+                                } else if (typeof arguments[i] === 'function') {
+                                    filter = arguments[i];
+                                } else if (typeof arguments[i] == 'boolean') {
+                                    noclick = arguments[i];
+                                }
+                            }
+                            var list = [];
+                            const groups = [];
+                            var dialog;
+                            var node = ui.create.div('.caption.pointerspan');
+                            if (get.is.phoneLayout()) {
+                                node.style.fontSize = '30px';
+                            }
+                            var namecapt = [];
+                            var getCapt = function (str) {
+                                var capt;
+                                if (str.indexOf('_') == -1) {
+                                    capt = str[0];
+                                } else {
+                                    capt = str[str.lastIndexOf('_') + 1];
+                                }
+                                capt = capt.toLowerCase();
+                                if (!/[a-z]/i.test(capt)) {
+                                    capt = '自定义';
+                                }
+                                return capt;
+                            };
+                            if (thisiscard) {
+                                for (var i in lib.card) {
+                                    if (!lib.translate[`${i}_info`]) continue;
+                                    if (filter && filter(i)) continue;
+                                    list.push(['', get.translation(lib.card[i].type), i]);
+                                    if (namecapt.indexOf(getCapt(i)) == -1) {
+                                        namecapt.push(getCapt(i));
+                                    }
+                                }
+                            } else {
+                                var groupnum = {};
+                                for (var i in lib.character) {
+                                    list.push(i);
+                                    if (get.is.double(i)) {
+                                        groups.add('double');
+                                    } else {
+                                        const Q = lib.character[i][1];
+                                        if (!groupnum[Q]) groupnum[Q] = 0;
+                                        groupnum[Q]++;
+                                        if (groupnum[Q] > 20) {
+                                            groups.add(lib.character[i][1]);
+                                        } //删除多余势力
+                                    }
+                                    if (namecapt.indexOf(getCapt(i)) == -1) {
+                                        namecapt.push(getCapt(i));
+                                    }
+                                }
+                            }
+                            namecapt.sort(function (a, b) {
+                                return a > b ? 1 : -1;
+                            });
+                            groups.sort(lib.sort.group);
+                            if (!thisiscard) {
+                                namecapt.remove('自定义');
+                                namecapt.push('newline');
+                                for (var i in lib.characterDialogGroup) {
+                                    namecapt.push(i);
+                                }
+                            }
+                            var newlined = false;
+                            var newlined2;
+                            var packsource;
+                            var clickCapt = function (e) {
+                                if (_status.dragged) return;
+                                if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
+                                    dialog.currentcapt2 = null;
+                                    dialog.currentcaptnode2.classList.remove('thundertext');
+                                    dialog.currentcaptnode2.inited = true;
+                                    dialog.currentcaptnode2 = null;
+                                }
+                                if (this.alphabet) {
+                                    if (this.classList.contains('thundertext')) {
+                                        dialog.currentcapt = null;
+                                        dialog.currentcaptnode = null;
+                                        this.classList.remove('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.remove('active');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    } else {
+                                        if (dialog.currentcaptnode) {
+                                            dialog.currentcaptnode.classList.remove('thundertext');
+                                            if (dialog.currentcaptnode.touchlink) {
+                                                dialog.currentcaptnode.touchlink.classList.remove('active');
+                                            }
+                                        }
+                                        dialog.currentcapt = this.link;
+                                        dialog.currentcaptnode = this;
+                                        this.classList.add('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.add('active');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (newlined2) {
+                                        newlined2.style.display = 'none';
+                                        if (!packsource.onlypack) {
+                                            packsource.classList.remove('thundertext');
+                                            if (!get.is.phoneLayout() || !lib.config.filternode_button) {
+                                                packsource.innerHTML = '武将包';
+                                            }
+                                        }
+                                    }
+                                    if (this.classList.contains('thundertext')) {
+                                        dialog.currentcapt2 = null;
+                                        dialog.currentcaptnode2 = null;
+                                        this.classList.remove('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.remove('active');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    } else {
+                                        if (dialog.currentcaptnode2) {
+                                            dialog.currentcaptnode2.classList.remove('thundertext');
+                                            if (dialog.currentcaptnode2.touchlink) {
+                                                dialog.currentcaptnode2.touchlink.classList.remove('active');
+                                            }
+                                        }
+                                        dialog.currentcapt2 = this.link;
+                                        dialog.currentcaptnode2 = this;
+                                        this.classList.add('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.add('active');
+                                        } else if (this.parentNode == newlined2) {
+                                            packsource.innerHTML = this.innerHTML;
+                                            packsource.classList.add('thundertext');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                if (dialog.buttons[i].activate) {
+                                                    dialog.buttons[i].activate();
+                                                }
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    }
+                                }
+                                if (dialog.seperate) {
+                                    for (var i = 0; i < dialog.seperate.length; i++) {
+                                        if (!dialog.seperate[i].nextSibling.querySelector('.button:not(.nodisplay)')) {
+                                            dialog.seperate[i].style.display = 'none';
+                                            dialog.seperate[i].nextSibling.style.display = 'none';
+                                        } else {
+                                            dialog.seperate[i].style.display = '';
+                                            dialog.seperate[i].nextSibling.style.display = '';
+                                        }
+                                    }
+                                }
+                                if (filternode) {
+                                    if (filternode.querySelector('.active')) {
+                                        packsource.classList.add('thundertext');
+                                    } else {
+                                        packsource.classList.remove('thundertext');
+                                    }
+                                }
+                                if (e) e.stopPropagation();
+                            };
+                            for (var i = 0; i < namecapt.length; i++) {
+                                if (namecapt[i] == 'newline') {
+                                    newlined = document.createElement('div');
+                                    newlined.style.marginTop = '5px';
+                                    newlined.style.display = 'block';
+                                    if (get.is.phoneLayout()) {
+                                        newlined.style.fontSize = '32px';
+                                    } else {
+                                        newlined.style.fontSize = '22px';
+                                    }
+                                    newlined.style.textAlign = 'center';
+                                    node.appendChild(newlined);
+                                } else if (newlined) {
+                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius');
+                                    span.style.margin = '3px';
+                                    span.style.width = 'auto';
+                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
+                                    span.link = namecapt[i];
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                    newlined.appendChild(span);
+                                    node[namecapt[i]] = span;
+                                    if (namecapt[i] == '收藏') {
+                                        span._nature = 'fire';
+                                    } else {
+                                        span._nature = 'wood';
+                                    }
+                                } else {
+                                    var span = document.createElement('span');
+                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
+                                    span.link = namecapt[i];
+                                    span.alphabet = true;
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                    node.appendChild(span);
+                                }
+                            }
+                            if (!thisiscard) {
+                                var natures = ['water', 'soil', 'wood', 'metal'];
+                                var span = document.createElement('span');
+                                newlined.appendChild(span);
+                                span.style.margin = '8px';
+                                var clickGroup = function () {
+                                    if (_status.dragged) return;
+                                    if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
+                                        dialog.currentcapt2 = null;
+                                        dialog.currentcaptnode2.classList.remove('thundertext');
+                                        dialog.currentcaptnode2.inited = true;
+                                        dialog.currentcaptnode2 = null;
+                                    }
+                                    var node = this,
+                                        link = this.link;
+                                    if (node.classList.contains('thundertext')) {
+                                        dialog.currentgroup = null;
+                                        dialog.currentgroupnode = null;
+                                        node.classList.remove('thundertext');
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    } else {
+                                        if (dialog.currentgroupnode) {
+                                            dialog.currentgroupnode.classList.remove('thundertext');
+                                        }
+                                        dialog.currentgroup = link;
+                                        dialog.currentgroupnode = node;
+                                        node.classList.add('thundertext');
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup == 'double') {
+                                                if (dialog.buttons[i]._changeGroup) dialog.buttons[i].classList.remove('nodisplay');
+                                                else dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup == 'ye') {
+                                                if (dialog.buttons[i].group == 'ye') dialog.buttons[i].classList.remove('nodisplay');
+                                                else dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                if (dialog.buttons[i]._changeGroup || dialog.buttons[i].group != dialog.currentgroup) {
+                                                    dialog.buttons[i].classList.add('nodisplay');
+                                                } else {
+                                                    dialog.buttons[i].classList.remove('nodisplay');
+                                                }
+                                            }
+                                        }
+                                    }
+                                };
+                                for (var i = 0; i < groups.length; i++) {
+                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
+                                    span.style.margin = '3px';
+                                    newlined.appendChild(span);
+                                    span.innerHTML = get.translation(groups[i]);
+                                    span.link = groups[i];
+                                    span._nature = natures[i];
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickGroup);
+                                }
+                                var span = document.createElement('span');
+                                newlined.appendChild(span);
+                                span.style.margin = '8px';
+                                packsource = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
+                                packsource.style.margin = '3px';
+                                newlined.appendChild(packsource);
+                                var filternode = null;
+                                var clickCaptNode = function (e) {
+                                    delete _status.filterCharacter;
+                                    ui.window.classList.remove('shortcutpaused');
+                                    filternode.delete();
+                                    filternode.classList.remove('shown');
+                                    clickCapt.call(this.link, e);
+                                };
+                                if (get.is.phoneLayout() && lib.config.filternode_button) {
+                                    newlined.style.marginTop = '';
+                                    packsource.innerHTML = '筛选';
+                                    filternode = ui.create.div('.popup-container.filter-character.modenopause');
+                                    ui.create.div(filternode);
+                                    filternode.listen(function (e) {
+                                        if (this.classList.contains('removing')) return;
+                                        delete _status.filterCharacter;
+                                        ui.window.classList.remove('shortcutpaused');
+                                        this.delete();
+                                        this.classList.remove('shown');
+                                        e.stopPropagation();
+                                    });
+                                    for (var i = 0; i < node.childElementCount; i++) {
+                                        if (node.childNodes[i].tagName.toLowerCase() == 'span') {
+                                            node.childNodes[i].style.display = 'none';
+                                            node.childNodes[i].touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large.capt', node.childNodes[i].innerHTML);
+                                            node.childNodes[i].touchlink.link = node.childNodes[i];
+                                        }
+                                    }
+                                    ui.create.node('br', filternode.firstChild);
+                                } else {
+                                    if (onlypack) {
+                                        packsource.onlypack = true;
+                                        packsource.innerHTML = get.translation(onlypack + '_character_config');
+                                        packsource.style.display = 'none';
+                                        packsource.previousSibling.style.display = 'none';
+                                    } else {
+                                        packsource.innerHTML = '武将包';
+                                    }
+                                }
+                                newlined2 = document.createElement('div');
+                                newlined2.style.marginTop = '5px';
+                                newlined2.style.display = 'none';
+                                newlined2.style.fontFamily = 'xinwei';
+                                newlined2.classList.add('pointernode');
+                                if (get.is.phoneLayout()) {
+                                    newlined2.style.fontSize = '32px';
+                                } else {
+                                    newlined2.style.fontSize = '22px';
+                                }
+                                newlined2.style.textAlign = 'center';
+                                node.appendChild(newlined2);
+                                packsource.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
+                                    if (packsource.onlypack) return;
+                                    if (_status.dragged) return;
+                                    if (get.is.phoneLayout() && lib.config.filternode_button && filternode) {
+                                        _status.filterCharacter = true;
+                                        ui.window.classList.add('shortcutpaused');
+                                        ui.window.appendChild(filternode);
+                                        ui.refresh(filternode);
+                                        filternode.classList.add('shown');
+                                        var dh = filternode.offsetHeight - filternode.firstChild.offsetHeight;
+                                        if (dh > 0) {
+                                            filternode.firstChild.style.top = dh / 2 + 'px';
+                                        } else {
+                                            filternode.firstChild.style.top = '';
+                                        }
+                                    } else {
+                                        if (newlined2.style.display == 'none') {
+                                            newlined2.style.display = 'block';
+                                        } else {
+                                            newlined2.style.display = 'none';
+                                        }
+                                    }
+                                });
+                                var packlist = [];
+                                for (var i = 0; i < lib.config.all.characters.length; i++) {
+                                    if (!lib.config.characters.includes(lib.config.all.characters[i])) continue;
+                                    packlist.push(lib.config.all.characters[i]);
+                                }
+                                for (var i in lib.characterPack) {
+                                    if (lib.config.characters.includes(i) && !lib.config.all.characters.includes(i)) {
+                                        packlist.push(i);
+                                    }
+                                }
+                                for (var i = 0; i < packlist.length; i++) {
+                                    var span = document.createElement('div');
+                                    span.style.display = 'inline-block';
+                                    span.style.width = 'auto';
+                                    span.style.margin = '5px';
+                                    if (get.is.phoneLayout()) {
+                                        span.style.fontSize = '32px';
+                                    } else {
+                                        span.style.fontSize = '22px';
+                                    }
+                                    span.innerHTML = lib.translate[packlist[i] + '_character_config'];
+                                    span.link = packlist[i];
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                    newlined2.appendChild(span);
+                                    if (filternode && !onlypack) {
+                                        span.touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large', span.innerHTML);
+                                        span.touchlink.link = span;
+                                    }
+                                }
+                            }
+                            var groupSort;
+                            if (thisiscard) {
+                                groupSort = function (name) {
+                                    var type = lib.card[name[2]].type;
+                                    if (lib.cardType[type]) {
+                                        return lib.cardType[type];
+                                    }
+                                    switch (type) {
+                                        case 'basic':
+                                            return 0;
+                                        case 'chess':
+                                            return 1.5;
+                                        case 'trick':
+                                            return 2;
+                                        case 'delay':
+                                            return 3;
+                                        case 'equip':
+                                            return 4;
+                                        case 'zhenfa':
+                                            return 5;
+                                        default:
+                                            return 6;
+                                    }
+                                };
+                                list.sort(function (a, b) {
+                                    var del = groupSort(a) - groupSort(b);
+                                    if (del != 0) return del;
+                                    var aa = a,
+                                        bb = b;
+                                    if (a.includes('_')) {
+                                        a = a.slice(a.lastIndexOf('_') + 1);
+                                    }
+                                    if (b.includes('_')) {
+                                        b = b.slice(b.lastIndexOf('_') + 1);
+                                    }
+                                    if (a != b) {
+                                        return a > b ? 1 : -1;
+                                    }
+                                    return aa > bb ? 1 : -1;
+                                });
+                            } else {
+                                list.sort(lib.sort.character);
+                            }
+                            dialog = ui.create.dialog('hidden');
+                            dialog.classList.add('noupdate');
+                            dialog.classList.add('scroll1');
+                            dialog.classList.add('scroll2');
+                            dialog.classList.add('scroll3');
+                            dialog.addEventListener(lib.config.touchscreen ? 'touchend' : 'mouseup', function () {
+                                _status.clicked2 = true;
+                            });
+                            if (heightset) {
+                                dialog.style.height = (game.layout == 'long2' || game.layout == 'nova' ? 380 : 350) + 'px';
+                                dialog._scrollset = true;
+                            }
+                            dialog.getCurrentCapt = function (link, capt, noalph) {
+                                var currentcapt = noalph ? this.currentcapt2 : this.currentcapt;
+                                if (this.seperatelist && noalph) {
+                                    if (this.seperatelist[currentcapt].includes(link)) return capt;
+                                    return null;
+                                }
+                                if (lib.characterDialogGroup[currentcapt]) {
+                                    return lib.characterDialogGroup[currentcapt](link, capt);
+                                }
+                                if (lib.characterPack[currentcapt]) {
+                                    if (lib.characterPack[currentcapt][link]) {
+                                        return capt;
+                                    }
+                                    return null;
+                                }
+                                return this.currentcapt;
+                            };
+                            if (str) {
+                                dialog.add(str);
+                            }
+                            dialog.add(node);
+                            if (thisiscard) {
+                                if (seperate) {
+                                    seperate = seperate(list);
+                                    dialog.seperate = [];
+                                    dialog.seperatelist = seperate.list;
+                                    if (dialog.seperatelist) {
+                                        newlined = document.createElement('div');
+                                        newlined.style.marginTop = '5px';
+                                        newlined.style.display = 'block';
+                                        newlined.style.fontFamily = 'xinwei';
+                                        if (get.is.phoneLayout()) {
+                                            newlined.style.fontSize = '32px';
+                                        } else {
+                                            newlined.style.fontSize = '22px';
+                                        }
+                                        newlined.style.textAlign = 'center';
+                                        node.appendChild(newlined);
+                                        for (var i in dialog.seperatelist) {
+                                            var span = document.createElement('span');
+                                            span.style.margin = '3px';
+                                            span.innerHTML = i;
+                                            span.link = i;
+                                            span.seperate = true;
+                                            span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                            newlined.appendChild(span);
+                                        }
+                                    }
+                                    for (var i in seperate) {
+                                        if (i == 'list') continue;
+                                        var link = '';
+                                        var linkcontent = seperate[i];
+                                        if (i.includes('_link:')) {
+                                            link = i.slice(i.indexOf('_link:') + 6);
+                                            i = i.slice(0, i.indexOf('_link:'));
+                                        }
+                                        var nodesep = dialog.add(i);
+                                        nodesep.link = link;
+                                        dialog.seperate.push(nodesep);
+                                        dialog.add([linkcontent, 'vcard'], noclick);
+                                    }
+                                } else {
+                                    dialog.add([list, 'vcard'], noclick);
+                                }
+                            } else {
+                                if (precharacter) {
+                                    dialog.add([list, 'precharacter'], noclick);
+                                } else if (characterx) {
+                                    dialog.add([list, 'characterx'], noclick);
+                                } else {
+                                    dialog.add([list, 'character'], noclick);
+                                }
+                            }
+                            dialog.add(ui.create.div('.placeholder'));
+                            for (var i = 0; i < dialog.buttons.length; i++) {
+                                if (thisiscard) {
+                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link[2]);
+                                } else {
+                                    dialog.buttons[i].group = lib.character[dialog.buttons[i].link][1];
+                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link);
+                                }
+                            }
+                            if (!expandall) {
+                                if (!thisiscard && (lib.characterDialogGroup[lib.config.character_dialog_tool] || lib.config.character_dialog_tool == '自创')) {
+                                    clickCapt.call(node[lib.config.character_dialog_tool]);
+                                }
+                            }
+                            //仅仅下面是新加的,by Curpond
+                            let container = dialog.querySelector('.content-container>.content');
+                            let Searcher = ui.create.div('.searcher.caption');
+                            let input = document.createElement('input');
+                            input.style.textAlign = 'center';
+                            input.style.border = 'solid 2px #294510';
+                            input.style.borderRadius = '6px';
+                            input.style.fontWeight = 'bold';
+                            input.style.fontSize = '21px';
+                            let find = ui.create.button(['find', '搜索'], 'tdnodes');
+                            find.style.display = 'inline';
+                            let clickfind = function (e) {
+                                e.stopPropagation();
+                                let value = input.value;
+                                if (value == '') {
+                                    game.alert('搜索不能为空');
+                                    input.focus();
+                                    return;
+                                }
+                                let list = [];
+                                for (let btn of dialog.buttons) {
+                                    if (new RegExp(value, 'g').test(get.translation(btn.link))) {
+                                        btn.classList.remove('nodisplay');
+                                    } else {
+                                        btn.classList.add('nodisplay');
+                                    }
+                                }
+                            };
+                            input.addEventListener('keyup', (e) => {
+                                if (e.key == 'Enter') clickfind(e);
+                            });
+                            find.listen(clickfind);
+                            Searcher.appendChild(input);
+                            Searcher.appendChild(find);
+                            container.prepend(Searcher);
+                            return dialog;
+                        };
+                    },
+                    set() { },
+                }); //选将列表修改
+            } //武将全部可选
         },
         config: {
             群聊: {
@@ -8013,6 +8223,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 name: '<span class=Qmenu>文字闪烁</span>',
                 intro: '开启后,部分文字会附加闪烁动画效果',
                 init: true,
+            },
+            扑克牌模式: {
+                name: '<span class=Qmenu>扑克牌模式</span>',
+                intro: '开启后,将牌堆改为54张扑克牌',
+                init: false,
             },
             关闭本体BOSS: {
                 name: '<span class=Qmenu>关闭本体BOSS</span>',
@@ -8195,7 +8410,7 @@ game.addMode(
             const player1 = game.players.slice(0, num);
             const player2 = game.players.slice(num, num * 2);
             const player3 = game.players.slice(num * 2, num * 3);
-            game.zhu = game.players.randomGet();//随机一个先出牌的
+            game.zhu = game.players.randomGet(); //随机一个先出牌的
             for (const i of player1) {
                 i.identity = 'xian';
                 i.side = 'xian';
@@ -8285,7 +8500,8 @@ game.addMode(
                     const list = skills.randomGets(3);
                     const {
                         result: { control },
-                    } = await player.chooseControl(list)
+                    } = await player
+                        .chooseControl(list)
                         .set(
                             'choiceList',
                             list.map(function (i) {
@@ -8451,3 +8667,12 @@ game.addMode(
     }
 );
 lib.mode.lingqifusu.splash = 'ext:火灵月影/image/lingqifusu.jpg';
+// 击鼓传花
+// 4人一队,总计两队
+// 游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌
+// 任意角色体力值减少时防止之,改为随机弃置一张牌
+// <花>指定第一个友方角色为目标时,置入其手牌区内
+// <花>不因使用离开手牌时,将其置入弃牌堆,且此<花>的持有者所在队伍弃置一半手牌,重新将牌堆顶一张牌作为<花>加入一号位手牌
+// 将<花>传过一队累计达到3次的队伍获得游戏胜利
+// 花
+// 出牌阶段,你可以对一名其他角色使用.此牌进入弃牌堆时恢复原牌名
