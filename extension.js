@@ -2313,6 +2313,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     },
                     skill: {
                         //————————————————————————————————————————————扑克牌
+                        // 对子
                         // 将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌
                         // 直到某一方打出失败,此人受到1点伤害
                         pukepai_duizi: {
@@ -2368,6 +2369,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        // 炸弹
                         // 将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害
                         pukepai_zhadan: {
                             enable: 'phaseUse',
@@ -2411,6 +2413,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        // 王炸
                         // 将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害
                         pukepai_wangzha: {
                             enable: 'phaseUse',
@@ -7195,7 +7198,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         shuidan: '水弹',
                         shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
                         pukepai: '扑克牌',
-                        pukepai_info: '回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌<br>直到某一方打出失败,此人受到1点伤害',
+                        pukepai_info: '回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌<br>直到某一方打出失败,此人受到1点伤害<br>对子<br>将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害<br>炸弹<br>将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害<br>王炸<br>将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
                     },
                 };
                 for (const i in QQQ.card) {
