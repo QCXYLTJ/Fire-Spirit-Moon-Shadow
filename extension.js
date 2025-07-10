@@ -2507,6 +2507,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.awakenSkill('HL_buyingcunzai_1');
                                         player.wudi = true;
                                         player.when({ global: 'roundStart' }).then(() => (player.wudi = false));
+                                        player.hp = Math.ceil(player.maxHp / 2);
                                     },
                                 },
                             },
