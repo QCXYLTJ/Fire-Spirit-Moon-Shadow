@@ -8753,12 +8753,13 @@ game.addMode(
                 },
                 async content(event, trigger, player) {
                     const card = get.cards()[0];
+                    card.identity = player.identity;
                     card.oriname = card.name;
                     card.init([card.suit, card.number, 'hua']);
                     player.gain(card, 'gain2');
                 },
                 subSkill: {
-                    // 此牌进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌,重新将牌堆顶一张牌作为<花>加入队伍一号位手牌
+                    // <花>进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌.将牌堆顶一张牌作为<花>,加入被失去的<花>原先所属队伍一号位手牌
                     1: {
                         trigger: {
                             player: ['loseAfter'],
@@ -8768,19 +8769,20 @@ game.addMode(
                             return event.cards?.some((c) => c.oriname && get.position(c) == 'd');
                         },
                         async content(event, trigger, player) {
+                            for (const npc of player.getFriends(true)) {
+                                await npc.randomDiscard('he', Math.ceil(npc.countCards('he') / 2));
+                            }
                             for (const card of trigger.cards.filter((c) => c.oriname && get.position(c) == 'd')) {
                                 card.init([card.suit, card.number, card.oriname]);
                                 delete card.oriname;
-                            }
-                            for (const npc of player.getFriends(true)) {
-                                npc.randomDiscard('he', Math.ceil(npc.countCards('he') / 2));
-                            }
-                            const boss = _status.chuanhua.find((q) => q.side == player.side);
-                            if (boss) {
-                                const card = get.cards()[0];
-                                card.oriname = card.name;
-                                card.init([card.suit, card.number, 'hua']);
-                                boss.gain(card, 'gain2');
+                                const boss = _status.chuanhua.find((q) => q.identity == card.identity);
+                                if (boss) {
+                                    const cardx = get.cards()[0];
+                                    cardx.oriname = cardx.name;
+                                    cardx.identity = boss.identity;
+                                    cardx.init([cardx.suit, cardx.number, 'hua']);
+                                    boss.gain(cardx, 'gain2');
+                                }
                             }
                         },
                     },
@@ -8849,14 +8851,14 @@ game.addMode(
             hua_info: '出牌阶段,你可以对下一个友方角色使用,置入目标手牌区内<br>当<花>从一号位经过后续队友重新回到一号位手中后,称为完整传递一次<br>将<花>完整传递累计达到3次的队伍,获得游戏胜利',
             jiguchuanhua: '击鼓传花',
             _jiguchuanhua: '击鼓传花',
-            _jiguchuanhua_info: '游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌<br>此牌进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌,重新将牌堆顶一张牌作为<花>加入队伍一号位手牌<br>任意角色体力值减少时防止之,改为随机弃置一张牌',
+            _jiguchuanhua_info: '游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌<br><花>进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌.将牌堆顶一张牌作为<花>,加入被失去的<花>原先所属队伍一号位手牌<br>任意角色体力值减少时防止之,改为随机弃置一张牌',
         },
     },
     {
         translate: '击鼓传花',
         config: {
             intro: {
-                name: '本模式4人一队,总计两队<br>游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌<br>此牌进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌,重新将牌堆顶一张牌作为<花>加入队伍一号位手牌<br>任意角色体力值减少时防止之,改为随机弃置一张牌<br>花<br>出牌阶段,你可以对下一个友方角色使用,置入目标手牌区内<br>当<花>从一号位经过后续队友重新回到一号位手中后,称为完整传递一次<br>将<花>完整传递累计达到3次的队伍,获得游戏胜利',
+                name: '本模式4人一队,总计两队<br>游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌<br><花>进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌.将牌堆顶一张牌作为<花>,加入被失去的<花>原先所属队伍一号位手牌<br>任意角色体力值减少时防止之,改为随机弃置一张牌<br>花<br>出牌阶段,你可以对下一个友方角色使用,置入目标手牌区内<br>当<花>从一号位经过后续队友重新回到一号位手中后,称为完整传递一次<br>将<花>完整传递累计达到3次的队伍,获得游戏胜利',
                 frequent: true,
                 clear: true,
             },
