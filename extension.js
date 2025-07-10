@@ -8843,8 +8843,8 @@ game.addMode(
                         target: 5,
                     },
                     basic: {
-                        useful: 9,
-                        value: 9,
+                        useful: 20,
+                        value: 20,
                     },
                 },
             },
