@@ -8816,7 +8816,6 @@ game.addMode(
                 image: 'ext:火灵月影/image/hua.jpg',
                 type: 'hua',
                 enable: true,
-                usable: 1,
                 filterTarget(c, p, t) {
                     const players = game.players.filter((q) => q.side == p.side);
                     return t === players[(players.indexOf(p) + 1) % players.length];
@@ -8833,7 +8832,7 @@ game.addMode(
                     }
                 },
                 ai: {
-                    order: 10,
+                    order: 50,
                     result: {
                         target: 5,
                     },
