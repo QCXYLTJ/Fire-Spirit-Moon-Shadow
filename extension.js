@@ -8254,38 +8254,51 @@ game.addMode(
             lib.config.mode = 'chelunzhan';
             _status.mode = 'chelunzhan';
             game.prepareArena(2);
-            for (const i of game.players) {
-                i.getId();
-            }
             game.me.identity = 'zhu';
+            game.me.side = true;
             game.me.next.identity = 'fan';
-            game.me.showIdentity();
-            game.me.next.showIdentity();
+            game.me.next.side = false;
+            game.zhu = game.me;
             lib.init.onfree();
             for (const npc of game.players) {
-                if (lib.config.mode_config.chelunzhan.随机选将) {
-                    npc.characternum = 9;
-                    const list = Object.keys(lib.character).randomGets(5);
-                    const {
-                        result: { links },
-                    } = await npc.chooseButton(['选择首个出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
-                    if (links && links[0]) {
-                        npc.init(links[0]);
-                    }
-                } else {
-                    const {
-                        result: { links },
-                    } = await npc.chooseButton(ui.create.characterDialog('选择十个出战武将'), 10, true).set('ai', (button) => Math.random());
-                    if (links && links[0]) {
-                        npc.characterlist = links;
+                npc.getId();
+                npc.node.identity.classList.remove('guessing');
+                npc.identityShown = true;
+                npc.ai.shown = 1;
+                npc.setIdentity();
+                if (npc == game.me) {
+                    if (lib.config.mode_config.chelunzhan.随机选将) {
+                        npc.characternum = 9;
+                        const list = Object.keys(lib.character).randomGets(5);
                         const {
-                            result: { links: links1 },
-                        } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true).set('ai', (button) => Math.random());
-                        if (links1 && links1[0]) {
-                            npc.characterlist.remove(links1[0]);
-                            npc.init(links1[0]);
+                            result: { links },
+                        } = await npc.chooseButton(['选择首个出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            npc.init(links[0]);
+                        }
+                    } else {
+                        const {
+                            result: { links },
+                        } = await npc.chooseButton(ui.create.characterDialog('选择十个出战武将'), 10, true).set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            npc.characterlist = links;
+                            const {
+                                result: { links: links1 },
+                            } = await npc.chooseButton(['选择首个出战武将', [npc.characterlist, 'character']], true).set('ai', (button) => Math.random());
+                            if (links1 && links1[0]) {
+                                npc.characterlist.remove(links1[0]);
+                                npc.init(links1[0]);
+                            }
                         }
                     }
+                }
+                else {
+                    if (lib.config.mode_config.chelunzhan.随机选将) {
+                        npc.characternum = 9;
+                    } else {
+                        npc.characterlist = Object.keys(lib.character).randomGets(9);
+                    }
+                    npc.init(Object.keys(lib.character).randomGet());
                 }
             }
             await event.trigger('gameStart');
@@ -8338,31 +8351,6 @@ game.addMode(
                     if (game.players.length < 2) {
                         game.checkResult();
                     }
-                },
-                showIdentity() {
-                    game.broadcastAll(
-                        function (player, identity) {
-                            player.identity = identity;
-                            game[identity] = player;
-                            player.side = identity == 'zhu';
-                            player.node.identity.classList.remove('guessing');
-                            player.identityShown = true;
-                            player.ai.shown = 1;
-                            player.setIdentity();
-                            if (player.identity == 'zhu') {
-                                player.isZhu = true;
-                            }
-                            if (_status.clickingidentity) {
-                                for (var i = 0; i < _status.clickingidentity[1].length; i++) {
-                                    _status.clickingidentity[1][i].delete();
-                                    _status.clickingidentity[1][i].style.transform = '';
-                                }
-                                delete _status.clickingidentity;
-                            }
-                        },
-                        this,
-                        this.identity
-                    );
                 },
             },
         },
@@ -8433,21 +8421,26 @@ game.addMode(
                 npc.identityShown = true;
                 npc.ai.shown = 1;
                 npc.setIdentity();
-                if (lib.config.mode_config.lingqifusu.随机选将) {
-                    const list = Object.keys(lib.character).randomGets(5);
-                    const {
-                        result: { links },
-                    } = await npc.chooseButton(['选择出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
-                    if (links && links[0]) {
-                        npc.init(links[0]);
+                if (npc == game.me) {
+                    if (lib.config.mode_config.lingqifusu.随机选将) {
+                        const list = Object.keys(lib.character).randomGets(5);
+                        const {
+                            result: { links },
+                        } = await npc.chooseButton(['选择出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            npc.init(links[0]);
+                        }
+                    } else {
+                        const {
+                            result: { links },
+                        } = await npc.chooseButton(ui.create.characterDialog('选择出战武将'), true).set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            npc.init(links[0]);
+                        }
                     }
-                } else {
-                    const {
-                        result: { links },
-                    } = await npc.chooseButton(ui.create.characterDialog('选择出战武将'), true).set('ai', (button) => Math.random());
-                    if (links && links[0]) {
-                        npc.init(links[0]);
-                    }
+                }
+                else {
+                    npc.init(Object.keys(lib.character).randomGet());
                 }
                 npc.maxHp = 10 * npc.maxHp;
                 npc.hp = 10 * npc.hp;
@@ -8670,12 +8663,211 @@ game.addMode(
     }
 );
 lib.mode.lingqifusu.splash = 'ext:火灵月影/image/lingqifusu.jpg';
-// 击鼓传花
-// 4人一队,总计两队
-// 游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌
-// 任意角色体力值减少时防止之,改为随机弃置一张牌
-// <花>指定第一个友方角色为目标时,置入其手牌区内
-// <花>不因使用离开手牌时,将其置入弃牌堆,且此<花>的持有者所在队伍弃置一半手牌,重新将牌堆顶一张牌作为<花>加入一号位手牌
-// 将<花>传过一队累计达到3次的队伍获得游戏胜利
-// 花
-// 出牌阶段,你可以对一名其他角色使用.此牌进入弃牌堆时恢复原牌名
+//—————————————————————————————————————————————————————————————————————————————击鼓传花模式
+game.addMode(
+    'jiguchuanhua',
+    {
+        async start(event) {
+            lib.config.mode = 'jiguchuanhua';
+            _status.mode = 'jiguchuanhua';
+            game.prepareArena(8);
+            const player1 = game.players.slice(0, 4);
+            const player2 = game.players.slice(4, 8);
+            _status.chuanhua = [player1[0], player2[0]];
+            _status.long = 0;
+            _status.hu = 0;
+            game.zhu = game.players.randomGet(); //随机一个先出牌的
+            for (const i of player1) {
+                i.identity = 'long';
+                i.side = true;
+            }
+            for (const i of player2) {
+                i.identity = 'hu';
+                i.side = false;
+            }
+            lib.init.onfree();
+            for (const npc of game.players) {
+                npc.getId();
+                npc.node.identity.classList.remove('guessing');
+                npc.identityShown = true;
+                npc.ai.shown = 1;
+                npc.setIdentity();
+                if (npc == game.me) {
+                    if (lib.config.mode_config.jiguchuanhua.随机选将) {
+                        const list = Object.keys(lib.character).randomGets(5);
+                        const {
+                            result: { links },
+                        } = await npc.chooseButton(['选择出战武将', [list, 'character']], true).set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            npc.init(links[0]);
+                        }
+                    } else {
+                        const {
+                            result: { links },
+                        } = await npc.chooseButton(ui.create.characterDialog('选择出战武将'), true).set('ai', (button) => Math.random());
+                        if (links && links[0]) {
+                            npc.init(links[0]);
+                        }
+                    }
+                }
+                else {
+                    npc.init(Object.keys(lib.character).randomGet());
+                }
+            }
+            await event.trigger('gameStart');
+            await game.gameDraw(game.zhu, () => 4);
+            game.phaseLoop(game.zhu);
+        },
+        game: {
+            checkResult() {
+                game.over(game.players[0]?.identity == game.me.identity);
+            },
+        },
+        element: {
+            player: {
+                dieAfter() {
+                    if (game.players.map((q) => q.identity).unique().length > 1) {
+                        return;
+                    }
+                    game.checkResult();
+                },
+            },
+        },
+        get: {
+            rawAttitude(from, to) {
+                if (!from) return 0;
+                if (!to) return 0;
+                if (from.identity == to.identity) return 10;
+                return -10;
+            },
+        },
+        skill: {
+            // 游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌
+            _jiguchuanhua: {
+                trigger: {
+                    global: ['gameStart'],
+                },
+                forced: true,
+                filter(event, player) {
+                    return _status.chuanhua.includes(player);
+                },
+                async content(event, trigger, player) {
+                    const card = get.cards()[0];
+                    card.oriname = card.name;
+                    card.init([card.suit, card.number, 'hua']);
+                    player.gain(card, 'gain2');
+                },
+                subSkill: {
+                    // 此牌进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌,重新将牌堆顶一张牌作为<花>加入队伍一号位手牌
+                    1: {
+                        trigger: {
+                            player: ['loseAfter'],
+                        },
+                        forced: true,
+                        filter(event, player) {
+                            return event.cards?.some((c) => c.oriname && get.position(c) == 'd');
+                        },
+                        async content(event, trigger, player) {
+                            for (const card of trigger.cards.filter((c) => c.oriname && get.position(c) == 'd')) {
+                                card.init([card.suit, card.number, card.oriname]);
+                                delete card.oriname;
+                            }
+                            for (const npc of player.getFriends(true)) {
+                                npc.randomDiscard('he', Math.ceil(npc.countCards('he') / 2));
+                            }
+                            const boss = _status.chuanhua.find((q) => q.side == player.side);
+                            if (boss) {
+                                const card = get.cards()[0];
+                                card.oriname = card.name;
+                                card.init([card.suit, card.number, 'hua']);
+                                boss.gain(card, 'gain2');
+                            }
+                        },
+                    },
+                    // 任意角色体力值减少时防止之,改为随机弃置一张牌
+                    2: {
+                        trigger: {
+                            player: ['changeHpBegin', 'dieBegin'],
+                        },
+                        forced: true,
+                        filter(event, player) {
+                            if (name == 'changeHpBegin') {
+                                return event.num < 0;
+                            }
+                            return true;
+                        },
+                        async content(event, trigger, player) {
+                            trigger.cancel();
+                            player.randomDiscard('he');
+                        },
+                    },
+                },
+            },
+        },
+        card: {
+            // 花
+            // 回合限一次,你可以对下一个友方角色使用,置入目标手牌区内
+            // 当<花>从一号位经过后续队友重新回到一号位手中后,称为完整传递一次
+            // 将<花>完整传递累计达到3次的队伍,获得游戏胜利
+            hua: {
+                fullimage: true,
+                image: 'ext:火灵月影/image/hua.jpg',
+                type: 'hua',
+                enable: true,
+                usable: 1,
+                filterTarget(c, p, t) {
+                    const players = game.players.filter((q) => q.side == p.side);
+                    return t === players[(players.indexOf(p) + 1) % players.length];
+                },
+                selectTarget: 1,
+                async content(event, trigger, player) {
+                    event.target.gain(event.cards, 'gain2');
+                    if (_status.chuanhua.includes(event.target)) {
+                        const identity = event.target.identity;
+                        _status[identity]++;
+                        if (_status[identity] > 2) {
+                            game.over(game.me.identity == identity);
+                        }
+                    }
+                },
+                ai: {
+                    order: 10,
+                    result: {
+                        target: 5,
+                    },
+                    basic: {
+                        useful: 9,
+                        value: 9,
+                    },
+                },
+            },
+        },
+        translate: {
+            long: '龙',
+            hu: '虎',
+            hua: '花',
+            hua_info: '出牌阶段,你可以对下一个友方角色使用,置入目标手牌区内<br>当<花>从一号位经过后续队友重新回到一号位手中后,称为完整传递一次<br>将<花>完整传递累计达到3次的队伍,获得游戏胜利',
+            jiguchuanhua: '击鼓传花',
+            _jiguchuanhua: '击鼓传花',
+            _jiguchuanhua_info: '游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌<br>此牌进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌,重新将牌堆顶一张牌作为<花>加入队伍一号位手牌<br>任意角色体力值减少时防止之,改为随机弃置一张牌',
+        },
+    },
+    {
+        translate: '击鼓传花',
+        config: {
+            intro: {
+                name: '本模式4人一队,总计两队<br>游戏开始时,将牌堆顶一张牌作为<花>加入每队的一号位手牌<br>此牌进入弃牌堆时恢复原牌名,且失去者所在队伍弃置一半牌,重新将牌堆顶一张牌作为<花>加入队伍一号位手牌<br>任意角色体力值减少时防止之,改为随机弃置一张牌<br>花<br>出牌阶段,你可以对下一个友方角色使用,置入目标手牌区内<br>当<花>从一号位经过后续队友重新回到一号位手中后,称为完整传递一次<br>将<花>完整传递累计达到3次的队伍,获得游戏胜利',
+                frequent: true,
+                clear: true,
+            },
+            随机选将: {
+                name: '<span class=Qmenu>随机选将</span>',
+                intro: '开启后,本模式选将逻辑改为随机选将',
+                init: false,
+                frequent: true,
+            },
+        },
+    }
+);
+lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
+
