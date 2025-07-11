@@ -8737,10 +8737,10 @@ game.addMode(
         element: {
             player: {
                 dieAfter() {
-                    if (game.players.map((q) => q.identity).unique().length > 1) {
-                        return;
+                    const player = this;
+                    if (!game.players.includes(player) || player.isDead()) {
+                        player.qrevive();
                     }
-                    game.checkResult();
                 },
             },
         },
