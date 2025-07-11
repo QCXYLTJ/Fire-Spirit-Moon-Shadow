@@ -126,9 +126,9 @@ const kangxing1 = function () {
     const kplayers = [];
     const obj = {
         get players() {
-            if (!_status.gameStarted && !['boss', 'brawl'].includes(lib.config.mode)) {
-                return startplayers;
-            } //防止没载入名字击杀
+            if (!_status.gameStarted) {
+                return startplayers.filter((q) => q.playerid);// 乱斗挑战模式的ui.create.player例外
+            } // 游戏没开始前,禁止即死
             return kplayers.filter((q) => {
                 if (!q) {
                     return false;
@@ -140,15 +140,18 @@ const kangxing1 = function () {
             });
         },
         get dead() {
-            if (!_status.gameStarted && lib.config.mode != 'boss') {
+            if (!_status.gameStarted) {
                 return [];
-            } //防止没载入名字击杀
+            } // 游戏没开始前,不进行击杀
             return kdead;
         },
     };
     Reflect.defineProperty(game, 'players', {
         get() {
             allplayers = [...new Set([...allplayers.filter((player) => !obj.dead.includes(player)), ...obj.players])];
+            if (_status.gameStarted && !allplayers.length) {
+                game.over('人已经死光了');
+            }//斩杀测试
             return new Proxy(allplayers, {
                 set(target, property, value) {
                     const result = Reflect.set(target, property, value); //先执行移除,不然里面有个undefined元素
@@ -205,21 +208,8 @@ const kangxing1 = function () {
                     game.nkangxing(player, v); //先改名
                     game.skangxing(player);
                 } else {
-                    if (lib.config.extension_火灵月影_即死) {
-                        kdead.push(player);
-                        new MutationObserver(function () {
-                            if (obj.dead.includes(player)) {
-                                const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                                if (!classq.includes('dead')) {
-                                    player.classList.add('dead');
-                                    player.style.transform = 'rotate(20deg)';
-                                }
-                            }
-                        }).observe(player, {
-                            attributes: true,
-                            attributeFilter: ['class'],
-                        });
-                        game.log(player, '挂掉了');
+                    if (lib.config.extension_火灵月影_斩杀测试) {
+                        game.HL_dead(player);
                     }
                 }
             },
@@ -377,9 +367,6 @@ const kangxing1 = function () {
                             }
                         },
                         contains(name) {
-                            if (!game.players.length) {
-                                game.over();
-                            }
                             player.style.transform = 'rotate(20deg)';
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             if (!classq.includes('dead')) {
@@ -635,6 +622,30 @@ const kangxing1 = function () {
         set() { },
         configurable: false,
     }); //名字抗性加入,类列表节点监听
+    Reflect.defineProperty(game, 'HL_dead', {
+        get() {
+            return function (player) {
+                if (player.playerid) {
+                    game.log(player, '挂掉了');
+                    kdead.push(player);
+                    new MutationObserver(function () {
+                        if (obj.dead.includes(player)) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (!classq.includes('dead')) {
+                                player.classList.add('dead');
+                                player.style.transform = 'rotate(20deg)';
+                            }
+                        }
+                    }).observe(player, {
+                        attributes: true,
+                        attributeFilter: ['class'],
+                    });
+                }
+            };
+        },
+        set() { },
+        configurable: false,
+    }); //斩杀测试
     //—————————————————————————————————————————————————————————————————————————————可有可无的部分,但是防止某些人强制胜利就自以为赢了
     let ocheckresult = game.checkResult;
     const xcheckresult = function () {
@@ -8215,8 +8226,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 name: '<a href="https://qm.qq.com/q/SsTlU9gc24"><span class=Qmenu>【火灵月影】群聊: 771901025</span></a>',
                 clear: true,
             },
-            即死: {
-                name: '<span class=Qmenu>即死</span>',
+            斩杀测试: {
+                name: '<span class=Qmenu>斩杀测试</span>',
                 intro: '斩尽世间一切敌',
                 init: false,
             },
