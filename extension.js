@@ -311,29 +311,29 @@ const kangxing1 = function () {
             get() {
                 if (obj.players.includes(player)) {
                     return {
-                        add(q) {
+                        add(...args) {
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                            if (!classq.includes(q) && list.includes(q)) {
-                                classq.push(q);
+                            for (const i of args) {
+                                if (!classq.includes(i) && list.includes(i)) {
+                                    classq.push(i);
+                                }
                             }
                             qsetstyle.call(player, 'class', classq.join(' ').trim());
                         },
-                        remove(q) {
-                            const classq = qgetstyle
-                                .call(player, 'class')
-                                .split(/\s+/g)
-                                .filter((i) => i != q);
-                            qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
-                        },
-                        toggle(q) {
+                        remove(...args) {
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                            if (classq.includes(q)) {
-                                player.classList.remove(q);
+                            const classx = classq.filter((i) => !args.includes(i));
+                            qsetstyle.call(player, 'class', classx.join(' ').replace(/^\s+|\s+$/g, ''));
+                        },
+                        toggle(name) {
+                            const classq = qgetstyle.call(player, 'class').split(/\s+/g);
+                            if (classq.includes(name)) {
+                                player.classList.remove(name);
                             } else {
-                                player.classList.add(q);
+                                player.classList.add(name);
                             }
                         },
-                        contains(q) {
+                        contains(name) {
                             if (ui.restart) {
                                 ui.restart.remove();
                             } //重新开始按钮
@@ -348,33 +348,35 @@ const kangxing1 = function () {
                                     player.classList.remove(style);
                                 }
                             }
-                            return list.includes(q) && classq.includes(q);
+                            return list.includes(name) && classq.includes(name);
                         },
                     };
                 }
                 if (obj.dead.includes(player)) {
                     return {
-                        add(q) {
+                        add(...args) {
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                            classq.push(q);
+                            for (const i of args) {
+                                if (!classq.includes(i)) {
+                                    classq.push(i);
+                                }
+                            }
                             qsetstyle.call(player, 'class', classq.join(' ').trim());
                         },
-                        remove(q) {
+                        remove(...args) {
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                            if (q != 'dead') {
-                                classq.remove(q);
-                            }
-                            qsetstyle.call(player, 'class', classq.join(' ').replace(/^\s+|\s+$/g, ''));
+                            const classx = classq.filter((i) => !args.includes(i) || !list.includes(i));
+                            qsetstyle.call(player, 'class', classx.join(' ').replace(/^\s+|\s+$/g, ''));
                         },
-                        toggle(q) {
+                        toggle(name) {
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
-                            if (classq.includes(q)) {
-                                player.classList.remove(q);
+                            if (classq.includes(name)) {
+                                player.classList.remove(name);
                             } else {
-                                player.classList.add(q);
+                                player.classList.add(name);
                             }
                         },
-                        contains(q) {
+                        contains(name) {
                             if (!game.players.length) {
                                 game.over();
                             }
@@ -383,7 +385,7 @@ const kangxing1 = function () {
                             if (!classq.includes('dead')) {
                                 player.classList.add('dead');
                             }
-                            return classq.includes(q) || q == 'dead';
+                            return classq.includes(name) || !list.includes(name);
                         },
                     };
                 }
