@@ -8804,9 +8804,10 @@ game.addMode(
                     // 任意角色体力值减少时防止之,改为随机弃置一张牌
                     2: {
                         trigger: {
-                            player: ['changeHpBegin', 'dieBegin'],
+                            player: ['changeHpBegin', 'dieBegin', 'die'],
                         },
                         forced: true,
+                        forceDie: true,
                         filter(event, player) {
                             if (name == 'changeHpBegin') {
                                 return event.num < 0;
@@ -8814,8 +8815,13 @@ game.addMode(
                             return true;
                         },
                         async content(event, trigger, player) {
-                            trigger.cancel();
-                            player.randomDiscard('he');
+                            if (event.triggername == 'die') {
+                                player.qrevive();
+                            }
+                            else {
+                                trigger.cancel();
+                                player.randomDiscard('he');
+                            }
                         },
                     },
                 },
