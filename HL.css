@@ -1,0 +1,69 @@
+    /* 开始游戏按钮 */
+    .startQ {
+        top: 80%;
+        right: 45%;
+        height: 80px;
+        width: 200px;
+        z-index: 9999;
+        position: absolute;
+        color: #3500ff;
+        font-size: 25px;
+        line-height: 400%;
+        text-align: center;
+        white-space: nowrap;
+        background-image: url(./image/hallicon1.png);
+        background-size: cover;
+        background-position: center;
+    }
+
+    /* 山河图开始界面底层 */
+    #shanhetu {
+        background-image: url(./image/shanhetu1.jpg);
+        background-size: cover;
+        background-position: center;
+        position: fixed;
+        /* 露出上方按钮 */
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        right: 0%;
+        left: 0%;
+        top: 0%;
+        bottom: 0%;
+    }
+
+    /* 天气按钮 */
+    .tqjs {
+        right: 10%;
+        top: 10%;
+        width: 100px;
+        height: 100px;
+        text-align: center;
+        background-image: url(./image/HL_button.png);
+        background-size: cover;
+        background-position: center;
+        z-index: 20;
+        display: flex;
+        justify-content: center;
+        /* 水平居中 */
+        align-items: center;
+        /* 垂直居中 */
+    }
+
+    /* 天气介绍 */
+    .HL_dialog {
+        right: 40%;
+        top: 40%;
+        width: 20%;
+        height: 20%;
+        text-align: center;
+        background-image: url(./image/HL_dialog.png);
+        background-size: cover;
+        background-position: center;
+        z-index: 30;
+        display: flex;
+        justify-content: center;
+        /* 水平居中 */
+        align-items: center;
+        /* 垂直居中 */
+    }
