@@ -150,7 +150,7 @@ const kangxing1 = function () {
     Reflect.defineProperty(game, 'players', {
         get() {
             allplayers = [...new Set([...allplayers.filter((player) => !obj.dead.includes(player)), ...obj.players])];
-            if (_status.gameStarted && !allplayers.length) {
+            if (lib.config.extension_火灵月影_斩杀测试 && _status.gameStarted && !allplayers.length) {
                 game.over('人已经死光了');
             }//斩杀测试
             return new Proxy(allplayers, {

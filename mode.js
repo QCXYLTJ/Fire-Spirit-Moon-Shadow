@@ -44,8 +44,7 @@ game.addMode(
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     if (lib.config.mode_config.chelunzhan.随机选将) {
                         npc.characternum = 9;
                     } else {
@@ -191,8 +190,7 @@ game.addMode(
                             npc.init(links[0]);
                         }
                     }
-                }
-                else {
+                } else {
                     npc.init(Object.keys(lib.character).randomGet());
                 }
                 npc.maxHp = 10 * npc.maxHp;
@@ -425,7 +423,7 @@ game.addMode(
             _status.mode = 'jiguchuanhua';
             game.prepareArena(8);
             const player1 = game.players.randomGets(4);
-            const player2 = game.players.filter((q) => !player1.includes(q));//随机座位
+            const player2 = game.players.filter((q) => !player1.includes(q)); //随机座位
             _status.chuanhua = [player1[0], player2[0]];
             _status.long = 0;
             _status.hu = 0;
@@ -462,8 +460,7 @@ game.addMode(
                             npc.init(links[0]);
                         }
                     }
-                }
-                else {
+                } else {
                     npc.init(Object.keys(lib.character).randomGet());
                 }
             }
@@ -559,8 +556,7 @@ game.addMode(
                         async content(event, trigger, player) {
                             if (event.triggername == 'die') {
                                 player.qrevive();
-                            }
-                            else {
+                            } else {
                                 trigger.cancel();
                                 player.randomDiscard('he');
                             }
@@ -636,35 +632,293 @@ game.addMode(
 );
 lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
 //—————————————————————————————————————————————————————————————————————————————山河图模式
+window.shanhe = {
+    // 商店 关卡选择 战法调整 技能栏 卡牌栏 装备栏 挑战过的关卡变灰色
+    chengchistart() {
+        shanhe.beijing1.remove();
+        shanhe.beijing2 = document.createElement('div');
+        shanhe.beijing2.id = 'shanhetu2';
+        document.body.appendChild(shanhe.beijing2);
+        const cur_chengchi = shanhe.chengchi[shanhe.cur_chengchi];
+        for (const i in cur_chengchi) {
+            const guanka = document.createElement('div');
+            guanka.className = 'guanka';
+            guanka.style.backgroundImage = `url(extension/火灵月影/image/${i}.png)`;
+            guanka.style.top = `${40 + 40 * Math.random()}%`;
+            guanka.style.left = `${100 * Math.random()}%`;
+            guanka.name = i;
+            guanka.onclick = function () {
+                const guanka = this;
+                shanhe.cur_guanka = guanka.name;
+                const guankazhandou = document.createElement('div');
+                guankazhandou.className = 'guankazhandou';
+                shanhe.beijing2.appendChild(guankazhandou);
+                const zhanshiboss = ui.create.button(cur_chengchi[i].boss1.name, 'character');
+                zhanshiboss.classList.add('touxiangQ');
+                guankazhandou.appendChild(zhanshiboss);
+                const guankastart = document.createElement('div');
+                guankastart.className = 'guankastart';
+                guankastart.innerHTML = '挑战此关';
+                guankastart.onclick = function () {
+                    guankazhandou.remove();
+                    shanhe.guankastart();
+                };
+                guankazhandou.appendChild(guankastart);
+            };
+            shanhe.beijing2.appendChild(guanka);
+        }
+    },
+    // 进入关卡开始战斗
+    async guankastart() {
+        shanhe.beijing2.remove();
+        const cur_guanka = shanhe.chengchi[shanhe.cur_chengchi][shanhe.cur_guanka];
+        const bosslist = Object.keys(cur_guanka);
+        game.prepareArena(bosslist.length + 1);
+        game.zhu = game.me;
+        lib.init.onfree();
+        game.players.forEach((player, index, array) => {
+            player.getId();
+            if (player == game.me) {
+                player.identity = 'zhu';
+                player.side = true;
+                player.init(shanhe.cur_xuanjiang);
+            } else {
+                const info = cur_guanka[bosslist[index - 1]];
+                player.identity = 'fan';
+                player.side = false;
+                player.init(info.name);
+                player.addSkill(info.skills);
+                player.maxHp = info.maxHp;
+                player.hp = info.hp;
+            }
+            player.node.identity.classList.remove('guessing');
+            player.identityShown = true;
+            player.ai.shown = 1;
+            player.setIdentity();
+        });
+        shanhe.gameStart = _status.event.trigger('gameStart');
+        await shanhe.gameStart;
+        shanhe.gameDraw = game.gameDraw(game.zhu, () => 4);
+        await shanhe.gameDraw;
+        shanhe.zhongzhi = false;
+        shanhe.phaseLoop = game.phaseLoop(game.zhu);
+        await shanhe.phaseLoop;
+    },
+    jiesuan(bool) {
+        if (bool) {
+            shanhe.chengchi[shanhe.cur_chengchi][shanhe.cur_guanka].tongguan = true;
+        }
+        shanhe.zhongzhi = true;
+        shanhe.gameDraw.finish();
+        shanhe.phaseLoop.finish();
+        const players = game.players.concat(game.dead);
+        for (const i of players) {
+            game.removePlayer(i);
+        }
+        shanhe.chengchistart();
+    },
+    chengchi: {
+        chengchi1: {
+            guanka1: {
+                boss1: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+                boss2: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+            },
+            guanka2: {
+                boss1: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+                boss2: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+            },
+        },
+        chengchi2: {
+            guanka1: {
+                boss1: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+                boss2: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+            },
+            guanka2: {
+                boss1: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+                boss2: {
+                    name: 'guojia',
+                    sex: 'female',
+                    skills: ['zhaxiang', 'ranshang'],
+                    maxHp: 10,
+                    hp: 10,
+                },
+            },
+        },
+    },
+};
 game.addMode(
     'shanhetu',
     {
+        // 点将 城池选择 挑战过的城池变灰色
         async start() {
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
             // 主界面 山河册 选择城池 开始/继续战斗
-            const page = document.createElement('div');
-            page.id = 'shanhetu';
-            document.body.appendChild(page);
+            shanhe.beijing1 = document.createElement('div');
+            shanhe.beijing1.id = 'shanhetu1';
+            document.body.appendChild(shanhe.beijing1);
+            for (const i in shanhe.chengchi) {
+                const chengchi = document.createElement('div');
+                chengchi.className = 'chengchi';
+                chengchi.style.top = `${40 + 40 * Math.random()}%`;
+                chengchi.style.left = `${10 + 80 * Math.random()}%`;
+                chengchi.style.backgroundImage = `url(extension/火灵月影/image/${i}.png)`;
+                chengchi.name = i;
+                chengchi.onclick = function () {
+                    const chengchi = this;
+                    shanhe.cur_chengchi = chengchi.name;
+                    if (shanhe.gongji) {
+                        shanhe.gongji.remove();
+                    }
+                    shanhe.gongji = document.createElement('div');
+                    shanhe.gongji.className = 'gongji';
+                    chengchi.appendChild(shanhe.gongji);
+                };
+                shanhe.beijing1.appendChild(chengchi);
+            }
             const start = document.createElement('div');
             start.className = 'startQ';
             start.innerHTML = '开始游戏';
-            page.appendChild(start);
-
-
-            // 商店 关卡选择 战法调整 技能栏 卡牌栏 装备栏
+            start.onclick = function () {
+                if (!shanhe.cur_chengchi) {
+                    alert('请先选择要挑战的城池');
+                    return;
+                }
+                shanhe.chengchistart();
+            };
+            shanhe.beijing1.appendChild(start);
+            if (!shanhe.cur_xuanjiang) {
+                const xuanjiangkuang = document.createElement('div');
+                xuanjiangkuang.id = 'divQ';
+                shanhe.beijing1.appendChild(xuanjiangkuang);
+                const list = Object.keys(lib.character).randomGets(5);
+                for (const i of list) {
+                    const touxiang = ui.create.button(i, 'character');
+                    touxiang.classList.add('touxiangQ');
+                    touxiang.onclick = function () {
+                        const touxiang = this;
+                        shanhe.cur_xuanjiang = touxiang.link;
+                        xuanjiangkuang.remove();
+                    };
+                    xuanjiangkuang.appendChild(touxiang);
+                }
+            }
         },
         game: {
             checkResult() {
-                game.over(game.players[0]?.identity == game.me.identity);
+                if (game.players[0]?.side == game.me.side) {
+                    shanhe.jiesuan(true);
+                } else {
+                    shanhe.jiesuan(false);
+                }
             },
         },
         element: {
             player: {
                 dieAfter() {
-                    const player = this;
-                    if (!game.players.includes(player) || player.isDead()) {
-                        player.qrevive();
+                    if (game.players.map((q) => q.side).unique().length > 1) {
+                        return;
+                    }
+                    game.checkResult();
+                },
+            },
+            content: {
+                async phaseLoop(event, trigger, player) {
+                    let num = 1,
+                        current = player;
+                    while (current.getSeatNum() === 0) {
+                        current.setSeatNum(num);
+                        current = current.next;
+                        num++;
+                    }
+                    while (true) {
+                        if (game.players.includes(event.player)) {
+                            lib.onphase.forEach((i) => i());
+                            const phase = event.player.phase();
+                            event.next.remove(phase);
+                            let isRoundEnd = false;
+                            if (lib.onround.every((i) => i(phase, event.player))) {
+                                isRoundEnd = _status.roundSkipped;
+                                if (_status.isRoundFilter) {
+                                    isRoundEnd = _status.isRoundFilter(phase, event.player);
+                                } else if (_status.seatNumSettled) {
+                                    const seatNum = event.player.getSeatNum();
+                                    if (seatNum != 0) {
+                                        if (get.itemtype(_status.lastPhasedPlayer) != 'player' || seatNum < _status.lastPhasedPlayer.getSeatNum()) {
+                                            isRoundEnd = true;
+                                        }
+                                    }
+                                } else if (event.player == _status.roundStart) {
+                                    isRoundEnd = true;
+                                }
+                                if (isRoundEnd && _status.globalHistory.some((i) => i.isRound)) {
+                                    game.log();
+                                    await event.trigger('roundEnd');
+                                }
+                            }
+                            event.next.push(phase);
+                            await phase;
+                        }
+                        await event.trigger('phaseOver');
+                        if (shanhe.zhongzhi) {
+                            break;
+                        }
+                        let findNext = (current) => {
+                            let players = game.players
+                                .slice(0)
+                                .concat(game.dead)
+                                .sort((a, b) => parseInt(a.dataset.position) - parseInt(b.dataset.position));
+                            let position = parseInt(current.dataset.position);
+                            for (let i = 0; i < players.length; i++) {
+                                if (parseInt(players[i].dataset.position) > position) {
+                                    return players[i];
+                                }
+                            }
+                            return players[0];
+                        };
+                        event.player = findNext(event.player);
                     }
                 },
             },
@@ -967,10 +1221,8 @@ game.addMode(
             // 传说	一忘皆空	武将初始技能可被替换
             // 传说	应急战略	回合外成为敌方角色使用牌唯一目标,随机弃置来源1张牌
         },
-        card: {
-        },
-        translate: {
-        },
+        card: {},
+        translate: {},
     },
     {
         translate: '山河图',
@@ -979,12 +1231,6 @@ game.addMode(
                 name: '山河图',
                 frequent: true,
                 clear: true,
-            },
-            随机选将: {
-                name: '<span class=Qmenu>随机选将</span>',
-                intro: '开启后,本模式选将逻辑改为随机选将',
-                init: false,
-                frequent: true,
             },
         },
     }
