@@ -633,6 +633,74 @@ game.addMode(
 lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
 //—————————————————————————————————————————————————————————————————————————————山河图模式
 window.shanhe = {
+    shanhetustart() {
+        // 主界面 山河册 选择城池 开始/继续战斗
+        if (shanhe.beijing2) {
+            shanhe.beijing2.remove();
+        }
+        shanhe.beijing1 = document.createElement('div');
+        shanhe.beijing1.id = 'shanhetu1';
+        document.body.appendChild(shanhe.beijing1);
+        for (const i in shanhe.chengchi) {
+            const chengchiinfo = shanhe.chengchi[i];
+            const chengchi = document.createElement('div');
+            chengchi.className = 'chengchi';
+            chengchi.style.top = `${40 + 40 * Math.random()}%`;
+            chengchi.style.left = `${10 + 80 * Math.random()}%`;
+            chengchi.style.backgroundImage = `url(extension/火灵月影/image/${i}.png)`;
+            chengchi.name = i;
+            if (i == shanhe.cur_chengchi) {
+                if (shanhe.gongji) {
+                    shanhe.gongji.remove();
+                }
+                shanhe.gongji = document.createElement('div');
+                shanhe.gongji.className = 'gongji';
+                chengchi.appendChild(shanhe.gongji);
+            }
+            if (chengchiinfo.tongguan) {
+                chengchi.style.filter = 'grayscale(100%)';
+            } else {
+                chengchi.onclick = function () {
+                    const chengchi = this;
+                    shanhe.cur_chengchi = chengchi.name;
+                    if (shanhe.gongji) {
+                        shanhe.gongji.remove();
+                    }
+                    shanhe.gongji = document.createElement('div');
+                    shanhe.gongji.className = 'gongji';
+                    chengchi.appendChild(shanhe.gongji);
+                };
+            }
+            shanhe.beijing1.appendChild(chengchi);
+        }
+        const start = document.createElement('div');
+        start.className = 'startQ';
+        start.innerHTML = '开始游戏';
+        start.onclick = function () {
+            if (!shanhe.cur_chengchi) {
+                alert('请先选择要挑战的城池');
+                return;
+            }
+            shanhe.chengchistart();
+        };
+        shanhe.beijing1.appendChild(start);
+        if (!shanhe.cur_xuanjiang) {
+            const xuanjiangkuang = document.createElement('div');
+            xuanjiangkuang.id = 'divQ';
+            shanhe.beijing1.appendChild(xuanjiangkuang);
+            const list = Object.keys(lib.character).randomGets(5);
+            for (const i of list) {
+                const touxiang = ui.create.button(i, 'character');
+                touxiang.classList.add('touxiangQ');
+                touxiang.onclick = function () {
+                    const touxiang = this;
+                    shanhe.cur_xuanjiang = touxiang.link;
+                    xuanjiangkuang.remove();
+                };
+                xuanjiangkuang.appendChild(touxiang);
+            }
+        }
+    },
     // 商店 关卡选择 战法调整 技能栏 卡牌栏 装备栏 挑战过的关卡变灰色
     chengchistart() {
         shanhe.beijing1.remove();
@@ -641,32 +709,51 @@ window.shanhe = {
         document.body.appendChild(shanhe.beijing2);
         const cur_chengchi = shanhe.chengchi[shanhe.cur_chengchi];
         for (const i in cur_chengchi) {
+            const guankainfo = cur_chengchi[i];
             const guanka = document.createElement('div');
             guanka.className = 'guanka';
             guanka.style.backgroundImage = `url(extension/火灵月影/image/${i}.png)`;
-            guanka.style.top = `${40 + 40 * Math.random()}%`;
-            guanka.style.left = `${100 * Math.random()}%`;
+            guanka.style.top = `${40 + 20 * Math.random()}%`;
+            guanka.style.left = `${10 + 80 * Math.random()}%`;
             guanka.name = i;
-            guanka.onclick = function () {
-                const guanka = this;
-                shanhe.cur_guanka = guanka.name;
-                const guankazhandou = document.createElement('div');
-                guankazhandou.className = 'guankazhandou';
-                shanhe.beijing2.appendChild(guankazhandou);
-                const zhanshiboss = ui.create.button(cur_chengchi[i].boss1.name, 'character');
-                zhanshiboss.classList.add('touxiangQ');
-                guankazhandou.appendChild(zhanshiboss);
-                const guankastart = document.createElement('div');
-                guankastart.className = 'guankastart';
-                guankastart.innerHTML = '挑战此关';
-                guankastart.onclick = function () {
-                    guankazhandou.remove();
-                    shanhe.guankastart();
+            if (guankainfo.tongguan) {
+                guanka.style.filter = 'grayscale(100%)';
+            } else {
+                guanka.onclick = function () {
+                    const guanka = this;
+                    shanhe.cur_guanka = guanka.name;
+                    const guankazhanshi = document.createElement('div');
+                    guankazhanshi.className = 'guankazhanshi';
+                    shanhe.beijing2.appendChild(guankazhanshi);
+                    const zhanshiboss = ui.create.button(guankainfo.boss1.name, 'character');
+                    zhanshiboss.classList.add('touxiangQ');
+                    guankazhanshi.appendChild(zhanshiboss);
+                    const guankastart = document.createElement('div');
+                    guankastart.className = 'guankastart';
+                    guankastart.innerHTML = '挑战此关';
+                    guankastart.onclick = function () {
+                        guankazhanshi.remove();
+                        shanhe.guankastart();
+                    };
+                    guankazhanshi.appendChild(guankastart);
+                    const fanhui = document.createElement('div');
+                    fanhui.className = 'backQ';
+                    fanhui.innerHTML = '返回';
+                    fanhui.onclick = function () {
+                        guankazhanshi.remove();
+                    };
+                    guankazhanshi.appendChild(fanhui);
                 };
-                guankazhandou.appendChild(guankastart);
-            };
+            }
             shanhe.beijing2.appendChild(guanka);
         }
+        const fanhui = document.createElement('div');
+        fanhui.className = 'backQ';
+        fanhui.innerHTML = '返回';
+        fanhui.onclick = function () {
+            shanhe.shanhetustart();
+        };
+        shanhe.beijing2.appendChild(fanhui);
     },
     // 进入关卡开始战斗
     async guankastart() {
@@ -690,6 +777,7 @@ window.shanhe = {
                 player.addSkill(info.skills);
                 player.maxHp = info.maxHp;
                 player.hp = info.hp;
+                player.hujia = info.hujia;
             }
             player.node.identity.classList.remove('guessing');
             player.identityShown = true;
@@ -705,15 +793,37 @@ window.shanhe = {
         await shanhe.phaseLoop;
     },
     jiesuan(bool) {
-        if (bool) {
-            shanhe.chengchi[shanhe.cur_chengchi][shanhe.cur_guanka].tongguan = true;
-        }
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
         shanhe.phaseLoop.finish();
         const players = game.players.concat(game.dead);
         for (const i of players) {
             game.removePlayer(i);
+        }
+        ui.me.remove();
+        ui.mebg.remove();
+        ui.handcards1Container.remove();
+        ui.handcards2Container.remove();
+        for (const i of Array.from(ui.arena.childNodes)) {
+            if (i.classList.contains('center')) {
+                i.remove();
+            }
+        } //清空中央区卡牌
+        if (bool) {
+            const chengchiinfo = shanhe.chengchi[shanhe.cur_chengchi];
+            const guankainfo = chengchiinfo[shanhe.cur_guanka];
+            guankainfo.tongguan = true;
+            let alltongguan = true;
+            for (const i in chengchiinfo) {
+                if (!chengchiinfo[i].tongguan) {
+                    alltongguan = false;
+                }
+            }
+            if (alltongguan) {
+                chengchiinfo.tongguan = true;
+                shanhe.shanhetustart();
+                return;
+            }
         }
         shanhe.chengchistart();
     },
@@ -724,15 +834,17 @@ window.shanhe = {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
                 boss2: {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
             },
             guanka2: {
@@ -740,15 +852,17 @@ window.shanhe = {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
                 boss2: {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
             },
         },
@@ -758,15 +872,17 @@ window.shanhe = {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
                 boss2: {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
             },
             guanka2: {
@@ -774,15 +890,17 @@ window.shanhe = {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
                 boss2: {
                     name: 'guojia',
                     sex: 'female',
                     skills: ['zhaxiang', 'ranshang'],
-                    maxHp: 10,
-                    hp: 10,
+                    hujia: 1,
+                    maxHp: 1,
+                    hp: 1,
                 },
             },
         },
@@ -795,56 +913,7 @@ game.addMode(
         async start() {
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
-            // 主界面 山河册 选择城池 开始/继续战斗
-            shanhe.beijing1 = document.createElement('div');
-            shanhe.beijing1.id = 'shanhetu1';
-            document.body.appendChild(shanhe.beijing1);
-            for (const i in shanhe.chengchi) {
-                const chengchi = document.createElement('div');
-                chengchi.className = 'chengchi';
-                chengchi.style.top = `${40 + 40 * Math.random()}%`;
-                chengchi.style.left = `${10 + 80 * Math.random()}%`;
-                chengchi.style.backgroundImage = `url(extension/火灵月影/image/${i}.png)`;
-                chengchi.name = i;
-                chengchi.onclick = function () {
-                    const chengchi = this;
-                    shanhe.cur_chengchi = chengchi.name;
-                    if (shanhe.gongji) {
-                        shanhe.gongji.remove();
-                    }
-                    shanhe.gongji = document.createElement('div');
-                    shanhe.gongji.className = 'gongji';
-                    chengchi.appendChild(shanhe.gongji);
-                };
-                shanhe.beijing1.appendChild(chengchi);
-            }
-            const start = document.createElement('div');
-            start.className = 'startQ';
-            start.innerHTML = '开始游戏';
-            start.onclick = function () {
-                if (!shanhe.cur_chengchi) {
-                    alert('请先选择要挑战的城池');
-                    return;
-                }
-                shanhe.chengchistart();
-            };
-            shanhe.beijing1.appendChild(start);
-            if (!shanhe.cur_xuanjiang) {
-                const xuanjiangkuang = document.createElement('div');
-                xuanjiangkuang.id = 'divQ';
-                shanhe.beijing1.appendChild(xuanjiangkuang);
-                const list = Object.keys(lib.character).randomGets(5);
-                for (const i of list) {
-                    const touxiang = ui.create.button(i, 'character');
-                    touxiang.classList.add('touxiangQ');
-                    touxiang.onclick = function () {
-                        const touxiang = this;
-                        shanhe.cur_xuanjiang = touxiang.link;
-                        xuanjiangkuang.remove();
-                    };
-                    xuanjiangkuang.appendChild(touxiang);
-                }
-            }
+            shanhe.shanhetustart();
         },
         game: {
             checkResult() {
