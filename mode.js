@@ -938,7 +938,7 @@ game.addMode(
                     let num = 1,
                         current = player;
                     while (current.getSeatNum() === 0) {
-                        current.setSeatNum(num);
+                        current.seatNum = num;
                         current = current.next;
                         num++;
                     }

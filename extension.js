@@ -1448,6 +1448,961 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 });
             }
         },
+        content(config, pack) {
+            get.vcardInfo = function (card) { }; //卡牌storage里面存了DOM元素会循环引用导致不能JSON.stringify
+            game.addGroup('仙', `<img src="extension/火灵月影/other/xian.png"width="30"height="30">`, '仙', {
+                color: ' #28e3ce',
+                image: 'ext:火灵月影/other/xian.png',
+            });
+            game.addNature('snow', '雪', {
+                linked: true,
+                order: 1000,
+            }); //添加杀的属性
+            game.addNature('blood', '血', {
+                linked: true,
+                order: 1000,
+            }); //添加杀的属性
+            game.addNature('poison', '毒', {
+                linked: true,
+                order: 1000,
+            }); //添加杀的属性
+            game.addNature('gold', '金', {
+                linked: true,
+                order: 1000,
+            }); //添加杀的属性
+            game.addNature('water', '水', {
+                linked: true,
+                order: 1000,
+            }); //添加杀的属性
+            game.addNature('ScarletRot', '猩红腐败', {
+                linked: true,
+                order: 1000,
+            }); //添加杀的属性
+            for (const nature of Array.from(lib.nature.keys())) {
+                lib.card.sha.ai.tag[nature + 'Damage'] = function (card) {
+                    if (game.hasNature(card, nature)) {
+                        return 1;
+                    }
+                };
+                lib.card.sha.nature.add(nature);
+            }
+            lib.skill.bosshp = {
+                init(player) {
+                    const info = lib.character[player.name];
+                    let maxhp = Math.max(info.maxHp, player.maxHp);
+                    Reflect.defineProperty(player, 'maxHp', {
+                        get() {
+                            return maxhp;
+                        },
+                        set(value) {
+                            if (value > maxhp) {
+                                maxhp = value;
+                            }
+                        },
+                    }); //扣减体力上限抗性
+                    let qhp = Math.max(info.hp, player.hp);
+                    Reflect.defineProperty(player, 'hp', {
+                        get() {
+                            return qhp;
+                        },
+                        set(value) {
+                            if (value > qhp) {
+                                qhp = value;
+                            } else {
+                                if (player.success) {
+                                    qhp = value;
+                                }
+                            }
+                        },
+                    });
+                    Reflect.defineProperty(player, 'skipList', {
+                        get() {
+                            return [];
+                        },
+                        set() { },
+                    });
+                },
+                trigger: {
+                    player: ['damageEnd'],
+                },
+                popup: false,
+                firstDo: true,
+                forced: true,
+                charlotte: true,
+                fixed: true,
+                kangxing: true,
+                filter(event, player) {
+                    return event.num > 0;
+                },
+                async content(event, trigger, player) {
+                    player.success = true;
+                    player.hp = player.hp - trigger.num;
+                    player.update();
+                    player.success = false;
+                },
+            }; // 挂的主技能被封了也会跟着被封
+            lib.skill.bossfinish = {
+                trigger: {
+                    source: ['damageBefore'],
+                    player: ['useCardBefore', 'phaseBefore', 'phaseDrawBefore', 'phaseUseBefore'],
+                },
+                popup: false,
+                firstDo: true,
+                forced: true,
+                async content(event, trigger, player) {
+                    if (['phaseUse', 'damage'].includes(trigger.name)) {
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 5;
+                            },
+                            set() { },
+                        });
+                        let damage = trigger.num;
+                        Reflect.defineProperty(trigger, 'num', {
+                            get() {
+                                return damage;
+                            },
+                            set(value) {
+                                if (value > damage) {
+                                    damage = value;
+                                }
+                            },
+                        });
+                        const npc = trigger.player;
+                        Reflect.defineProperty(trigger, 'player', {
+                            get() {
+                                return npc;
+                            },
+                            set() { },
+                        });
+                    }
+                    if (trigger.name == 'useCard') {
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 16;
+                            },
+                            set() { },
+                        });
+                        Reflect.defineProperty(trigger, 'excluded', {
+                            get() {
+                                return [];
+                            },
+                            set() { },
+                        });
+                        Reflect.defineProperty(trigger, 'all_excluded', {
+                            get() {
+                                return false;
+                            },
+                            set() { },
+                        });
+                        if (get.tag(trigger.card, 'damage')) {
+                            Reflect.defineProperty(trigger, 'targets', {
+                                get() {
+                                    return player.getEnemies();
+                                },
+                                set() { },
+                            });
+                        } //用牌击穿
+                    }
+                    if (trigger.name == 'phase') {
+                        Reflect.defineProperty(trigger, 'finished', {
+                            get() {
+                                return trigger.step > 12;
+                            },
+                            set() { },
+                        });
+                        Reflect.defineProperty(trigger, 'player', {
+                            get() {
+                                return player;
+                            },
+                            set() { },
+                        });
+                    }
+                },
+            };
+            lib.translate.bosshp = 'boss抗性';
+            lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流';
+            lib.translate.bossfinish = 'boss抗性';
+            lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
+            if (lib.boss) {
+                for (const i of HL.boss) {
+                    lib.boss[i] = {
+                        chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
+                        checkResult(player) {
+                            if (player == game.boss && player.hp > 0) {
+                                return false;
+                            }
+                        },
+                        init() {
+                            game.nkangxing(game.boss, game.boss.name);
+                            game.skangxing(game.boss);
+                            game.boss.bosskangxing = true;
+                        },
+                    };
+                }
+                lib.skill._HL_ws_boss = {
+                    trigger: {
+                        player: 'dieEnd',
+                    },
+                    forced: true,
+                    forceDie: true,
+                    mode: ['boss'],
+                    filter(event, player) {
+                        return HL.HL_ws_boss?.boss.every((q) => !game.players.includes(q)) && HL.HL_ws_boss.num < 4;
+                    },
+                    async content(event, trigger, player) {
+                        HL.HL_ws_boss.boss = [];
+                        HL.HL_ws_boss.num++;
+                        const list = HL.HL_ws_boss.name.randomGets(HL.HL_ws_boss.num);
+                        let first;
+                        for (const name of list) {
+                            let bossx;
+                            if (!first) {
+                                first = true;
+                                bossx = game.changeBossQ(name);
+                            } else {
+                                bossx = game.boss.addFellow(name);
+                            }
+                            HL.HL_ws_boss.boss.add(bossx);
+                            bossx.skills = [];
+                            const skills = lib.character[name].skills.slice(0, HL.HL_ws_boss.num);
+                            if (lib.config.extension_火灵月影_lianyu) {
+                                skills.add(lib.character[name].skills.slice(-1));
+                            }
+                            game.nkangxing(bossx, name);
+                            game.skangxing(bossx, skills);
+                            bossx.bosskangxing = true;
+                        }
+                    },
+                };
+                lib.boss.HL_ws_boss = {
+                    chongzheng: false,
+                    checkResult(player) {
+                        if (HL.HL_ws_boss.num < 4 || HL.HL_ws_boss.boss.some((q) => game.players.includes(q))) {
+                            if (player == game.boss) {
+                                return false;
+                            }
+                        } else {
+                            game.checkResult();
+                        }
+                    },
+                    init() {
+                        HL.HL_ws_boss = {
+                            num: 1,
+                            name: ['HL_liru', 'HL_jiaxu', 'HL_huaxiong', 'HL_lvbu'],
+                            boss: [game.boss],
+                        };
+                        const name = HL.HL_ws_boss.name.randomGet();
+                        game.boss.init(name);
+                        game.boss.skills = [];
+                        const skills = lib.character[name].skills.slice(0, HL.HL_ws_boss.num);
+                        if (lib.config.extension_火灵月影_lianyu) {
+                            skills.add(lib.character[name].skills.slice(-1));
+                        }
+                        game.nkangxing(game.boss, name);
+                        game.skangxing(game.boss, skills);
+                        game.boss.bosskangxing = true;
+                    },
+                };
+                lib.skill._HL_libai_boss = {
+                    trigger: {
+                        player: ['dieEnd'],
+                    },
+                    forced: true,
+                    forceDie: true,
+                    mode: ['boss'],
+                    filter(event, player) {
+                        return HL.HL_libai_boss && HL.HL_libai_boss < 4 && game.boss == player;
+                    },
+                    async content(event, trigger, player) {
+                        HL.HL_libai_boss++;
+                        const name = `HL_libai${HL.HL_libai_boss}`;
+                        const boss = game.changeBossQ(name);
+                        game.nkangxing(boss, name);
+                        game.skangxing(boss);
+                        boss.bosskangxing = true;
+                        const evt = _status.event.getParent('phase', true);
+                        if (evt) {
+                            evt.finish();
+                        }
+                        boss.phase();
+                    },
+                };
+                lib.boss.HL_libai_boss = {
+                    chongzheng: false,
+                    checkResult(player) {
+                        if (player == game.boss && game.boss.name != 'HL_libai4') {
+                            return false;
+                        }
+                    },
+                    init() {
+                        HL.HL_libai_boss = 1;
+                        game.boss.init('HL_libai1');
+                        game.nkangxing(game.boss, 'HL_libai1');
+                        game.skangxing(game.boss);
+                        game.boss.bosskangxing = true;
+                    },
+                };
+            }
+            if (lib.config.extension_火灵月影_关闭本体BOSS) {
+                for (const i of ['boss_hundun', 'boss_qiongqi', 'boss_taotie', 'boss_taowu', 'boss_zhuyin', 'boss_xiangliu', 'boss_zhuyan', 'boss_bifang', 'boss_yingzhao', 'boss_qingmushilian', 'boss_qinglong', 'boss_mushengoumang', 'boss_shujing', 'boss_taihao', 'boss_chiyanshilian', 'boss_zhuque', 'boss_huoshenzhurong', 'boss_yanling', 'boss_yandi', 'boss_baimangshilian', 'boss_baihu', 'boss_jinshenrushou', 'boss_mingxingzhu', 'boss_shaohao', 'boss_xuanlinshilian', 'boss_xuanwu', 'boss_shuishengonggong', 'boss_shuishenxuanming', 'boss_zhuanxu', 'boss_zhuoguiquxie', 'boss_nianshou_heti', 'boss_nianshou_jingjue', 'boss_nianshou_renxing', 'boss_nianshou_ruizhi', 'boss_nianshou_baonu', 'boss_baiwuchang', 'boss_heiwuchang', 'boss_luocha', 'boss_yecha', 'boss_niutou', 'boss_mamian', 'boss_chi', 'boss_mo', 'boss_wang', 'boss_liang', 'boss_qinguangwang', 'boss_chujiangwang', 'boss_songdiwang', 'boss_wuguanwang', 'boss_yanluowang', 'boss_bianchengwang', 'boss_taishanwang', 'boss_dushiwang', 'boss_pingdengwang', 'boss_zhuanlunwang', 'boss_mengpo', 'boss_dizangwang', 'boss_lvbu1', 'boss_lvbu2', 'boss_lvbu3', 'boss_caocao', 'boss_guojia', 'boss_zhangchunhua', 'boss_zhenji', 'boss_liubei', 'boss_zhugeliang', 'boss_huangyueying', 'boss_pangtong', 'boss_zhouyu', 'boss_caiwenji', 'boss_zhangjiao', 'boss_zuoci', 'boss_diaochan', 'boss_huatuo', 'boss_dongzhuo', 'boss_sunce']) {
+                    lib.config.mode_config.boss[`${i}_boss_config`] = false;
+                }
+                game.saveConfig(`mode_config`, lib.config.mode_config);
+            }
+            if (lib.config.extension_火灵月影_文字闪烁) {
+                const style = document.createElement('style');
+                style.innerHTML = '@keyframes QQQ{';
+                for (var i = 1; i <= 20; i++) {
+                    let rand1 = Math.floor(Math.random() * 255),
+                        rand2 = Math.floor(Math.random() * 255),
+                        rand3 = Math.floor(Math.random() * 255);
+                    style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
+                }
+                style.innerHTML += '}';
+                document.head.appendChild(style);
+            }
+            if (lib.config.extension_火灵月影_武将全部可选) {
+                Reflect.defineProperty(lib.filter, 'characterDisabled', {
+                    get: () =>
+                        function (i) {
+                            return !lib.character[i];
+                        },
+                    set() { },
+                }); //取消禁将
+                lib.filter.characterDisabled2 = function (i) {
+                    return !lib.character[i];
+                }; //取消禁将
+                get.gainableSkills = function (func, player) {
+                    var list = [];
+                    for (var i in lib.character) {
+                        for (var j = 0; j < lib.character[i][3].length; j++) {
+                            list.add(lib.character[i][3][j]);
+                        }
+                    }
+                    return list;
+                }; //BOSS选将
+                get.gainableSkillsName = function (name, func) {
+                    var list = [];
+                    if (name && lib.character[name]) {
+                        for (var j = 0; j < lib.character[name][3].length; j++) {
+                            list.add(lib.character[name][3][j]);
+                        }
+                    }
+                    return list;
+                }; //BOSS选将
+                Reflect.defineProperty(ui.create, 'characterDialog', {
+                    get() {
+                        return function () {
+                            var filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
+                            for (var i = 0; i < arguments.length; i++) {
+                                if (arguments[i] === 'thisiscard') {
+                                    thisiscard = true;
+                                } else if (arguments[i] === 'expandall') {
+                                    expandall = true;
+                                } else if (arguments[i] === 'heightset') {
+                                    heightset = true;
+                                } else if (arguments[i] == 'precharacter') {
+                                    precharacter = true;
+                                } else if (arguments[i] == 'characterx') {
+                                    characterx = true;
+                                } else if (typeof arguments[i] == 'string' && arguments[i].startsWith('onlypack:')) {
+                                    onlypack = arguments[i].slice(9);
+                                } else if (typeof arguments[i] == 'object' && typeof arguments[i].seperate == 'function') {
+                                    seperate = arguments[i].seperate;
+                                } else if (typeof arguments[i] === 'string') {
+                                    str = arguments[i];
+                                } else if (typeof arguments[i] === 'function') {
+                                    filter = arguments[i];
+                                } else if (typeof arguments[i] == 'boolean') {
+                                    noclick = arguments[i];
+                                }
+                            }
+                            var list = [];
+                            const groups = [];
+                            var dialog;
+                            var node = ui.create.div('.caption.pointerspan');
+                            if (get.is.phoneLayout()) {
+                                node.style.fontSize = '30px';
+                            }
+                            var namecapt = [];
+                            var getCapt = function (str) {
+                                var capt;
+                                if (str.indexOf('_') == -1) {
+                                    capt = str[0];
+                                } else {
+                                    capt = str[str.lastIndexOf('_') + 1];
+                                }
+                                capt = capt.toLowerCase();
+                                if (!/[a-z]/i.test(capt)) {
+                                    capt = '自定义';
+                                }
+                                return capt;
+                            };
+                            if (thisiscard) {
+                                for (var i in lib.card) {
+                                    if (!lib.translate[`${i}_info`]) continue;
+                                    if (filter && filter(i)) continue;
+                                    list.push(['', get.translation(lib.card[i].type), i]);
+                                    if (namecapt.indexOf(getCapt(i)) == -1) {
+                                        namecapt.push(getCapt(i));
+                                    }
+                                }
+                            } else {
+                                var groupnum = {};
+                                for (var i in lib.character) {
+                                    list.push(i);
+                                    if (get.is.double(i)) {
+                                        groups.add('double');
+                                    } else {
+                                        const Q = lib.character[i][1];
+                                        if (!groupnum[Q]) groupnum[Q] = 0;
+                                        groupnum[Q]++;
+                                        if (groupnum[Q] > 20) {
+                                            groups.add(lib.character[i][1]);
+                                        } //删除多余势力
+                                    }
+                                    if (namecapt.indexOf(getCapt(i)) == -1) {
+                                        namecapt.push(getCapt(i));
+                                    }
+                                }
+                            }
+                            namecapt.sort(function (a, b) {
+                                return a > b ? 1 : -1;
+                            });
+                            groups.sort(lib.sort.group);
+                            if (!thisiscard) {
+                                namecapt.remove('自定义');
+                                namecapt.push('newline');
+                                for (var i in lib.characterDialogGroup) {
+                                    namecapt.push(i);
+                                }
+                            }
+                            var newlined = false;
+                            var newlined2;
+                            var packsource;
+                            var clickCapt = function (e) {
+                                if (_status.dragged) return;
+                                if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
+                                    dialog.currentcapt2 = null;
+                                    dialog.currentcaptnode2.classList.remove('thundertext');
+                                    dialog.currentcaptnode2.inited = true;
+                                    dialog.currentcaptnode2 = null;
+                                }
+                                if (this.alphabet) {
+                                    if (this.classList.contains('thundertext')) {
+                                        dialog.currentcapt = null;
+                                        dialog.currentcaptnode = null;
+                                        this.classList.remove('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.remove('active');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    } else {
+                                        if (dialog.currentcaptnode) {
+                                            dialog.currentcaptnode.classList.remove('thundertext');
+                                            if (dialog.currentcaptnode.touchlink) {
+                                                dialog.currentcaptnode.touchlink.classList.remove('active');
+                                            }
+                                        }
+                                        dialog.currentcapt = this.link;
+                                        dialog.currentcaptnode = this;
+                                        this.classList.add('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.add('active');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (newlined2) {
+                                        newlined2.style.display = 'none';
+                                        if (!packsource.onlypack) {
+                                            packsource.classList.remove('thundertext');
+                                            if (!get.is.phoneLayout() || !lib.config.filternode_button) {
+                                                packsource.innerHTML = '武将包';
+                                            }
+                                        }
+                                    }
+                                    if (this.classList.contains('thundertext')) {
+                                        dialog.currentcapt2 = null;
+                                        dialog.currentcaptnode2 = null;
+                                        this.classList.remove('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.remove('active');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    } else {
+                                        if (dialog.currentcaptnode2) {
+                                            dialog.currentcaptnode2.classList.remove('thundertext');
+                                            if (dialog.currentcaptnode2.touchlink) {
+                                                dialog.currentcaptnode2.touchlink.classList.remove('active');
+                                            }
+                                        }
+                                        dialog.currentcapt2 = this.link;
+                                        dialog.currentcaptnode2 = this;
+                                        this.classList.add('thundertext');
+                                        if (this.touchlink) {
+                                            this.touchlink.classList.add('active');
+                                        } else if (this.parentNode == newlined2) {
+                                            packsource.innerHTML = this.innerHTML;
+                                            packsource.classList.add('thundertext');
+                                        }
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                if (dialog.buttons[i].activate) {
+                                                    dialog.buttons[i].activate();
+                                                }
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    }
+                                }
+                                if (dialog.seperate) {
+                                    for (var i = 0; i < dialog.seperate.length; i++) {
+                                        if (!dialog.seperate[i].nextSibling.querySelector('.button:not(.nodisplay)')) {
+                                            dialog.seperate[i].style.display = 'none';
+                                            dialog.seperate[i].nextSibling.style.display = 'none';
+                                        } else {
+                                            dialog.seperate[i].style.display = '';
+                                            dialog.seperate[i].nextSibling.style.display = '';
+                                        }
+                                    }
+                                }
+                                if (filternode) {
+                                    if (filternode.querySelector('.active')) {
+                                        packsource.classList.add('thundertext');
+                                    } else {
+                                        packsource.classList.remove('thundertext');
+                                    }
+                                }
+                                if (e) e.stopPropagation();
+                            };
+                            for (var i = 0; i < namecapt.length; i++) {
+                                if (namecapt[i] == 'newline') {
+                                    newlined = document.createElement('div');
+                                    newlined.style.marginTop = '5px';
+                                    newlined.style.display = 'block';
+                                    if (get.is.phoneLayout()) {
+                                        newlined.style.fontSize = '32px';
+                                    } else {
+                                        newlined.style.fontSize = '22px';
+                                    }
+                                    newlined.style.textAlign = 'center';
+                                    node.appendChild(newlined);
+                                } else if (newlined) {
+                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius');
+                                    span.style.margin = '3px';
+                                    span.style.width = 'auto';
+                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
+                                    span.link = namecapt[i];
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                    newlined.appendChild(span);
+                                    node[namecapt[i]] = span;
+                                    if (namecapt[i] == '收藏') {
+                                        span._nature = 'fire';
+                                    } else {
+                                        span._nature = 'wood';
+                                    }
+                                } else {
+                                    var span = document.createElement('span');
+                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
+                                    span.link = namecapt[i];
+                                    span.alphabet = true;
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                    node.appendChild(span);
+                                }
+                            }
+                            if (!thisiscard) {
+                                var natures = ['water', 'soil', 'wood', 'metal'];
+                                var span = document.createElement('span');
+                                newlined.appendChild(span);
+                                span.style.margin = '8px';
+                                var clickGroup = function () {
+                                    if (_status.dragged) return;
+                                    if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
+                                        dialog.currentcapt2 = null;
+                                        dialog.currentcaptnode2.classList.remove('thundertext');
+                                        dialog.currentcaptnode2.inited = true;
+                                        dialog.currentcaptnode2 = null;
+                                    }
+                                    var node = this,
+                                        link = this.link;
+                                    if (node.classList.contains('thundertext')) {
+                                        dialog.currentgroup = null;
+                                        dialog.currentgroupnode = null;
+                                        node.classList.remove('thundertext');
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                dialog.buttons[i].classList.remove('nodisplay');
+                                            }
+                                        }
+                                    } else {
+                                        if (dialog.currentgroupnode) {
+                                            dialog.currentgroupnode.classList.remove('thundertext');
+                                        }
+                                        dialog.currentgroup = link;
+                                        dialog.currentgroupnode = node;
+                                        node.classList.add('thundertext');
+                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
+                                                dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup == 'double') {
+                                                if (dialog.buttons[i]._changeGroup) dialog.buttons[i].classList.remove('nodisplay');
+                                                else dialog.buttons[i].classList.add('nodisplay');
+                                            } else if (dialog.currentgroup == 'ye') {
+                                                if (dialog.buttons[i].group == 'ye') dialog.buttons[i].classList.remove('nodisplay');
+                                                else dialog.buttons[i].classList.add('nodisplay');
+                                            } else {
+                                                if (dialog.buttons[i]._changeGroup || dialog.buttons[i].group != dialog.currentgroup) {
+                                                    dialog.buttons[i].classList.add('nodisplay');
+                                                } else {
+                                                    dialog.buttons[i].classList.remove('nodisplay');
+                                                }
+                                            }
+                                        }
+                                    }
+                                };
+                                for (var i = 0; i < groups.length; i++) {
+                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
+                                    span.style.margin = '3px';
+                                    newlined.appendChild(span);
+                                    span.innerHTML = get.translation(groups[i]);
+                                    span.link = groups[i];
+                                    span._nature = natures[i];
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickGroup);
+                                }
+                                var span = document.createElement('span');
+                                newlined.appendChild(span);
+                                span.style.margin = '8px';
+                                packsource = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
+                                packsource.style.margin = '3px';
+                                newlined.appendChild(packsource);
+                                var filternode = null;
+                                var clickCaptNode = function (e) {
+                                    delete _status.filterCharacter;
+                                    ui.window.classList.remove('shortcutpaused');
+                                    filternode.delete();
+                                    filternode.classList.remove('shown');
+                                    clickCapt.call(this.link, e);
+                                };
+                                if (get.is.phoneLayout() && lib.config.filternode_button) {
+                                    newlined.style.marginTop = '';
+                                    packsource.innerHTML = '筛选';
+                                    filternode = ui.create.div('.popup-container.filter-character.modenopause');
+                                    ui.create.div(filternode);
+                                    filternode.listen(function (e) {
+                                        if (this.classList.contains('removing')) return;
+                                        delete _status.filterCharacter;
+                                        ui.window.classList.remove('shortcutpaused');
+                                        this.delete();
+                                        this.classList.remove('shown');
+                                        e.stopPropagation();
+                                    });
+                                    for (var i = 0; i < node.childElementCount; i++) {
+                                        if (node.childNodes[i].tagName.toLowerCase() == 'span') {
+                                            node.childNodes[i].style.display = 'none';
+                                            node.childNodes[i].touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large.capt', node.childNodes[i].innerHTML);
+                                            node.childNodes[i].touchlink.link = node.childNodes[i];
+                                        }
+                                    }
+                                    ui.create.node('br', filternode.firstChild);
+                                } else {
+                                    if (onlypack) {
+                                        packsource.onlypack = true;
+                                        packsource.innerHTML = get.translation(onlypack + '_character_config');
+                                        packsource.style.display = 'none';
+                                        packsource.previousSibling.style.display = 'none';
+                                    } else {
+                                        packsource.innerHTML = '武将包';
+                                    }
+                                }
+                                newlined2 = document.createElement('div');
+                                newlined2.style.marginTop = '5px';
+                                newlined2.style.display = 'none';
+                                newlined2.style.fontFamily = 'xinwei';
+                                newlined2.classList.add('pointernode');
+                                if (get.is.phoneLayout()) {
+                                    newlined2.style.fontSize = '32px';
+                                } else {
+                                    newlined2.style.fontSize = '22px';
+                                }
+                                newlined2.style.textAlign = 'center';
+                                node.appendChild(newlined2);
+                                packsource.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
+                                    if (packsource.onlypack) return;
+                                    if (_status.dragged) return;
+                                    if (get.is.phoneLayout() && lib.config.filternode_button && filternode) {
+                                        _status.filterCharacter = true;
+                                        ui.window.classList.add('shortcutpaused');
+                                        ui.window.appendChild(filternode);
+                                        ui.refresh(filternode);
+                                        filternode.classList.add('shown');
+                                        var dh = filternode.offsetHeight - filternode.firstChild.offsetHeight;
+                                        if (dh > 0) {
+                                            filternode.firstChild.style.top = dh / 2 + 'px';
+                                        } else {
+                                            filternode.firstChild.style.top = '';
+                                        }
+                                    } else {
+                                        if (newlined2.style.display == 'none') {
+                                            newlined2.style.display = 'block';
+                                        } else {
+                                            newlined2.style.display = 'none';
+                                        }
+                                    }
+                                });
+                                var packlist = [];
+                                for (var i = 0; i < lib.config.all.characters.length; i++) {
+                                    if (!lib.config.characters.includes(lib.config.all.characters[i])) continue;
+                                    packlist.push(lib.config.all.characters[i]);
+                                }
+                                for (var i in lib.characterPack) {
+                                    if (lib.config.characters.includes(i) && !lib.config.all.characters.includes(i)) {
+                                        packlist.push(i);
+                                    }
+                                }
+                                for (var i = 0; i < packlist.length; i++) {
+                                    var span = document.createElement('div');
+                                    span.style.display = 'inline-block';
+                                    span.style.width = 'auto';
+                                    span.style.margin = '5px';
+                                    if (get.is.phoneLayout()) {
+                                        span.style.fontSize = '32px';
+                                    } else {
+                                        span.style.fontSize = '22px';
+                                    }
+                                    span.innerHTML = lib.translate[packlist[i] + '_character_config'];
+                                    span.link = packlist[i];
+                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                    newlined2.appendChild(span);
+                                    if (filternode && !onlypack) {
+                                        span.touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large', span.innerHTML);
+                                        span.touchlink.link = span;
+                                    }
+                                }
+                            }
+                            var groupSort;
+                            if (thisiscard) {
+                                groupSort = function (name) {
+                                    var type = lib.card[name[2]].type;
+                                    if (lib.cardType[type]) {
+                                        return lib.cardType[type];
+                                    }
+                                    switch (type) {
+                                        case 'basic':
+                                            return 0;
+                                        case 'chess':
+                                            return 1.5;
+                                        case 'trick':
+                                            return 2;
+                                        case 'delay':
+                                            return 3;
+                                        case 'equip':
+                                            return 4;
+                                        case 'zhenfa':
+                                            return 5;
+                                        default:
+                                            return 6;
+                                    }
+                                };
+                                list.sort(function (a, b) {
+                                    var del = groupSort(a) - groupSort(b);
+                                    if (del != 0) return del;
+                                    var aa = a,
+                                        bb = b;
+                                    if (a.includes('_')) {
+                                        a = a.slice(a.lastIndexOf('_') + 1);
+                                    }
+                                    if (b.includes('_')) {
+                                        b = b.slice(b.lastIndexOf('_') + 1);
+                                    }
+                                    if (a != b) {
+                                        return a > b ? 1 : -1;
+                                    }
+                                    return aa > bb ? 1 : -1;
+                                });
+                            } else {
+                                list.sort(lib.sort.character);
+                            }
+                            dialog = ui.create.dialog('hidden');
+                            dialog.classList.add('noupdate');
+                            dialog.classList.add('scroll1');
+                            dialog.classList.add('scroll2');
+                            dialog.classList.add('scroll3');
+                            dialog.addEventListener(lib.config.touchscreen ? 'touchend' : 'mouseup', function () {
+                                _status.clicked2 = true;
+                            });
+                            if (heightset) {
+                                dialog.style.height = (game.layout == 'long2' || game.layout == 'nova' ? 380 : 350) + 'px';
+                                dialog._scrollset = true;
+                            }
+                            dialog.getCurrentCapt = function (link, capt, noalph) {
+                                var currentcapt = noalph ? this.currentcapt2 : this.currentcapt;
+                                if (this.seperatelist && noalph) {
+                                    if (this.seperatelist[currentcapt].includes(link)) return capt;
+                                    return null;
+                                }
+                                if (lib.characterDialogGroup[currentcapt]) {
+                                    return lib.characterDialogGroup[currentcapt](link, capt);
+                                }
+                                if (lib.characterPack[currentcapt]) {
+                                    if (lib.characterPack[currentcapt][link]) {
+                                        return capt;
+                                    }
+                                    return null;
+                                }
+                                return this.currentcapt;
+                            };
+                            if (str) {
+                                dialog.add(str);
+                            }
+                            dialog.add(node);
+                            if (thisiscard) {
+                                if (seperate) {
+                                    seperate = seperate(list);
+                                    dialog.seperate = [];
+                                    dialog.seperatelist = seperate.list;
+                                    if (dialog.seperatelist) {
+                                        newlined = document.createElement('div');
+                                        newlined.style.marginTop = '5px';
+                                        newlined.style.display = 'block';
+                                        newlined.style.fontFamily = 'xinwei';
+                                        if (get.is.phoneLayout()) {
+                                            newlined.style.fontSize = '32px';
+                                        } else {
+                                            newlined.style.fontSize = '22px';
+                                        }
+                                        newlined.style.textAlign = 'center';
+                                        node.appendChild(newlined);
+                                        for (var i in dialog.seperatelist) {
+                                            var span = document.createElement('span');
+                                            span.style.margin = '3px';
+                                            span.innerHTML = i;
+                                            span.link = i;
+                                            span.seperate = true;
+                                            span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
+                                            newlined.appendChild(span);
+                                        }
+                                    }
+                                    for (var i in seperate) {
+                                        if (i == 'list') continue;
+                                        var link = '';
+                                        var linkcontent = seperate[i];
+                                        if (i.includes('_link:')) {
+                                            link = i.slice(i.indexOf('_link:') + 6);
+                                            i = i.slice(0, i.indexOf('_link:'));
+                                        }
+                                        var nodesep = dialog.add(i);
+                                        nodesep.link = link;
+                                        dialog.seperate.push(nodesep);
+                                        dialog.add([linkcontent, 'vcard'], noclick);
+                                    }
+                                } else {
+                                    dialog.add([list, 'vcard'], noclick);
+                                }
+                            } else {
+                                if (precharacter) {
+                                    dialog.add([list, 'precharacter'], noclick);
+                                } else if (characterx) {
+                                    dialog.add([list, 'characterx'], noclick);
+                                } else {
+                                    dialog.add([list, 'character'], noclick);
+                                }
+                            }
+                            dialog.add(ui.create.div('.placeholder'));
+                            for (var i = 0; i < dialog.buttons.length; i++) {
+                                if (thisiscard) {
+                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link[2]);
+                                } else {
+                                    dialog.buttons[i].group = lib.character[dialog.buttons[i].link][1];
+                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link);
+                                }
+                            }
+                            if (!expandall) {
+                                if (!thisiscard && (lib.characterDialogGroup[lib.config.character_dialog_tool] || lib.config.character_dialog_tool == '自创')) {
+                                    clickCapt.call(node[lib.config.character_dialog_tool]);
+                                }
+                            }
+                            //仅仅下面是新加的,by Curpond
+                            let container = dialog.querySelector('.content-container>.content');
+                            let Searcher = ui.create.div('.searcher.caption');
+                            let input = document.createElement('input');
+                            input.style.textAlign = 'center';
+                            input.style.border = 'solid 2px #294510';
+                            input.style.borderRadius = '6px';
+                            input.style.fontWeight = 'bold';
+                            input.style.fontSize = '21px';
+                            let find = ui.create.button(['find', '搜索'], 'tdnodes');
+                            find.style.display = 'inline';
+                            let clickfind = function (e) {
+                                e.stopPropagation();
+                                let value = input.value;
+                                if (value == '') {
+                                    game.alert('搜索不能为空');
+                                    input.focus();
+                                    return;
+                                }
+                                let list = [];
+                                for (let btn of dialog.buttons) {
+                                    if (new RegExp(value, 'g').test(get.translation(btn.link))) {
+                                        btn.classList.remove('nodisplay');
+                                    } else {
+                                        btn.classList.add('nodisplay');
+                                    }
+                                }
+                            };
+                            input.addEventListener('keyup', (e) => {
+                                if (e.key == 'Enter') clickfind(e);
+                            });
+                            find.listen(clickfind);
+                            Searcher.appendChild(input);
+                            Searcher.appendChild(find);
+                            container.prepend(Searcher);
+                            return dialog;
+                        };
+                    },
+                    set() { },
+                }); //选将列表修改
+            } //武将全部可选
+        },
         precontent() {
             const numfunc = function () {
                 if (!lib.number) {
@@ -7267,961 +8222,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 lib.translate.火灵月影_card_config = '火灵月影';
                 return QQQ;
             });
-        },
-        content(config, pack) {
-            get.vcardInfo = function (card) { }; //卡牌storage里面存了DOM元素会循环引用导致不能JSON.stringify
-            game.addGroup('仙', `<img src="extension/火灵月影/other/xian.png"width="30"height="30">`, '仙', {
-                color: ' #28e3ce',
-                image: 'ext:火灵月影/other/xian.png',
-            });
-            game.addNature('snow', '雪', {
-                linked: true,
-                order: 1000,
-            }); //添加杀的属性
-            game.addNature('blood', '血', {
-                linked: true,
-                order: 1000,
-            }); //添加杀的属性
-            game.addNature('poison', '毒', {
-                linked: true,
-                order: 1000,
-            }); //添加杀的属性
-            game.addNature('gold', '金', {
-                linked: true,
-                order: 1000,
-            }); //添加杀的属性
-            game.addNature('water', '水', {
-                linked: true,
-                order: 1000,
-            }); //添加杀的属性
-            game.addNature('ScarletRot', '猩红腐败', {
-                linked: true,
-                order: 1000,
-            }); //添加杀的属性
-            for (const nature of Array.from(lib.nature.keys())) {
-                lib.card.sha.ai.tag[nature + 'Damage'] = function (card) {
-                    if (game.hasNature(card, nature)) {
-                        return 1;
-                    }
-                };
-                lib.card.sha.nature.add(nature);
-            }
-            lib.skill.bosshp = {
-                init(player) {
-                    const info = lib.character[player.name];
-                    let maxhp = Math.max(info.maxHp, player.maxHp);
-                    Reflect.defineProperty(player, 'maxHp', {
-                        get() {
-                            return maxhp;
-                        },
-                        set(value) {
-                            if (value > maxhp) {
-                                maxhp = value;
-                            }
-                        },
-                    }); //扣减体力上限抗性
-                    let qhp = Math.max(info.hp, player.hp);
-                    Reflect.defineProperty(player, 'hp', {
-                        get() {
-                            return qhp;
-                        },
-                        set(value) {
-                            if (value > qhp) {
-                                qhp = value;
-                            } else {
-                                if (player.success) {
-                                    qhp = value;
-                                }
-                            }
-                        },
-                    });
-                    Reflect.defineProperty(player, 'skipList', {
-                        get() {
-                            return [];
-                        },
-                        set() { },
-                    });
-                },
-                trigger: {
-                    player: ['damageEnd'],
-                },
-                popup: false,
-                firstDo: true,
-                forced: true,
-                charlotte: true,
-                fixed: true,
-                kangxing: true,
-                filter(event, player) {
-                    return event.num > 0;
-                },
-                async content(event, trigger, player) {
-                    player.success = true;
-                    player.hp = player.hp - trigger.num;
-                    player.update();
-                    player.success = false;
-                },
-            }; // 挂的主技能被封了也会跟着被封
-            lib.skill.bossfinish = {
-                trigger: {
-                    source: ['damageBefore'],
-                    player: ['useCardBefore', 'phaseBefore', 'phaseDrawBefore', 'phaseUseBefore'],
-                },
-                popup: false,
-                firstDo: true,
-                forced: true,
-                async content(event, trigger, player) {
-                    if (['phaseUse', 'damage'].includes(trigger.name)) {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 5;
-                            },
-                            set() { },
-                        });
-                        let damage = trigger.num;
-                        Reflect.defineProperty(trigger, 'num', {
-                            get() {
-                                return damage;
-                            },
-                            set(value) {
-                                if (value > damage) {
-                                    damage = value;
-                                }
-                            },
-                        });
-                        const npc = trigger.player;
-                        Reflect.defineProperty(trigger, 'player', {
-                            get() {
-                                return npc;
-                            },
-                            set() { },
-                        });
-                    }
-                    if (trigger.name == 'useCard') {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 16;
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'excluded', {
-                            get() {
-                                return [];
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'all_excluded', {
-                            get() {
-                                return false;
-                            },
-                            set() { },
-                        });
-                        if (get.tag(trigger.card, 'damage')) {
-                            Reflect.defineProperty(trigger, 'targets', {
-                                get() {
-                                    return player.getEnemies();
-                                },
-                                set() { },
-                            });
-                        } //用牌击穿
-                    }
-                    if (trigger.name == 'phase') {
-                        Reflect.defineProperty(trigger, 'finished', {
-                            get() {
-                                return trigger.step > 12;
-                            },
-                            set() { },
-                        });
-                        Reflect.defineProperty(trigger, 'player', {
-                            get() {
-                                return player;
-                            },
-                            set() { },
-                        });
-                    }
-                },
-            };
-            lib.translate.bosshp = 'boss抗性';
-            lib.translate.bosshp_info = '你的体力上限不会减少,免疫体力调整与体流';
-            lib.translate.bossfinish = 'boss抗性';
-            lib.translate.bossfinish_info = '你的阶段与回合不会被跳过,你造成的伤害不能被减免,你使用的牌不能被无效且伤害牌指定所有敌方角色';
-            if (lib.boss) {
-                for (const i of HL.boss) {
-                    lib.boss[i] = {
-                        chongzheng: false, //所有人死后几轮复活,填0不会复活//boss不会自动添加重整
-                        checkResult(player) {
-                            if (player == game.boss && player.hp > 0) {
-                                return false;
-                            }
-                        },
-                        init() {
-                            game.nkangxing(game.boss, game.boss.name);
-                            game.skangxing(game.boss);
-                            game.boss.bosskangxing = true;
-                        },
-                    };
-                }
-                lib.skill._HL_ws_boss = {
-                    trigger: {
-                        player: 'dieEnd',
-                    },
-                    forced: true,
-                    forceDie: true,
-                    mode: ['boss'],
-                    filter(event, player) {
-                        return HL.HL_ws_boss?.boss.every((q) => !game.players.includes(q)) && HL.HL_ws_boss.num < 4;
-                    },
-                    async content(event, trigger, player) {
-                        HL.HL_ws_boss.boss = [];
-                        HL.HL_ws_boss.num++;
-                        const list = HL.HL_ws_boss.name.randomGets(HL.HL_ws_boss.num);
-                        let first;
-                        for (const name of list) {
-                            let bossx;
-                            if (!first) {
-                                first = true;
-                                bossx = game.changeBossQ(name);
-                            } else {
-                                bossx = game.boss.addFellow(name);
-                            }
-                            HL.HL_ws_boss.boss.add(bossx);
-                            bossx.skills = [];
-                            const skills = lib.character[name].skills.slice(0, HL.HL_ws_boss.num);
-                            if (lib.config.extension_火灵月影_lianyu) {
-                                skills.add(lib.character[name].skills.slice(-1));
-                            }
-                            game.nkangxing(bossx, name);
-                            game.skangxing(bossx, skills);
-                            bossx.bosskangxing = true;
-                        }
-                    },
-                };
-                lib.boss.HL_ws_boss = {
-                    chongzheng: false,
-                    checkResult(player) {
-                        if (HL.HL_ws_boss.num < 4 || HL.HL_ws_boss.boss.some((q) => game.players.includes(q))) {
-                            if (player == game.boss) {
-                                return false;
-                            }
-                        } else {
-                            game.checkResult();
-                        }
-                    },
-                    init() {
-                        HL.HL_ws_boss = {
-                            num: 1,
-                            name: ['HL_liru', 'HL_jiaxu', 'HL_huaxiong', 'HL_lvbu'],
-                            boss: [game.boss],
-                        };
-                        const name = HL.HL_ws_boss.name.randomGet();
-                        game.boss.init(name);
-                        game.boss.skills = [];
-                        const skills = lib.character[name].skills.slice(0, HL.HL_ws_boss.num);
-                        if (lib.config.extension_火灵月影_lianyu) {
-                            skills.add(lib.character[name].skills.slice(-1));
-                        }
-                        game.nkangxing(game.boss, name);
-                        game.skangxing(game.boss, skills);
-                        game.boss.bosskangxing = true;
-                    },
-                };
-                lib.skill._HL_libai_boss = {
-                    trigger: {
-                        player: ['dieEnd'],
-                    },
-                    forced: true,
-                    forceDie: true,
-                    mode: ['boss'],
-                    filter(event, player) {
-                        return HL.HL_libai_boss && HL.HL_libai_boss < 4 && game.boss == player;
-                    },
-                    async content(event, trigger, player) {
-                        HL.HL_libai_boss++;
-                        const name = `HL_libai${HL.HL_libai_boss}`;
-                        const boss = game.changeBossQ(name);
-                        game.nkangxing(boss, name);
-                        game.skangxing(boss);
-                        boss.bosskangxing = true;
-                        const evt = _status.event.getParent('phase', true);
-                        if (evt) {
-                            evt.finish();
-                        }
-                        boss.phase();
-                    },
-                };
-                lib.boss.HL_libai_boss = {
-                    chongzheng: false,
-                    checkResult(player) {
-                        if (player == game.boss && game.boss.name != 'HL_libai4') {
-                            return false;
-                        }
-                    },
-                    init() {
-                        HL.HL_libai_boss = 1;
-                        game.boss.init('HL_libai1');
-                        game.nkangxing(game.boss, 'HL_libai1');
-                        game.skangxing(game.boss);
-                        game.boss.bosskangxing = true;
-                    },
-                };
-            }
-            if (lib.config.extension_火灵月影_关闭本体BOSS) {
-                for (const i of ['boss_hundun', 'boss_qiongqi', 'boss_taotie', 'boss_taowu', 'boss_zhuyin', 'boss_xiangliu', 'boss_zhuyan', 'boss_bifang', 'boss_yingzhao', 'boss_qingmushilian', 'boss_qinglong', 'boss_mushengoumang', 'boss_shujing', 'boss_taihao', 'boss_chiyanshilian', 'boss_zhuque', 'boss_huoshenzhurong', 'boss_yanling', 'boss_yandi', 'boss_baimangshilian', 'boss_baihu', 'boss_jinshenrushou', 'boss_mingxingzhu', 'boss_shaohao', 'boss_xuanlinshilian', 'boss_xuanwu', 'boss_shuishengonggong', 'boss_shuishenxuanming', 'boss_zhuanxu', 'boss_zhuoguiquxie', 'boss_nianshou_heti', 'boss_nianshou_jingjue', 'boss_nianshou_renxing', 'boss_nianshou_ruizhi', 'boss_nianshou_baonu', 'boss_baiwuchang', 'boss_heiwuchang', 'boss_luocha', 'boss_yecha', 'boss_niutou', 'boss_mamian', 'boss_chi', 'boss_mo', 'boss_wang', 'boss_liang', 'boss_qinguangwang', 'boss_chujiangwang', 'boss_songdiwang', 'boss_wuguanwang', 'boss_yanluowang', 'boss_bianchengwang', 'boss_taishanwang', 'boss_dushiwang', 'boss_pingdengwang', 'boss_zhuanlunwang', 'boss_mengpo', 'boss_dizangwang', 'boss_lvbu1', 'boss_lvbu2', 'boss_lvbu3', 'boss_caocao', 'boss_guojia', 'boss_zhangchunhua', 'boss_zhenji', 'boss_liubei', 'boss_zhugeliang', 'boss_huangyueying', 'boss_pangtong', 'boss_zhouyu', 'boss_caiwenji', 'boss_zhangjiao', 'boss_zuoci', 'boss_diaochan', 'boss_huatuo', 'boss_dongzhuo', 'boss_sunce']) {
-                    lib.config.mode_config.boss[`${i}_boss_config`] = false;
-                }
-                game.saveConfig(`mode_config`, lib.config.mode_config);
-            }
-            if (lib.config.extension_火灵月影_文字闪烁) {
-                const style = document.createElement('style');
-                style.innerHTML = '@keyframes QQQ{';
-                for (var i = 1; i <= 20; i++) {
-                    let rand1 = Math.floor(Math.random() * 255),
-                        rand2 = Math.floor(Math.random() * 255),
-                        rand3 = Math.floor(Math.random() * 255);
-                    style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
-                }
-                style.innerHTML += '}';
-                document.head.appendChild(style);
-            }
-            if (lib.config.extension_火灵月影_武将全部可选) {
-                Reflect.defineProperty(lib.filter, 'characterDisabled', {
-                    get: () =>
-                        function (i) {
-                            return !lib.character[i];
-                        },
-                    set() { },
-                }); //取消禁将
-                lib.filter.characterDisabled2 = function (i) {
-                    return !lib.character[i];
-                }; //取消禁将
-                get.gainableSkills = function (func, player) {
-                    var list = [];
-                    for (var i in lib.character) {
-                        for (var j = 0; j < lib.character[i][3].length; j++) {
-                            list.add(lib.character[i][3][j]);
-                        }
-                    }
-                    return list;
-                }; //BOSS选将
-                get.gainableSkillsName = function (name, func) {
-                    var list = [];
-                    if (name && lib.character[name]) {
-                        for (var j = 0; j < lib.character[name][3].length; j++) {
-                            list.add(lib.character[name][3][j]);
-                        }
-                    }
-                    return list;
-                }; //BOSS选将
-                Reflect.defineProperty(ui.create, 'characterDialog', {
-                    get() {
-                        return function () {
-                            var filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
-                            for (var i = 0; i < arguments.length; i++) {
-                                if (arguments[i] === 'thisiscard') {
-                                    thisiscard = true;
-                                } else if (arguments[i] === 'expandall') {
-                                    expandall = true;
-                                } else if (arguments[i] === 'heightset') {
-                                    heightset = true;
-                                } else if (arguments[i] == 'precharacter') {
-                                    precharacter = true;
-                                } else if (arguments[i] == 'characterx') {
-                                    characterx = true;
-                                } else if (typeof arguments[i] == 'string' && arguments[i].startsWith('onlypack:')) {
-                                    onlypack = arguments[i].slice(9);
-                                } else if (typeof arguments[i] == 'object' && typeof arguments[i].seperate == 'function') {
-                                    seperate = arguments[i].seperate;
-                                } else if (typeof arguments[i] === 'string') {
-                                    str = arguments[i];
-                                } else if (typeof arguments[i] === 'function') {
-                                    filter = arguments[i];
-                                } else if (typeof arguments[i] == 'boolean') {
-                                    noclick = arguments[i];
-                                }
-                            }
-                            var list = [];
-                            const groups = [];
-                            var dialog;
-                            var node = ui.create.div('.caption.pointerspan');
-                            if (get.is.phoneLayout()) {
-                                node.style.fontSize = '30px';
-                            }
-                            var namecapt = [];
-                            var getCapt = function (str) {
-                                var capt;
-                                if (str.indexOf('_') == -1) {
-                                    capt = str[0];
-                                } else {
-                                    capt = str[str.lastIndexOf('_') + 1];
-                                }
-                                capt = capt.toLowerCase();
-                                if (!/[a-z]/i.test(capt)) {
-                                    capt = '自定义';
-                                }
-                                return capt;
-                            };
-                            if (thisiscard) {
-                                for (var i in lib.card) {
-                                    if (!lib.translate[`${i}_info`]) continue;
-                                    if (filter && filter(i)) continue;
-                                    list.push(['', get.translation(lib.card[i].type), i]);
-                                    if (namecapt.indexOf(getCapt(i)) == -1) {
-                                        namecapt.push(getCapt(i));
-                                    }
-                                }
-                            } else {
-                                var groupnum = {};
-                                for (var i in lib.character) {
-                                    list.push(i);
-                                    if (get.is.double(i)) {
-                                        groups.add('double');
-                                    } else {
-                                        const Q = lib.character[i][1];
-                                        if (!groupnum[Q]) groupnum[Q] = 0;
-                                        groupnum[Q]++;
-                                        if (groupnum[Q] > 20) {
-                                            groups.add(lib.character[i][1]);
-                                        } //删除多余势力
-                                    }
-                                    if (namecapt.indexOf(getCapt(i)) == -1) {
-                                        namecapt.push(getCapt(i));
-                                    }
-                                }
-                            }
-                            namecapt.sort(function (a, b) {
-                                return a > b ? 1 : -1;
-                            });
-                            groups.sort(lib.sort.group);
-                            if (!thisiscard) {
-                                namecapt.remove('自定义');
-                                namecapt.push('newline');
-                                for (var i in lib.characterDialogGroup) {
-                                    namecapt.push(i);
-                                }
-                            }
-                            var newlined = false;
-                            var newlined2;
-                            var packsource;
-                            var clickCapt = function (e) {
-                                if (_status.dragged) return;
-                                if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
-                                    dialog.currentcapt2 = null;
-                                    dialog.currentcaptnode2.classList.remove('thundertext');
-                                    dialog.currentcaptnode2.inited = true;
-                                    dialog.currentcaptnode2 = null;
-                                }
-                                if (this.alphabet) {
-                                    if (this.classList.contains('thundertext')) {
-                                        dialog.currentcapt = null;
-                                        dialog.currentcaptnode = null;
-                                        this.classList.remove('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.remove('active');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    } else {
-                                        if (dialog.currentcaptnode) {
-                                            dialog.currentcaptnode.classList.remove('thundertext');
-                                            if (dialog.currentcaptnode.touchlink) {
-                                                dialog.currentcaptnode.touchlink.classList.remove('active');
-                                            }
-                                        }
-                                        dialog.currentcapt = this.link;
-                                        dialog.currentcaptnode = this;
-                                        this.classList.add('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.add('active');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if (newlined2) {
-                                        newlined2.style.display = 'none';
-                                        if (!packsource.onlypack) {
-                                            packsource.classList.remove('thundertext');
-                                            if (!get.is.phoneLayout() || !lib.config.filternode_button) {
-                                                packsource.innerHTML = '武将包';
-                                            }
-                                        }
-                                    }
-                                    if (this.classList.contains('thundertext')) {
-                                        dialog.currentcapt2 = null;
-                                        dialog.currentcaptnode2 = null;
-                                        this.classList.remove('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.remove('active');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    } else {
-                                        if (dialog.currentcaptnode2) {
-                                            dialog.currentcaptnode2.classList.remove('thundertext');
-                                            if (dialog.currentcaptnode2.touchlink) {
-                                                dialog.currentcaptnode2.touchlink.classList.remove('active');
-                                            }
-                                        }
-                                        dialog.currentcapt2 = this.link;
-                                        dialog.currentcaptnode2 = this;
-                                        this.classList.add('thundertext');
-                                        if (this.touchlink) {
-                                            this.touchlink.classList.add('active');
-                                        } else if (this.parentNode == newlined2) {
-                                            packsource.innerHTML = this.innerHTML;
-                                            packsource.classList.add('thundertext');
-                                        }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                if (dialog.buttons[i].activate) {
-                                                    dialog.buttons[i].activate();
-                                                }
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    }
-                                }
-                                if (dialog.seperate) {
-                                    for (var i = 0; i < dialog.seperate.length; i++) {
-                                        if (!dialog.seperate[i].nextSibling.querySelector('.button:not(.nodisplay)')) {
-                                            dialog.seperate[i].style.display = 'none';
-                                            dialog.seperate[i].nextSibling.style.display = 'none';
-                                        } else {
-                                            dialog.seperate[i].style.display = '';
-                                            dialog.seperate[i].nextSibling.style.display = '';
-                                        }
-                                    }
-                                }
-                                if (filternode) {
-                                    if (filternode.querySelector('.active')) {
-                                        packsource.classList.add('thundertext');
-                                    } else {
-                                        packsource.classList.remove('thundertext');
-                                    }
-                                }
-                                if (e) e.stopPropagation();
-                            };
-                            for (var i = 0; i < namecapt.length; i++) {
-                                if (namecapt[i] == 'newline') {
-                                    newlined = document.createElement('div');
-                                    newlined.style.marginTop = '5px';
-                                    newlined.style.display = 'block';
-                                    if (get.is.phoneLayout()) {
-                                        newlined.style.fontSize = '32px';
-                                    } else {
-                                        newlined.style.fontSize = '22px';
-                                    }
-                                    newlined.style.textAlign = 'center';
-                                    node.appendChild(newlined);
-                                } else if (newlined) {
-                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius');
-                                    span.style.margin = '3px';
-                                    span.style.width = 'auto';
-                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
-                                    span.link = namecapt[i];
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                    newlined.appendChild(span);
-                                    node[namecapt[i]] = span;
-                                    if (namecapt[i] == '收藏') {
-                                        span._nature = 'fire';
-                                    } else {
-                                        span._nature = 'wood';
-                                    }
-                                } else {
-                                    var span = document.createElement('span');
-                                    span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
-                                    span.link = namecapt[i];
-                                    span.alphabet = true;
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                    node.appendChild(span);
-                                }
-                            }
-                            if (!thisiscard) {
-                                var natures = ['water', 'soil', 'wood', 'metal'];
-                                var span = document.createElement('span');
-                                newlined.appendChild(span);
-                                span.style.margin = '8px';
-                                var clickGroup = function () {
-                                    if (_status.dragged) return;
-                                    if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
-                                        dialog.currentcapt2 = null;
-                                        dialog.currentcaptnode2.classList.remove('thundertext');
-                                        dialog.currentcaptnode2.inited = true;
-                                        dialog.currentcaptnode2 = null;
-                                    }
-                                    var node = this,
-                                        link = this.link;
-                                    if (node.classList.contains('thundertext')) {
-                                        dialog.currentgroup = null;
-                                        dialog.currentgroupnode = null;
-                                        node.classList.remove('thundertext');
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                dialog.buttons[i].classList.remove('nodisplay');
-                                            }
-                                        }
-                                    } else {
-                                        if (dialog.currentgroupnode) {
-                                            dialog.currentgroupnode.classList.remove('thundertext');
-                                        }
-                                        dialog.currentgroup = link;
-                                        dialog.currentgroupnode = node;
-                                        node.classList.add('thundertext');
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
-                                            if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
-                                                dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup == 'double') {
-                                                if (dialog.buttons[i]._changeGroup) dialog.buttons[i].classList.remove('nodisplay');
-                                                else dialog.buttons[i].classList.add('nodisplay');
-                                            } else if (dialog.currentgroup == 'ye') {
-                                                if (dialog.buttons[i].group == 'ye') dialog.buttons[i].classList.remove('nodisplay');
-                                                else dialog.buttons[i].classList.add('nodisplay');
-                                            } else {
-                                                if (dialog.buttons[i]._changeGroup || dialog.buttons[i].group != dialog.currentgroup) {
-                                                    dialog.buttons[i].classList.add('nodisplay');
-                                                } else {
-                                                    dialog.buttons[i].classList.remove('nodisplay');
-                                                }
-                                            }
-                                        }
-                                    }
-                                };
-                                for (var i = 0; i < groups.length; i++) {
-                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
-                                    span.style.margin = '3px';
-                                    newlined.appendChild(span);
-                                    span.innerHTML = get.translation(groups[i]);
-                                    span.link = groups[i];
-                                    span._nature = natures[i];
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickGroup);
-                                }
-                                var span = document.createElement('span');
-                                newlined.appendChild(span);
-                                span.style.margin = '8px';
-                                packsource = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
-                                packsource.style.margin = '3px';
-                                newlined.appendChild(packsource);
-                                var filternode = null;
-                                var clickCaptNode = function (e) {
-                                    delete _status.filterCharacter;
-                                    ui.window.classList.remove('shortcutpaused');
-                                    filternode.delete();
-                                    filternode.classList.remove('shown');
-                                    clickCapt.call(this.link, e);
-                                };
-                                if (get.is.phoneLayout() && lib.config.filternode_button) {
-                                    newlined.style.marginTop = '';
-                                    packsource.innerHTML = '筛选';
-                                    filternode = ui.create.div('.popup-container.filter-character.modenopause');
-                                    ui.create.div(filternode);
-                                    filternode.listen(function (e) {
-                                        if (this.classList.contains('removing')) return;
-                                        delete _status.filterCharacter;
-                                        ui.window.classList.remove('shortcutpaused');
-                                        this.delete();
-                                        this.classList.remove('shown');
-                                        e.stopPropagation();
-                                    });
-                                    for (var i = 0; i < node.childElementCount; i++) {
-                                        if (node.childNodes[i].tagName.toLowerCase() == 'span') {
-                                            node.childNodes[i].style.display = 'none';
-                                            node.childNodes[i].touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large.capt', node.childNodes[i].innerHTML);
-                                            node.childNodes[i].touchlink.link = node.childNodes[i];
-                                        }
-                                    }
-                                    ui.create.node('br', filternode.firstChild);
-                                } else {
-                                    if (onlypack) {
-                                        packsource.onlypack = true;
-                                        packsource.innerHTML = get.translation(onlypack + '_character_config');
-                                        packsource.style.display = 'none';
-                                        packsource.previousSibling.style.display = 'none';
-                                    } else {
-                                        packsource.innerHTML = '武将包';
-                                    }
-                                }
-                                newlined2 = document.createElement('div');
-                                newlined2.style.marginTop = '5px';
-                                newlined2.style.display = 'none';
-                                newlined2.style.fontFamily = 'xinwei';
-                                newlined2.classList.add('pointernode');
-                                if (get.is.phoneLayout()) {
-                                    newlined2.style.fontSize = '32px';
-                                } else {
-                                    newlined2.style.fontSize = '22px';
-                                }
-                                newlined2.style.textAlign = 'center';
-                                node.appendChild(newlined2);
-                                packsource.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                                    if (packsource.onlypack) return;
-                                    if (_status.dragged) return;
-                                    if (get.is.phoneLayout() && lib.config.filternode_button && filternode) {
-                                        _status.filterCharacter = true;
-                                        ui.window.classList.add('shortcutpaused');
-                                        ui.window.appendChild(filternode);
-                                        ui.refresh(filternode);
-                                        filternode.classList.add('shown');
-                                        var dh = filternode.offsetHeight - filternode.firstChild.offsetHeight;
-                                        if (dh > 0) {
-                                            filternode.firstChild.style.top = dh / 2 + 'px';
-                                        } else {
-                                            filternode.firstChild.style.top = '';
-                                        }
-                                    } else {
-                                        if (newlined2.style.display == 'none') {
-                                            newlined2.style.display = 'block';
-                                        } else {
-                                            newlined2.style.display = 'none';
-                                        }
-                                    }
-                                });
-                                var packlist = [];
-                                for (var i = 0; i < lib.config.all.characters.length; i++) {
-                                    if (!lib.config.characters.includes(lib.config.all.characters[i])) continue;
-                                    packlist.push(lib.config.all.characters[i]);
-                                }
-                                for (var i in lib.characterPack) {
-                                    if (lib.config.characters.includes(i) && !lib.config.all.characters.includes(i)) {
-                                        packlist.push(i);
-                                    }
-                                }
-                                for (var i = 0; i < packlist.length; i++) {
-                                    var span = document.createElement('div');
-                                    span.style.display = 'inline-block';
-                                    span.style.width = 'auto';
-                                    span.style.margin = '5px';
-                                    if (get.is.phoneLayout()) {
-                                        span.style.fontSize = '32px';
-                                    } else {
-                                        span.style.fontSize = '22px';
-                                    }
-                                    span.innerHTML = lib.translate[packlist[i] + '_character_config'];
-                                    span.link = packlist[i];
-                                    span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                    newlined2.appendChild(span);
-                                    if (filternode && !onlypack) {
-                                        span.touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large', span.innerHTML);
-                                        span.touchlink.link = span;
-                                    }
-                                }
-                            }
-                            var groupSort;
-                            if (thisiscard) {
-                                groupSort = function (name) {
-                                    var type = lib.card[name[2]].type;
-                                    if (lib.cardType[type]) {
-                                        return lib.cardType[type];
-                                    }
-                                    switch (type) {
-                                        case 'basic':
-                                            return 0;
-                                        case 'chess':
-                                            return 1.5;
-                                        case 'trick':
-                                            return 2;
-                                        case 'delay':
-                                            return 3;
-                                        case 'equip':
-                                            return 4;
-                                        case 'zhenfa':
-                                            return 5;
-                                        default:
-                                            return 6;
-                                    }
-                                };
-                                list.sort(function (a, b) {
-                                    var del = groupSort(a) - groupSort(b);
-                                    if (del != 0) return del;
-                                    var aa = a,
-                                        bb = b;
-                                    if (a.includes('_')) {
-                                        a = a.slice(a.lastIndexOf('_') + 1);
-                                    }
-                                    if (b.includes('_')) {
-                                        b = b.slice(b.lastIndexOf('_') + 1);
-                                    }
-                                    if (a != b) {
-                                        return a > b ? 1 : -1;
-                                    }
-                                    return aa > bb ? 1 : -1;
-                                });
-                            } else {
-                                list.sort(lib.sort.character);
-                            }
-                            dialog = ui.create.dialog('hidden');
-                            dialog.classList.add('noupdate');
-                            dialog.classList.add('scroll1');
-                            dialog.classList.add('scroll2');
-                            dialog.classList.add('scroll3');
-                            dialog.addEventListener(lib.config.touchscreen ? 'touchend' : 'mouseup', function () {
-                                _status.clicked2 = true;
-                            });
-                            if (heightset) {
-                                dialog.style.height = (game.layout == 'long2' || game.layout == 'nova' ? 380 : 350) + 'px';
-                                dialog._scrollset = true;
-                            }
-                            dialog.getCurrentCapt = function (link, capt, noalph) {
-                                var currentcapt = noalph ? this.currentcapt2 : this.currentcapt;
-                                if (this.seperatelist && noalph) {
-                                    if (this.seperatelist[currentcapt].includes(link)) return capt;
-                                    return null;
-                                }
-                                if (lib.characterDialogGroup[currentcapt]) {
-                                    return lib.characterDialogGroup[currentcapt](link, capt);
-                                }
-                                if (lib.characterPack[currentcapt]) {
-                                    if (lib.characterPack[currentcapt][link]) {
-                                        return capt;
-                                    }
-                                    return null;
-                                }
-                                return this.currentcapt;
-                            };
-                            if (str) {
-                                dialog.add(str);
-                            }
-                            dialog.add(node);
-                            if (thisiscard) {
-                                if (seperate) {
-                                    seperate = seperate(list);
-                                    dialog.seperate = [];
-                                    dialog.seperatelist = seperate.list;
-                                    if (dialog.seperatelist) {
-                                        newlined = document.createElement('div');
-                                        newlined.style.marginTop = '5px';
-                                        newlined.style.display = 'block';
-                                        newlined.style.fontFamily = 'xinwei';
-                                        if (get.is.phoneLayout()) {
-                                            newlined.style.fontSize = '32px';
-                                        } else {
-                                            newlined.style.fontSize = '22px';
-                                        }
-                                        newlined.style.textAlign = 'center';
-                                        node.appendChild(newlined);
-                                        for (var i in dialog.seperatelist) {
-                                            var span = document.createElement('span');
-                                            span.style.margin = '3px';
-                                            span.innerHTML = i;
-                                            span.link = i;
-                                            span.seperate = true;
-                                            span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickCapt);
-                                            newlined.appendChild(span);
-                                        }
-                                    }
-                                    for (var i in seperate) {
-                                        if (i == 'list') continue;
-                                        var link = '';
-                                        var linkcontent = seperate[i];
-                                        if (i.includes('_link:')) {
-                                            link = i.slice(i.indexOf('_link:') + 6);
-                                            i = i.slice(0, i.indexOf('_link:'));
-                                        }
-                                        var nodesep = dialog.add(i);
-                                        nodesep.link = link;
-                                        dialog.seperate.push(nodesep);
-                                        dialog.add([linkcontent, 'vcard'], noclick);
-                                    }
-                                } else {
-                                    dialog.add([list, 'vcard'], noclick);
-                                }
-                            } else {
-                                if (precharacter) {
-                                    dialog.add([list, 'precharacter'], noclick);
-                                } else if (characterx) {
-                                    dialog.add([list, 'characterx'], noclick);
-                                } else {
-                                    dialog.add([list, 'character'], noclick);
-                                }
-                            }
-                            dialog.add(ui.create.div('.placeholder'));
-                            for (var i = 0; i < dialog.buttons.length; i++) {
-                                if (thisiscard) {
-                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link[2]);
-                                } else {
-                                    dialog.buttons[i].group = lib.character[dialog.buttons[i].link][1];
-                                    dialog.buttons[i].capt = getCapt(dialog.buttons[i].link);
-                                }
-                            }
-                            if (!expandall) {
-                                if (!thisiscard && (lib.characterDialogGroup[lib.config.character_dialog_tool] || lib.config.character_dialog_tool == '自创')) {
-                                    clickCapt.call(node[lib.config.character_dialog_tool]);
-                                }
-                            }
-                            //仅仅下面是新加的,by Curpond
-                            let container = dialog.querySelector('.content-container>.content');
-                            let Searcher = ui.create.div('.searcher.caption');
-                            let input = document.createElement('input');
-                            input.style.textAlign = 'center';
-                            input.style.border = 'solid 2px #294510';
-                            input.style.borderRadius = '6px';
-                            input.style.fontWeight = 'bold';
-                            input.style.fontSize = '21px';
-                            let find = ui.create.button(['find', '搜索'], 'tdnodes');
-                            find.style.display = 'inline';
-                            let clickfind = function (e) {
-                                e.stopPropagation();
-                                let value = input.value;
-                                if (value == '') {
-                                    game.alert('搜索不能为空');
-                                    input.focus();
-                                    return;
-                                }
-                                let list = [];
-                                for (let btn of dialog.buttons) {
-                                    if (new RegExp(value, 'g').test(get.translation(btn.link))) {
-                                        btn.classList.remove('nodisplay');
-                                    } else {
-                                        btn.classList.add('nodisplay');
-                                    }
-                                }
-                            };
-                            input.addEventListener('keyup', (e) => {
-                                if (e.key == 'Enter') clickfind(e);
-                            });
-                            find.listen(clickfind);
-                            Searcher.appendChild(input);
-                            Searcher.appendChild(find);
-                            container.prepend(Searcher);
-                            return dialog;
-                        };
-                    },
-                    set() { },
-                }); //选将列表修改
-            } //武将全部可选
         },
         config: {
             群聊: {
