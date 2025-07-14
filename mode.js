@@ -633,8 +633,8 @@ game.addMode(
 lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
 //—————————————————————————————————————————————————————————————————————————————山河图模式
 window.shanhe = {
+    // 初始页面 点将 城池选择 山河册 开始/继续战斗
     shanhetustart() {
-        // 主界面 山河册 选择城池 开始/继续战斗
         if (shanhe.beijing2) {
             shanhe.beijing2.remove();
         }
@@ -685,23 +685,12 @@ window.shanhe = {
         };
         shanhe.beijing1.appendChild(start);
         if (!shanhe.cur_xuanjiang) {
-            const xuanjiangkuang = document.createElement('div');
-            xuanjiangkuang.id = 'divQ';
-            shanhe.beijing1.appendChild(xuanjiangkuang);
-            const list = Object.keys(lib.character).randomGets(5);
-            for (const i of list) {
-                const touxiang = ui.create.button(i, 'character');
-                touxiang.classList.add('touxiangQ');
-                touxiang.onclick = function () {
-                    const touxiang = this;
-                    shanhe.cur_xuanjiang = touxiang.link;
-                    xuanjiangkuang.remove();
-                };
-                xuanjiangkuang.appendChild(touxiang);
-            }
+            shanhe.xuanjiang();
+        } else {
+            shanhe.dianjiang();
         }
     },
-    // 商店 关卡选择 战法调整 技能栏 卡牌栏 装备栏 挑战过的关卡变灰色
+    // 大厅页面 商店 关卡选择 战法调整 技能栏 卡牌栏 装备栏 挑战过的关卡变灰色
     chengchistart() {
         shanhe.beijing1.remove();
         shanhe.beijing2 = document.createElement('div');
@@ -792,6 +781,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 挑战过的城池变灰色
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
@@ -827,6 +817,43 @@ window.shanhe = {
         }
         shanhe.chengchistart();
     },
+    // 选择武将
+    xuanjiang() {
+        if (shanhe.xuanjiangkuang) {
+            shanhe.xuanjiangkuang.remove();
+        }
+        shanhe.xuanjiangkuang = document.createElement('div');
+        shanhe.xuanjiangkuang.className = 'xuanjiang';
+        shanhe.xuanjiangkuang.innerHTML = '请选择一个出战武将';
+        shanhe.beijing1.appendChild(shanhe.xuanjiangkuang);
+        const list = Object.keys(lib.character).randomGets(5);
+        for (const i of list) {
+            const touxiang = ui.create.button(i, 'character');
+            touxiang.classList.add('touxiangQ');
+            touxiang.onclick = function () {
+                const touxiang = this;
+                shanhe.cur_xuanjiang = touxiang.link;
+                shanhe.xuanjiangkuang.remove();
+                shanhe.dianjiang();
+            };
+            shanhe.xuanjiangkuang.appendChild(touxiang);
+        }
+    },
+    // 展示点将框
+    dianjiang() {
+        const dianjiang = document.createElement('div');
+        dianjiang.className = 'dianjiang';
+        dianjiang.innerHTML = '出战武将';
+        dianjiang.onclick = function () {
+            shanhe.xuanjiang();
+        };
+        shanhe.beijing1.appendChild(dianjiang);
+        const touxiang = document.createElement('div');
+        touxiang.style.backgroundImage = `url(${game.src(shanhe.cur_xuanjiang)})`;
+        touxiang.className = 'touxiangQ';
+        dianjiang.appendChild(touxiang);
+    },
+    // 可挑战城池 关卡 boss
     chengchi: {
         chengchi1: {
             guanka1: {
@@ -909,7 +936,6 @@ window.shanhe = {
 game.addMode(
     'shanhetu',
     {
-        // 点将 城池选择 挑战过的城池变灰色
         async start() {
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
