@@ -127,8 +127,8 @@ const kangxing1 = function () {
     const kplayers = [];
     const obj = {
         get players() {
-            if (!_status.gameStarted) {
-                return startplayers.filter((q) => q.playerid);// 乱斗挑战模式的ui.create.player例外
+            if (!_status.gameStarted && lib.config.mode != 'boss') {
+                return startplayers.filter((q) => q.playerid);// 乱斗/挑战模式的ui.create.player例外//挑战模式加入抗性过早,会强制玩家当boss
             } // 游戏没开始前,禁止即死
             return kplayers.filter((q) => {
                 if (!q) {
@@ -745,7 +745,7 @@ const kangxing2 = function () {
                 init(player) {
                     if (player == game.me) {
                         game.playAudio('../extension/火灵月影/audio/醉诗2.mp3');
-                        game.HL_VIDEO('HL_李白');
+                        game.HL_mp4('HL_李白');
                     } //李白动画
                 },
                 trigger: {
@@ -2404,6 +2404,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             } //武将全部可选
         },
         precontent() {
+            //—————————————————————————————————————————————————————————————————————————————数据操作相关自定义函数
             const numfunc = function () {
                 if (!lib.number) {
                     lib.number = [];
@@ -2451,88 +2452,91 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //深拷贝对象
             };
             numfunc();
-            HTMLDivElement.prototype.setBackgroundImage = function (src) {
-                if (Array.isArray(src)) {
-                    src = src[0];
-                }
-                if (src.includes('.mp4')) {
-                    this.style.backgroundImage = 'none';
-                    this.setBackgroundMp4(src);
-                } else {
-                    this.style.backgroundImage = `url(${src})`;
-                }
-                return this;
-            }; //引入mp4新逻辑
-            HTMLElement.prototype.setBackgroundMp4 = function (src) {
-                const video = document.createElement('video');
-                video.src = src;
-                video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
-                video.autoplay = true;
-                video.loop = true;
-                this.appendChild(video);
-                video.addEventListener('error', function () {
-                    video.remove();
-                });
-                return video;
-            }; //给父元素添加一个覆盖的背景mp4
-            HTMLElement.prototype.HL_BG = function (name) {
-                const src = `extension/火灵月影/mp4/${name}.mp4`;
-                const video = this.setBackgroundMp4(src);
-                return video;
-            }; //火灵月影背景mp4
-            game.HL_VIDEO = async function (name) {
-                return new Promise((resolve) => {
+            //—————————————————————————————————————————————————————————————————————————————播放视频与背景图片相关函数
+            const video = function () {
+                HTMLDivElement.prototype.setBackgroundImage = function (src) {
+                    if (Array.isArray(src)) {
+                        src = src[0];
+                    }
+                    if (src.includes('.mp4')) {
+                        this.style.backgroundImage = 'none';
+                        this.setBackgroundMp4(src);
+                    }
+                    else {
+                        this.style.backgroundImage = `url(${src})`;
+                    }
+                    return this;
+                }; //引入mp4新逻辑
+                HTMLElement.prototype.setBackgroundMp4 = function (src) {
                     const video = document.createElement('video');
-                    video.src = `extension/火灵月影/mp4/${name}.mp4`;
-                    video.style.cssText = 'z-index: 999; height: 100%; width: 100%; position: fixed; object-fit: cover; left: 0; right: 0; mix-blend-mode: screen; pointer-events: none;';
+                    video.src = src;
+                    video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
                     video.autoplay = true;
-                    video.loop = false;
-                    const backButton = document.createElement('div');
-                    backButton.innerHTML = '返回游戏'; //文字内容
-                    backButton.style.cssText = 'z-index: 999; position: absolute; bottom: 10px; right: 10px; color: red; font-size: 16px; padding: 5px 10px; background: rgba(0, 0, 0, 0.3);';
-                    backButton.onclick = function () {
-                        backButton.remove();
-                        video.remove();
-                        resolve();
-                    }; //设置返回按钮的点击事件
-                    document.body.appendChild(video); //document上面创建video元素之后不要立刻贴上,加一个延迟可以略过前面的播放框,配置越烂延迟越大
-                    document.body.appendChild(backButton);
+                    video.loop = true;
+                    this.appendChild(video);
                     video.addEventListener('error', function () {
-                        backButton.remove();
                         video.remove();
-                        resolve();
                     });
-                    video.addEventListener('ended', function () {
-                        backButton.remove();
-                        video.remove();
-                        resolve();
-                    });
-                });
-            }; //播放mp4
-            lib.init.css('extension/火灵月影/HL.css');//火灵月影专属CSS
-            lib.init.css('extension/火灵月影/QQQ.css');//通用CSS
-            game.src = function (name) {
-                let extimage = null,
-                    nameinfo = get.character(name),
-                    imgPrefixUrl;
-                if (nameinfo && nameinfo.trashBin) {
-                    for (const value of nameinfo.trashBin) {
-                        if (value.startsWith('img:')) {
-                            imgPrefixUrl = value.slice(4);
-                            break;
-                        } else if (value.startsWith('ext:')) {
-                            extimage = value;
-                            break;
-                        } else if (value.startsWith('character:')) {
-                            name = value.slice(10);
-                            break;
+                    return video;
+                }; //给父元素添加一个覆盖的背景mp4
+                game.src = function (name) {
+                    let extimage = null,
+                        nameinfo = get.character(name),
+                        imgPrefixUrl;
+                    if (nameinfo && nameinfo.trashBin) {
+                        for (const value of nameinfo.trashBin) {
+                            if (value.startsWith('img:')) {
+                                imgPrefixUrl = value.slice(4);
+                                break;
+                            } else if (value.startsWith('ext:')) {
+                                extimage = value;
+                                break;
+                            } else if (value.startsWith('character:')) {
+                                name = value.slice(10);
+                                break;
+                            }
                         }
                     }
-                }
-                if (imgPrefixUrl) return imgPrefixUrl;
-                else if (extimage) return extimage.replace(/^ext:/, 'extension/');
-                return `image/character/${name}.jpg`;
-            }; //获取武将名对应立绘路径
+                    if (imgPrefixUrl) return imgPrefixUrl;
+                    else if (extimage) return extimage.replace(/^ext:/, 'extension/');
+                    return `image/character/${name}.jpg`;
+                }; //获取武将名对应立绘路径
+                HTMLElement.prototype.HL_BG = function (name) {
+                    const src = `extension/火灵月影/mp4/${name}.mp4`;
+                    const video = this.setBackgroundMp4(src);
+                    return video;
+                }; //火灵月影背景mp4
+                game.HL_mp4 = async function (name) {
+                    return new Promise((resolve) => {
+                        const video = document.createElement('video');
+                        video.src = `extension/火灵月影/mp4/${name}.mp4`;
+                        video.style.cssText = 'z-index: 999; height: 100%; width: 100%; position: fixed; object-fit: cover; left: 0; right: 0; mix-blend-mode: screen; pointer-events: none;';
+                        video.autoplay = true;
+                        video.loop = false;
+                        const backButton = document.createElement('div');
+                        backButton.innerHTML = '返回游戏'; //文字内容
+                        backButton.style.cssText = 'z-index: 999; position: absolute; bottom: 10px; right: 10px; color: red; font-size: 16px; padding: 5px 10px; background: rgba(0, 0, 0, 0.3);';
+                        backButton.onclick = function () {
+                            backButton.remove();
+                            video.remove();
+                            resolve();
+                        }; //设置返回按钮的点击事件
+                        document.body.appendChild(video); //document上面创建video元素之后不要立刻贴上,加一个延迟可以略过前面的播放框,配置越烂延迟越大
+                        document.body.appendChild(backButton);
+                        video.addEventListener('error', function () {
+                            backButton.remove();
+                            video.remove();
+                            resolve();
+                        });
+                        video.addEventListener('ended', function () {
+                            backButton.remove();
+                            video.remove();
+                            resolve();
+                        });
+                    });
+                }; //播放mp4
+            };
+            video();
             //—————————————————————————————————————————————————————————————————————————————解构魔改本体函数
             const mogai = function () {
                 lib.element.player.dyingResult = async function () {
@@ -2778,6 +2782,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }; //真实伤害
             };
             mogai();
+            //—————————————————————————————————————————————————————————————————————————————视为转化虚拟牌相关自创函数
             const shiwei = function () {
                 lib.element.player.filterCardx = function (card, filter) {
                     if (typeof card == 'string') {
@@ -3023,6 +3028,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 player.storage[yinji] += 2;
                 player.addSkill(yinji);
             };
+            lib.init.css('extension/火灵月影/HL.css');//火灵月影专属CSS
+            lib.init.css('extension/火灵月影/QQQ.css');//通用CSS
             game.import('character', function (lib, game, ui, get, ai, _status) {
                 const QQQ = {
                     name: '火灵月影',
@@ -5641,7 +5648,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             async content(event, trigger, player) {
                                 if (Math.random() > 0.7) {
-                                    await game.HL_VIDEO(event.name);
+                                    await game.HL_mp4(event.name);
                                 }
                                 player.useCard({ name: 'huoshaolianying' }, player.getEnemies(), false);
                             },
@@ -5663,7 +5670,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 await player.addCharge(trigger.num);
                                 if (player.countCharge() > 8) {
                                     if (Math.random() > 0.7) {
-                                        await game.HL_VIDEO(event.name);
+                                        await game.HL_mp4(event.name);
                                     }
                                     player.removeCharge(9);
                                     for (const npc of player.getEnemies()) {
@@ -5688,7 +5695,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_A_zhuan');
-                                await game.HL_VIDEO(event.name);
+                                await game.HL_mp4(event.name);
                                 player.qreinit('HL_zhinukuanglei');
                                 const remove = ['HL_A_ji', 'HL_A_heng', 'HL_A_nu', 'HL_A_zhuan'];
                                 player.removeSkill(remove);
@@ -5887,7 +5894,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             async content(event, trigger, player) {
                                 if (Math.random() > 0.7) {
-                                    await game.HL_VIDEO(event.name);
+                                    await game.HL_mp4(event.name);
                                 }
                                 player.useCard({ name: 'shuiyanqijunx' }, player.getEnemies(), false);
                             },
@@ -5909,7 +5916,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 await player.addCharge(trigger.num);
                                 if (player.countCharge() > 8) {
                                     if (Math.random() > 0.7) {
-                                        await game.HL_VIDEO(event.name);
+                                        await game.HL_mp4(event.name);
                                     }
                                     player.removeCharge(9);
                                     for (const npc of player.getEnemies()) {
@@ -5933,7 +5940,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 player.awakenSkill('HL_A_ce');
-                                await game.HL_VIDEO(event.name);
+                                await game.HL_mp4(event.name);
                                 player.qreinit('HL_juemiezhe');
                                 const remove = ['HL_A_ming', 'HL_A_ting', 'HL_A_fen', 'HL_A_ce'];
                                 player.removeSkill(remove);
@@ -6062,7 +6069,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             async content(event, trigger, player) {
                                 if (Math.random() > 0.7) {
-                                    await game.HL_VIDEO(event.name);
+                                    await game.HL_mp4(event.name);
                                 }
                                 await player.useCard({ name: 'shuiyanqijunx' }, player.getEnemies(), false);
                                 player.useCard({ name: 'huoshaolianying' }, player.getEnemies(), false);
@@ -6085,7 +6092,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 await player.addCharge(trigger.num);
                                 if (player.countCharge() > 17) {
                                     if (Math.random() > 0.7) {
-                                        await game.HL_VIDEO(event.name);
+                                        await game.HL_mp4(event.name);
                                     }
                                     player.removeCharge(18);
                                     for (const npc of player.getEnemies()) {
