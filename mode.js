@@ -937,7 +937,7 @@ game.addMode(
                 async phaseLoop(event, trigger, player) {
                     let num = 1,
                         current = player;
-                    while (current.getSeatNum() === 0) {
+                    while (current.seatNum === 0) {
                         current.seatNum = num;
                         current = current.next;
                         num++;
@@ -952,13 +952,6 @@ game.addMode(
                                 isRoundEnd = _status.roundSkipped;
                                 if (_status.isRoundFilter) {
                                     isRoundEnd = _status.isRoundFilter(phase, event.player);
-                                } else if (_status.seatNumSettled) {
-                                    const seatNum = event.player.getSeatNum();
-                                    if (seatNum != 0) {
-                                        if (get.itemtype(_status.lastPhasedPlayer) != 'player' || seatNum < _status.lastPhasedPlayer.getSeatNum()) {
-                                            isRoundEnd = true;
-                                        }
-                                    }
                                 } else if (event.player == _status.roundStart) {
                                     isRoundEnd = true;
                                 }
