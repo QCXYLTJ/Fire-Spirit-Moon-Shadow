@@ -5840,48 +5840,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 水弹
                         // 回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害
-                        _shuidan: {
-                            enable: 'phaseUse',
-                            usable: 1,
+                        g_shuidan: {
+                            trigger: {
+                                player: ['loseEnd'],
+                            },
+                            forced: true,
                             filter(event, player, name) {
-                                return player.countCards('he', { name: 'shuidan' });
+                                return event.parent.name != 'useCard' && event.cards.some((q) => q.name == 'shuidan');
                             },
-                            filterCard(c) {
-                                return c.name == 'shuidan';
-                            },
-                            selectCard: 1,
-                            position: 'he',
-                            filterTarget(c, p, t) {
-                                return t != p;
-                            },
-                            selectTarget: 1,
-                            discard: false,
                             async content(event, trigger, player) {
-                                player.give(event.cards, event.target);
-                            },
-                            ai: {
-                                order: 10,
-                                result: {
-                                    target: -2,
-                                },
-                            },
-                            subSkill: {
-                                1: {
-                                    trigger: {
-                                        player: ['loseEnd'],
-                                    },
-                                    forced: true,
-                                    filter(event, player, name) {
-                                        return event.parent.skill != '_shuidan' && event.cards.some((q) => q.name == 'shuidan');
-                                    },
-                                    async content(event, trigger, player) {
-                                        for (const card of trigger.cards) {
-                                            if (card.name == 'shuidan') {
-                                                player.damage('water', 'nosource');
-                                            }
-                                        }
-                                    },
-                                },
+                                for (const card of trigger.cards) {
+                                    if (card.name == 'shuidan') {
+                                        player.damage('water', 'nosource');
+                                    }
+                                }
                             },
                         },
                         // 霆————如海摇山倾
@@ -7902,8 +7874,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         _HL_leidian_info: '此天气下,雷属性伤害翻倍<br>所有黑桃牌均视为雷属性<br>任意牌被使用或打出时,当前角色进行一次闪电判定',
                         _HL_baoyu: '暴雨',
                         _HL_baoyu_info: '此天气下,水属性伤害翻倍<br>任意回合开始时,将场上所有装备牌变化为<水弹><br>每回合至多使用5-<水弹>数张牌',
-                        _shuidan: '水弹',
-                        _shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
+                        g_shuidan: '水弹',
+                        g_shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
                         HL_A_ting: '霆✬如海摇山倾',
                         HL_A_ting_info: '每轮开始时/准备阶段,你视为对所有敌方角色使用一张【水淹七军】',
                         HL_A_fen: '愤✬破昼夜长空',
@@ -8129,13 +8101,28 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     card: {
                         shuidan: {
                             type: 'basic',
-                            enable: false,
+                            enable: true,
+                            usable: 1,
+                            filterTarget(card, player, target) {
+                                return target != player;
+                            },
+                            selectTarget: 1,
+                            discard: false,
+                            lose: false,
+                            async content(event, trigger, player) {
+                                player.give(event.cards, event.target);
+                            },
                             ai: {
                                 basic: {
-                                    useful: 0,
-                                    value: 0,
+                                    useful: -1,
+                                    value: -1,
+                                },
+                                order: 10,
+                                result: {
+                                    target: -2,
                                 },
                             },
+                            global: ['g_shuidan'],
                         },
                         // 回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌
                         // 直到某一方打出失败,此人受到1点伤害
