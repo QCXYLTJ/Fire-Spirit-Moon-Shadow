@@ -7909,33 +7909,40 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return player.countCards('h', (c) => get.tag(c, 'damage'));
                             },
                             async content(event, trigger, player) {
-                                const {
-                                    result: { targets },
-                                } = await player
-                                    .chooseTarget('选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡')
-                                    .set('filterTarget', (c, p, t) => p != t)
-                                    .set('ai', (t) => -get.attitude(player, t));
-                                if (targets && targets[0]) {
-                                    player.HL_kuangbao = true;
-                                    while (targets[0].isAlive()) {
-                                        const { result } = await player
-                                            .chooseToUse()
-                                            .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
-                                            .set('filterTarget', (c, p, t) => t == targets[0])
-                                            .set('ai1', (card, arg) => {
-                                                if (lib.card[card.name]) {
-                                                    return number0(player.getUseValue(card, null, true)) + 10;
-                                                }
-                                            });
-                                        if (!result.bool) {
-                                            break;
+                                if (player.HL_kuangbao) {
+                                    game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
+                                    trigger.cancel();
+                                    player.hp = 1;
+                                }
+                                else {
+                                    const {
+                                        result: { targets },
+                                    } = await player
+                                        .chooseTarget('选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡')
+                                        .set('filterTarget', (c, p, t) => p != t)
+                                        .set('ai', (t) => -get.attitude(player, t));
+                                    if (targets && targets[0]) {
+                                        player.HL_kuangbao = true;
+                                        while (targets[0].isAlive()) {
+                                            const { result } = await player
+                                                .chooseToUse()
+                                                .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
+                                                .set('filterTarget', (c, p, t) => t == targets[0])
+                                                .set('ai1', (card, arg) => {
+                                                    if (lib.card[card.name]) {
+                                                        return number0(player.getUseValue(card, null, true)) + 10;
+                                                    }
+                                                });
+                                            if (!result.bool) {
+                                                break;
+                                            }
                                         }
-                                    }
-                                    player.HL_kuangbao = false;
-                                    if (targets[0].isDead()) {
-                                        game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
-                                        trigger.cancel();
-                                        player.hp = 1;
+                                        player.HL_kuangbao = false;
+                                        if (targets[0].isDead()) {
+                                            game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
+                                            trigger.cancel();
+                                            player.hp = 1;
+                                        }
                                     }
                                 }
                             },
