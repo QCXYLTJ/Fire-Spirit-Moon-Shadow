@@ -3255,7 +3255,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             sex: 'female',
                             hp: 5,
                             maxHp: 5,
-                            skills: ['HL_zhuolan', 'HL_jiaozhan', 'HL_wufan', 'HL_kuangbao'],
+                            skills: ['HL_zhuolan', 'HL_jiaozhan', 'HL_wufan', 'HL_kuangbao', 'HL_ziyu'],
                             trashBin: [`ext:火灵月影/image/HL_qinli.png`],
                         },
                     },
@@ -7834,14 +7834,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (player.storage.HL_wufan_1 > 4) {
                                         player.storage.HL_wufan_1 = 0;
                                         player.chooseToDiscard('弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
-                                        const {
-                                            result: { targets },
-                                        } = await player
-                                            .chooseTarget('观看一名其他角色的手牌,获得其中一张')
-                                            .set('filterTarget', (c, p, t) => p != t && t.countCards('h'))
-                                            .set('ai', (t) => -get.attitude(player, t));
-                                        if (targets && targets[0]) {
-                                            player.gainPlayerCard(targets[0], 'h', 'visible').set('ai', (b) => get.value(b.link));
+                                        if (game.players.some((q) => q != player && q.countCards('h'))) {
+                                            const {
+                                                result: { targets },
+                                            } = await player
+                                                .chooseTarget('观看一名其他角色的手牌,获得其中一张')
+                                                .set('filterTarget', (c, p, t) => p != t && t.countCards('h'))
+                                                .set('ai', (t) => -get.attitude(player, t));
+                                            if (targets && targets[0]) {
+                                                player.gainPlayerCard(targets[0], 'h', 'visible').set('ai', (b) => get.value(b.link));
+                                            }
                                         }
                                     }
                                 }
@@ -7906,6 +7908,43 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
+                        // 自愈
+                        // 每五个任意回合后,你回复1点体力
+                        // 你回复体力时,若此回复溢出,将之转变为护甲
+                        HL_ziyu: {
+                            intro: {
+                                content: 'mark',
+                            },
+                            trigger: {
+                                global: ['phaseEnd'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                player.addMark('HL_ziyu');
+                                if (player.storage.HL_ziyu > 4) {
+                                    player.storage.HL_ziyu = 0;
+                                    player.recover();
+                                }
+                            },
+                            group: ['HL_ziyu_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['recoverBefore'],
+                                    },
+                                    forced: true,
+                                    firstDo: true,
+                                    filter(event, player) {
+                                        return event.num + player.hp > player.maxHp;
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = player.hp + trigger.num - player.maxHp;
+                                        trigger.num -= num;
+                                        player.changeHujia(num);
+                                    }
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -7926,8 +7965,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jiaozhan_info: '每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:<br>弃置一张不同颜色的牌,令其无效<br>弃置一张同花色的牌,令其无效并获得之',
                         HL_wufan: '神威灵装·五番',
                         HL_wufan_info: '你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记<br>当【严厉】/【残酷】标记数大于4时触发以下效果,然后将标记数归零:<br>①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张<br>②残酷:移除一名其他角色的全部技能直到本回合结束',
+                        HL_wufan_1: '严厉',
+                        HL_wufan_1_info: '你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张',
+                        HL_wufan_2: '残酷',
+                        HL_wufan_2_info: '移除一名其他角色的全部技能直到本回合结束',
                         HL_kuangbao: '狂暴',
                         HL_kuangbao_info: '当你死亡前,选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,将体力调整至1点',
+                        HL_ziyu: '自愈',
+                        HL_ziyu_info: '每五个任意回合后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         //————————————————————————————————————————————扑克牌
                         pukepai_duizi: '对子',
                         pukepai_duizi_info: '将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',
