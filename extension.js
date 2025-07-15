@@ -7726,6 +7726,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 灼烂歼鬼
                         // 其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害
                         HL_zhuolan: {
+                            init(player) {
+                                game.playAudio(`../extension/火灵月影/audio/qinli_init${[1, 2, 3].randomGet()}.mp3`);
+                            },
                             trigger: {
                                 global: ['useCard', 'respond'],
                             },
@@ -7757,6 +7760,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 }
                                 if (list.size > 0) {
+                                    if (trigger.player == player) {
+                                        game.playAudio(`../extension/火灵月影/audio/qinli_zhuolan${[4, 5, 6].randomGet()}.mp3`);
+                                    }
+                                    else {
+                                        game.playAudio(`../extension/火灵月影/audio/qinli_zhuolan${[1, 2, 3].randomGet()}.mp3`);
+                                    }
                                     for (const [target, num] of list) {
                                         await target.damage(num, 'fire');
                                     }
@@ -7787,6 +7796,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     .set('filterCard', (c) => get.color(c) != get.color(trigger.card) || c.suit == trigger.card.suit)
                                     .set('ai', (c) => -get.effect(player, trigger.card, trigger.player, player) - get.value(c));
                                 if (cards && cards[0]) {
+                                    game.playAudio(`../extension/火灵月影/audio/qinli_jiaozhan${[1, 2, 3].randomGet()}.mp3`);
                                     trigger.parent.all_excluded = true;
                                     if (cards[0].suit == trigger.card.suit && trigger.cards?.length) {
                                         player.gain(trigger.cards, 'gain2');
@@ -7800,8 +7810,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 神威灵装·五番
                         // 你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记
                         // 当【严厉】/【残酷】标记数大于9时触发以下效果,然后将标记数归零:
-                        // ①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张
-                        // ②残酷:移除一名其他角色的全部技能直到本回合结束
+                        // ①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其一张牌
+                        // ②残酷:移除一名其他角色的全部技能,直到你的回合结束
                         HL_wufan: {
                             trigger: {
                                 player: ['loseEnd', 'gainEnd'],
@@ -7820,16 +7830,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         const {
                                             result: { targets },
                                         } = await player
-                                            .chooseTarget('移除一名其他角色的全部技能直到本回合结束')
+                                            .chooseTarget('残酷:移除一名其他角色的全部技能,直到你的回合结束')
                                             .set('filterTarget', (c, p, t) => p != t)
                                             .set('ai', (t) => -get.attitude(player, t));
                                         if (targets && targets[0]) {
                                             targets[0].storage.HL_wufan = targets[0].GS();
                                             targets[0].CS();
-                                            targets[0].when({ global: 'phaseAfter' }).then(() => {
-                                                player.addSkill(player.storage.HL_wufan);
-                                                player.storage.HL_wufan = [];
-                                            });
+                                            game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
+                                            player.when({ player: 'phaseAfter' }).then(() => {
+                                                npc.addSkill(npc.storage.HL_wufan);
+                                                npc.storage.HL_wufan = [];
+                                            }).vars({ npc: targets[0] });
                                         }
                                     }
                                 } else {
@@ -7837,16 +7848,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.addMark('HL_wufan_1', -num);
                                     if (player.storage.HL_wufan_1 > 9) {
                                         player.storage.HL_wufan_1 = 0;
-                                        await player.chooseToDiscard('弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
+                                        await player.chooseToDiscard('严厉:弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
+                                        game.playAudio(`../extension/火灵月影/audio/qinli_yanli${[1, 2, 3].randomGet()}.mp3`);
                                         if (game.players.some((q) => q != player && q.countCards('h'))) {
                                             const {
                                                 result: { targets },
                                             } = await player
-                                                .chooseTarget('观看一名其他角色的手牌,获得其中一张')
+                                                .chooseTarget('严厉:观看一名其他角色的手牌,获得其一张牌')
                                                 .set('filterTarget', (c, p, t) => p != t && t.countCards('h'))
                                                 .set('ai', (t) => -get.attitude(player, t));
                                             if (targets && targets[0]) {
-                                                player.gainPlayerCard(targets[0], 'h', 'visible').set('ai', (b) => get.value(b.link));
+                                                player.gainPlayerCard(targets[0], 'hej', 'visible').set('ai', (b) => get.value(b.link));
                                             }
                                         }
                                     }
@@ -7869,6 +7881,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     intro: {
                                         content: 'mark',
                                     },
+                                    trigger: {
+                                        source: ['damage'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        if (player.HL_kuangbao) {
+                                            game.playAudio(`../extension/火灵月影/audio/qinli_sourcedamage${[4, 5, 6].randomGet()}.mp3`);
+                                        }
+                                        else {
+                                            game.playAudio(`../extension/火灵月影/audio/qinli_sourcedamage${[1, 2, 3].randomGet()}.mp3`);
+                                        }
+                                    }
                                 },
                             },
                         },
@@ -7879,6 +7903,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['dieBefore'],
                             },
+                            audio: 'ext:火灵月影/audio:3',
                             forced: true,
                             filter(event, player) {
                                 return player.countCards('h', (c) => get.tag(c, 'damage'));
@@ -7891,6 +7916,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     .set('filterTarget', (c, p, t) => p != t)
                                     .set('ai', (t) => -get.attitude(player, t));
                                 if (targets && targets[0]) {
+                                    player.HL_kuangbao = true;
                                     while (targets[0].isAlive()) {
                                         const { result } = await player
                                             .chooseToUse()
@@ -7905,7 +7931,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             break;
                                         }
                                     }
+                                    player.HL_kuangbao = false;
                                     if (targets[0].isDead()) {
+                                        game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                         trigger.cancel();
                                         player.hp = 1;
                                     }
@@ -7923,6 +7951,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['phaseEnd'],
                             },
                             forced: true,
+                            audio: 'ext:火灵月影/audio:3',
                             async content(event, trigger, player) {
                                 player.addMark('HL_ziyu');
                                 if (player.storage.HL_ziyu > 4) {
@@ -7968,11 +7997,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jiaozhan: '交战!',
                         HL_jiaozhan_info: '每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:<br>弃置一张不同颜色的牌,令其无效<br>弃置一张同花色的牌,令其无效并获得之',
                         HL_wufan: '神威灵装·五番',
-                        HL_wufan_info: '你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记<br>当【严厉】/【残酷】标记数大于9时触发以下效果,然后将标记数归零:<br>①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张<br>②残酷:移除一名其他角色的全部技能直到本回合结束',
+                        HL_wufan_info: '你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记<br>当【严厉】/【残酷】标记数大于9时触发以下效果,然后将标记数归零:<br>①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其一张牌<br>②残酷:移除一名其他角色的全部技能,直到你的回合结束',
                         HL_wufan_1: '严厉',
-                        HL_wufan_1_info: '你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张',
+                        HL_wufan_1_info: '你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其一张牌',
                         HL_wufan_2: '残酷',
-                        HL_wufan_2_info: '移除一名其他角色的全部技能直到本回合结束',
+                        HL_wufan_2_info: '移除一名其他角色的全部技能,直到你的回合结束',
                         HL_kuangbao: '狂暴',
                         HL_kuangbao_info: '当你死亡前,选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,将体力调整至1点',
                         HL_ziyu: '自愈',
