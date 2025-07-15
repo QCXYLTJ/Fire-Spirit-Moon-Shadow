@@ -97,7 +97,11 @@ game.addMode(
                         boss.characternum = player.characternum;
                         boss.characterlist = player.characterlist;
                         boss.identity = player.identity;
-                        boss.showIdentity();
+                        boss.side = player.side;
+                        boss.node.identity.classList.remove('guessing');
+                        boss.identityShown = true;
+                        boss.ai.shown = 1;
+                        boss.setIdentity();
                         game.removePlayer(player);
                     }
                     if (game.players.length < 2) {
