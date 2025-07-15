@@ -7951,11 +7951,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['phaseEnd'],
                             },
                             forced: true,
-                            audio: 'ext:火灵月影/audio:3',
                             async content(event, trigger, player) {
                                 player.addMark('HL_ziyu');
                                 if (player.storage.HL_ziyu > 4) {
                                     player.storage.HL_ziyu = 0;
+                                    game.playAudio(`../extension/火灵月影/audio/qinli_ziyu${[1, 2, 3].randomGet()}.mp3`);
                                     player.recover();
                                 }
                             },
