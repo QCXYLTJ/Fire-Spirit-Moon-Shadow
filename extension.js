@@ -128,7 +128,7 @@ const kangxing1 = function () {
     const obj = {
         get players() {
             if (!_status.gameStarted && lib.config.mode != 'boss') {
-                return startplayers.filter((q) => q.playerid);// 乱斗/挑战模式的ui.create.player例外//挑战模式加入抗性过早,会强制玩家当boss
+                return startplayers.filter((q) => q.playerid); // 乱斗/挑战模式的ui.create.player例外//挑战模式加入抗性过早,会强制玩家当boss
             } // 游戏没开始前,禁止即死
             return kplayers.filter((q) => {
                 if (!q) {
@@ -152,7 +152,7 @@ const kangxing1 = function () {
             allplayers = [...new Set([...allplayers.filter((player) => !obj.dead.includes(player)), ...obj.players])];
             if (lib.config.extension_火灵月影_斩杀测试 && _status.gameStarted && !allplayers.length) {
                 game.over('人已经死光了');
-            }//斩杀测试
+            } //斩杀测试
             return new Proxy(allplayers, {
                 set(target, property, value) {
                     const result = Reflect.set(target, property, value); //先执行移除,不然里面有个undefined元素
@@ -1441,7 +1441,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 list.push(['none', 15, 'pukepai']);
                 Reflect.defineProperty(lib.card, 'list', {
                     get() {
-                        return list.randomSort().slice();//每次生成新数组,不加slice的话每次都是原数组,修改会被映射进去
+                        return list.randomSort().slice(); //每次生成新数组,不加slice的话每次都是原数组,修改会被映射进去
                     },
                     configurable: false,
                     set() { },
@@ -2461,8 +2461,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     if (src.includes('.mp4')) {
                         this.style.backgroundImage = 'none';
                         this.setBackgroundMp4(src);
-                    }
-                    else {
+                    } else {
                         this.style.backgroundImage = `url(${src})`;
                     }
                     return this;
@@ -3028,8 +3027,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 player.storage[yinji] += 2;
                 player.addSkill(yinji);
             };
-            lib.init.css('extension/火灵月影/HL.css');//火灵月影专属CSS
-            lib.init.css('extension/火灵月影/QQQ.css');//通用CSS
+            lib.init.css('extension/火灵月影/HL.css'); //火灵月影专属CSS
+            lib.init.css('extension/火灵月影/QQQ.css'); //通用CSS
             game.import('character', function (lib, game, ui, get, ai, _status) {
                 const QQQ = {
                     name: '火灵月影',
@@ -3252,6 +3251,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             maxHp: 40,
                             skills: ['HL_A_zhi', 'HL_A_luo', 'HL_zhianchaoxi', 'HL_zhangbujimoyan', 'HL_jinhuisiji'],
                         },
+                        HL_qinli: {
+                            sex: 'female',
+                            hp: 5,
+                            maxHp: 5,
+                            skills: ['HL_zhuolan', 'HL_jiaozhan', 'HL_wufan', 'HL_kuangbao'],
+                            trashBin: [`ext:火灵月影/image/HL_qinli.png`],
+                        },
                     },
                     characterIntro: {
                         HL_amiya: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>存在于每个故事尽头,带走每位角色,封闭每种可能,停止每段讲述.它是对终结的想象,亦是所有想象的终结,它是一切,唯独不是你熟悉的人',
@@ -3304,7 +3310,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 for (const card of cards) {
                                     counts[card.number] = (counts[card.number] || 0) + 1;
                                 }
-                                const duplicates = cards.filter(card => counts[card.number] > 1);
+                                const duplicates = cards.filter((card) => counts[card.number] > 1);
                                 return c.name == 'pukepai' && duplicates.includes(c);
                             },
                             selectCard: 2,
@@ -3314,9 +3320,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             selectTarget: 1,
                             filter(event, player) {
-                                const numbers = player.getCards('hs', { name: 'pukepai' }).map(card => card.number);
+                                const numbers = player.getCards('hs', { name: 'pukepai' }).map((card) => card.number);
                                 return new Set(numbers).size < numbers.length;
-                            },//set的长度小于原数组,就说明有点数相同的牌
+                            }, //set的长度小于原数组,就说明有点数相同的牌
                             prompt: '将两张同点数扑克牌一起对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',
                             async content(event, trigger, player) {
                                 let num = event.cards[0].number;
@@ -3324,12 +3330,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 let index = 0;
                                 while (true) {
                                     const npc = players[index];
-                                    const { result } = await npc.chooseToRespond('打出两张更大的同点数扑克牌,否则受到2点伤害', 2, (c) => {
-                                        if (ui.selected.cards.length) {
-                                            return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
-                                        }
-                                        return c.name == 'pukepai' && c.number > num;
-                                    }).set('complexCard', true);//filtercard里面调用ui.selected.cards,需要这个complexCard来刷新ui.selected.cards
+                                    const { result } = await npc
+                                        .chooseToRespond('打出两张更大的同点数扑克牌,否则受到2点伤害', 2, (c) => {
+                                            if (ui.selected.cards.length) {
+                                                return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
+                                            }
+                                            return c.name == 'pukepai' && c.number > num;
+                                        })
+                                        .set('complexCard', true); //filtercard里面调用ui.selected.cards,需要这个complexCard来刷新ui.selected.cards
                                     if (result?.cards?.length) {
                                         index = (index + 1) % 2;
                                         num = result.cards[0].number;
@@ -3359,7 +3367,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 for (const card of cards) {
                                     counts[card.number] = (counts[card.number] || 0) + 1;
                                 }
-                                const duplicates = cards.filter(card => counts[card.number] > 3);
+                                const duplicates = cards.filter((card) => counts[card.number] > 3);
                                 return c.name == 'pukepai' && duplicates.includes(c);
                             },
                             selectCard: 4,
@@ -3882,10 +3890,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————抗性测试
                         HL_miaosha: {
                             enable: 'phaseUse',
-                            get usable() {
-                                return 3;
-                            },
-                            set usable(v) { },
+                            usable: 1,
                             filterTarget: true,
                             selectTarget: 1,
                             async content(event, trigger, player) {
@@ -7717,6 +7722,190 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
+                        // 灼烂歼鬼
+                        // 其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害
+                        HL_zhuolan: {
+                            trigger: {
+                                global: ['useCard'],
+                            },
+                            filter(event, player) {
+                                return event.card.number == 5;
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                let num = 1;
+                                if (trigger.player == player) {
+                                    num = 5;
+                                }
+                                const list = new Map();
+                                while (num > 0) {
+                                    const {
+                                        result: { targets },
+                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target.isEnemiesOf(player)).set('ai', (target) => get.damageEffect(target, player, target, 'fire'));
+                                    if (targets && targets[0]) {
+                                        num--;
+                                        const index = list.get(targets[0]);
+                                        if (!index) {
+                                            list.set(targets[0], 1);
+                                        } else {
+                                            list.set(targets[0], index + 1);
+                                        }
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                if (list.size > 0) {
+                                    for (const [target, num] of list) {
+                                        await target.damage(num, 'fire');
+                                    }
+                                }
+                            },
+                        },
+                        // 交战!
+                        // 每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:
+                        // 弃置一张不同颜色的牌,令其无效
+                        // 弃置一张同花色的牌,令其无效并获得之
+                        HL_jiaozhan: {
+                            usable(skill, player) {
+                                return player.maxHp - player.hp + 1;
+                            },
+                            trigger: {
+                                target: ['useCardToPlayer'],
+                            },
+                            filter(event, player) {
+                                return event.player != player;
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                const info = get.translation(trigger.card);
+                                const {
+                                    result: { cards },
+                                } = await player
+                                    .chooseToDiscard(`弃置一张不同颜色的牌,令${info}无效;或弃置一张同花色的牌,令${info}无效并获得之`, 'he')
+                                    .set('filterCard', (c) => get.color(c) != get.color(trigger.card) || c.suit == trigger.card.suit)
+                                    .set('ai', (c) => 6 - get.value(c));
+                                if (cards && cards[0]) {
+                                    trigger.parent.all_excluded = true;
+                                    if (cards[0].suit == trigger.card.suit && trigger.cards?.length) {
+                                        player.gain(trigger.cards, 'gain2');
+                                    }
+                                }
+                            },
+                        },
+                        // 神威灵装·五番
+                        // 你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记
+                        // 当【严厉】/【残酷】标记数大于4时触发以下效果,然后将标记数归零:
+                        // ①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张
+                        // ②残酷:移除一名其他角色的全部技能直到本回合结束
+                        HL_wufan: {
+                            trigger: {
+                                player: ['loseEnd', 'gainEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return player.countCards('h') != 5;
+                            },
+                            async content(event, trigger, player) {
+                                const num = player.countCards('h') - 5;
+                                if (num > 0) {
+                                    player.chooseToDiscard(true, num, 'h').set('ai', (c) => 6 - get.value(c));
+                                    player.addMark('HL_wufan_2', num);
+                                    if (player.storage.HL_wufan_2 > 4) {
+                                        player.storage.HL_wufan_2 = 0;
+                                        const {
+                                            result: { targets },
+                                        } = await player
+                                            .chooseTarget('移除一名其他角色的全部技能直到本回合结束')
+                                            .set('filterTarget', (c, p, t) => p != t)
+                                            .set('ai', (t) => -get.attitude(player, t));
+                                        if (targets && targets[0]) {
+                                            targets[0].storage.HL_wufan = targets[0].GS();
+                                            targets[0].CS();
+                                            targets[0].when({ global: 'phaseAfter' }).then(() => {
+                                                player.addSkill(player.storage.HL_wufan);
+                                                player.storage.HL_wufan = [];
+                                            });
+                                        }
+                                    }
+                                } else {
+                                    player.draw(-num);
+                                    player.addMark('HL_wufan_1', -num);
+                                    if (player.storage.HL_wufan_1 > 4) {
+                                        player.storage.HL_wufan_1 = 0;
+                                        player.chooseToDiscard('弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
+                                        const {
+                                            result: { targets },
+                                        } = await player
+                                            .chooseTarget('观看一名其他角色的手牌,获得其中一张')
+                                            .set('filterTarget', (c, p, t) => p != t && t.countCards('h'))
+                                            .set('ai', (t) => -get.attitude(player, t));
+                                        if (targets && targets[0]) {
+                                            player.gainPlayerCard(targets[0], 'h', 'visible').set('ai', (b) => get.value(b.link));
+                                        }
+                                    }
+                                }
+                            },
+                            group: ['HL_wufan_1', 'HL_wufan_2'],
+                            subSkill: {
+                                1: {
+                                    intro: {
+                                        content: 'mark',
+                                    },
+                                    audio: 'ext:火灵月影/audio:3',
+                                    trigger: {
+                                        player: ['damageEnd'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) { }
+                                }, // 受伤语音
+                                2: {
+                                    intro: {
+                                        content: 'mark',
+                                    },
+                                },
+                            },
+                        },
+                        // 狂暴
+                        // 当你死亡前,选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡
+                        // 若对方死亡,你取消你的死亡结算,将体力调整至1点
+                        HL_kuangbao: {
+                            trigger: {
+                                player: ['dieBefore'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return player.countCards('h', (c) => get.tag(c, 'damage'));
+                            },
+                            async content(event, trigger, player) {
+                                const {
+                                    result: { targets },
+                                } = await player
+                                    .chooseTarget('选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡')
+                                    .set('filterTarget', (c, p, t) => p != t)
+                                    .set('ai', (t) => -get.attitude(player, t));
+                                if (targets && targets[0]) {
+                                    while (targets[0].isAlive()) {
+                                        const { result } = await player
+                                            .chooseToUse()
+                                            .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
+                                            .set('filterTarget', (c, p, t) => t == targets[0])
+                                            .set('ai1', (card, arg) => {
+                                                if (lib.card[card.name]) {
+                                                    return number0(player.getUseValue(card, null, true)) + 10;
+                                                }
+                                            });
+                                        if (!result.bool) {
+                                            break;
+                                        }
+                                    }
+                                    if (targets[0].isDead()) {
+                                        trigger.cancel();
+                                        player.hp = 1;
+                                    }
+                                }
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -7729,6 +7918,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
+                        HL_qinli: '五河琴里',
+                        HL_zhuolan: '灼烂歼鬼',
+                        HL_zhuolan_info: '其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害',
+                        HL_jiaozhan: '交战!',
+                        HL_jiaozhan_info: '每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:<br>弃置一张不同颜色的牌,令其无效<br>弃置一张同花色的牌,令其无效并获得之',
+                        HL_wufan: '神威灵装·五番',
+                        HL_wufan_info: '你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记<br>当【严厉】/【残酷】标记数大于4时触发以下效果,然后将标记数归零:<br>①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张<br>②残酷:移除一名其他角色的全部技能直到本回合结束',
+                        HL_kuangbao: '狂暴',
+                        HL_kuangbao_info: '当你死亡前,选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,将体力调整至1点',
                         //————————————————————————————————————————————扑克牌
                         pukepai_duizi: '对子',
                         pukepai_duizi_info: '将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',

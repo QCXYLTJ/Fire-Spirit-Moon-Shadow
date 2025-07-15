@@ -633,7 +633,7 @@ game.addMode(
 lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
 //—————————————————————————————————————————————————————————————————————————————山河图模式
 window.shanhe = {
-    // 初始页面 点将 城池选择 山河册 开始/继续战斗
+    // 初始页面 点将 城池选择 山河册 开始/继续战斗 挑战过的城池变灰色
     shanhetustart() {
         if (shanhe.beijing2) {
             shanhe.beijing2.remove();
@@ -736,6 +736,7 @@ window.shanhe = {
             }
             shanhe.beijing2.appendChild(guanka);
         }
+        //—————————————————————————————————————————————————————返回按钮
         const fanhui = document.createElement('div');
         fanhui.className = 'backQ';
         fanhui.innerHTML = '返回';
@@ -743,6 +744,7 @@ window.shanhe = {
             shanhe.shanhetustart();
         };
         shanhe.beijing2.appendChild(fanhui);
+        //—————————————————————————————————————————————————————集市
     },
     // 进入关卡开始战斗
     async guankastart() {
@@ -781,7 +783,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 挑战过的城池变灰色
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
@@ -846,6 +848,9 @@ window.shanhe = {
         dianjiang.innerHTML = '出战武将';
         dianjiang.onclick = function () {
             shanhe.xuanjiang();
+        };
+        dianjiang.oncontextmenu = function (e) {
+            ui.click.charactercard(shanhe.cur_xuanjiang, null, null, true, dianjiang);
         };
         shanhe.beijing1.appendChild(dianjiang);
         const touxiang = document.createElement('div');
@@ -936,7 +941,7 @@ window.shanhe = {
 game.addMode(
     'shanhetu',
     {
-        async start() {
+        start() {
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
             shanhe.shanhetustart();
