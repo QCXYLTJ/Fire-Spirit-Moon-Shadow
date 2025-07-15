@@ -7727,7 +7727,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害
                         HL_zhuolan: {
                             trigger: {
-                                global: ['useCard'],
+                                global: ['useCard', 'respond'],
                             },
                             filter(event, player) {
                                 return event.card.number == 5;
@@ -7742,7 +7742,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 while (num > 0) {
                                     const {
                                         result: { targets },
-                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target.isEnemiesOf(player)).set('ai', (target) => get.damageEffect(target, player, target, 'fire'));
+                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target.isEnemiesOf(player))
+                                        .set('ai', (t) => -get.attitude(player, t));
                                     if (targets && targets[0]) {
                                         num--;
                                         const index = list.get(targets[0]);
@@ -7784,18 +7785,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } = await player
                                     .chooseToDiscard(`弃置一张不同颜色的牌,令${info}无效;或弃置一张同花色的牌,令${info}无效并获得之`, 'he')
                                     .set('filterCard', (c) => get.color(c) != get.color(trigger.card) || c.suit == trigger.card.suit)
-                                    .set('ai', (c) => 6 - get.value(c));
+                                    .set('ai', (c) => -get.effect(player, trigger.card, trigger.player, player) - get.value(c));
                                 if (cards && cards[0]) {
                                     trigger.parent.all_excluded = true;
                                     if (cards[0].suit == trigger.card.suit && trigger.cards?.length) {
                                         player.gain(trigger.cards, 'gain2');
                                     }
                                 }
+                                else {
+                                    player.storage.counttrigger.HL_jiaozhan--;
+                                }
                             },
                         },
                         // 神威灵装·五番
                         // 你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记
-                        // 当【严厉】/【残酷】标记数大于4时触发以下效果,然后将标记数归零:
+                        // 当【严厉】/【残酷】标记数大于9时触发以下效果,然后将标记数归零:
                         // ①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张
                         // ②残酷:移除一名其他角色的全部技能直到本回合结束
                         HL_wufan: {
@@ -7809,9 +7813,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const num = player.countCards('h') - 5;
                                 if (num > 0) {
-                                    player.chooseToDiscard(true, num, 'h').set('ai', (c) => 6 - get.value(c));
+                                    await player.chooseToDiscard(true, num, 'h').set('ai', (c) => 6 - get.value(c));
                                     player.addMark('HL_wufan_2', num);
-                                    if (player.storage.HL_wufan_2 > 4) {
+                                    if (player.storage.HL_wufan_2 > 9) {
                                         player.storage.HL_wufan_2 = 0;
                                         const {
                                             result: { targets },
@@ -7829,11 +7833,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     }
                                 } else {
-                                    player.draw(-num);
+                                    await player.draw(-num);
                                     player.addMark('HL_wufan_1', -num);
-                                    if (player.storage.HL_wufan_1 > 4) {
+                                    if (player.storage.HL_wufan_1 > 9) {
                                         player.storage.HL_wufan_1 = 0;
-                                        player.chooseToDiscard('弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
+                                        await player.chooseToDiscard('弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
                                         if (game.players.some((q) => q != player && q.countCards('h'))) {
                                             const {
                                                 result: { targets },
@@ -7869,7 +7873,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 狂暴
-                        // 当你死亡前,选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡
+                        // 当你死亡前,选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡
                         // 若对方死亡,你取消你的死亡结算,将体力调整至1点
                         HL_kuangbao: {
                             trigger: {
@@ -7883,7 +7887,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const {
                                     result: { targets },
                                 } = await player
-                                    .chooseTarget('选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡')
+                                    .chooseTarget('选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡')
                                     .set('filterTarget', (c, p, t) => p != t)
                                     .set('ai', (t) => -get.attitude(player, t));
                                 if (targets && targets[0]) {
@@ -7964,13 +7968,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jiaozhan: '交战!',
                         HL_jiaozhan_info: '每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:<br>弃置一张不同颜色的牌,令其无效<br>弃置一张同花色的牌,令其无效并获得之',
                         HL_wufan: '神威灵装·五番',
-                        HL_wufan_info: '你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记<br>当【严厉】/【残酷】标记数大于4时触发以下效果,然后将标记数归零:<br>①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张<br>②残酷:移除一名其他角色的全部技能直到本回合结束',
+                        HL_wufan_info: '你的手牌数始终为5,你每因此技能摸/弃一张牌,增加1个【严厉】/【残酷】标记<br>当【严厉】/【残酷】标记数大于9时触发以下效果,然后将标记数归零:<br>①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张<br>②残酷:移除一名其他角色的全部技能直到本回合结束',
                         HL_wufan_1: '严厉',
                         HL_wufan_1_info: '你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其中一张',
                         HL_wufan_2: '残酷',
                         HL_wufan_2_info: '移除一名其他角色的全部技能直到本回合结束',
                         HL_kuangbao: '狂暴',
-                        HL_kuangbao_info: '当你死亡前,选择任意一名角色,你对其依次打出带有伤害标签的牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,将体力调整至1点',
+                        HL_kuangbao_info: '当你死亡前,选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,将体力调整至1点',
                         HL_ziyu: '自愈',
                         HL_ziyu_info: '每五个任意回合后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         //————————————————————————————————————————————扑克牌
