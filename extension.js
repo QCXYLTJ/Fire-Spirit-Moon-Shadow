@@ -7854,7 +7854,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.addMark('HL_wufan_1', -num);
                                     if (player.storage.HL_wufan_1 > 9) {
                                         player.storage.HL_wufan_1 = 0;
-                                        await player.chooseToDiscard('严厉:弃置自己区域内任意张牌', 'hej', [1, player.countCards('hej')]).set('ai', (c) => -get.value(c));
+                                        const {
+                                            result: { links },
+                                        } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')])
+                                            .set('ai', (button) => 6 - get.value(button.link));
+                                        if (links && links[0]) {
+                                            await player.discard(links);
+                                        }
                                         game.playAudio(`../extension/火灵月影/audio/qinli_yanli${[1, 2, 3].randomGet()}.mp3`);
                                         if (game.players.some((q) => q != player && q.countCards('h'))) {
                                             const {
