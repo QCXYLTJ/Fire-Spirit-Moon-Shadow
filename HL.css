@@ -205,7 +205,6 @@
     left: 10%;
     width: 80%;
     height: 80%;
-    position: relative;
     background-image: url(./image/guankazhanshi.jpg);
     background-size: cover;
     background-position: center;
@@ -216,7 +215,6 @@
     filter: brightness(0.8) contrast(1.5) hue-rotate(0deg);
     height: 100px;
     width: 100px;
-    position: relative;
     background-size: cover;
     background-position: center;
 }
@@ -225,7 +223,6 @@
 .gongji {
     width: 100%;
     height: 100%;
-    position: relative;
     background-image: url(./image/gongji1.png);
     background-size: cover;
     background-position: center;
@@ -236,7 +233,6 @@
     filter: brightness(0.8) contrast(1.5) hue-rotate(0deg);
     height: 100px;
     width: 100px;
-    position: relative;
     background-size: cover;
     background-position: center;
 }
