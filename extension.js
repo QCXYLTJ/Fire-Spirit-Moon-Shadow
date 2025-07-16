@@ -7059,6 +7059,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_tianqi: {
                             init(player) {
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
+                                player.isHealthy = function () {
+                                    return false;
+                                };//回血溢出
                             },
                             trigger: {
                                 global: ['roundStart'],
@@ -7232,14 +7235,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                                 2: {
                                     trigger: {
-                                        player: ['recoverBegin'],
+                                        player: ['recoverBefore'],
                                     },
                                     forced: true,
+                                    firstDo: true,
                                     filter(event, player) {
-                                        return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player && event.num > player.maxHp - player.hp;
+                                        return HL.lvfa.includes('HL_shengming') && HL.jielvboss == player && event.num + player.hp > player.maxHp;
                                     },
                                     async content(event, trigger, player) {
-                                        const num = trigger.num - (player.maxHp - player.hp);
+                                        const num = player.hp + trigger.num - player.maxHp;
                                         player.gainMaxHp(num);
                                         player.draw(num);
                                     },
@@ -7745,7 +7749,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 while (num > 0) {
                                     const {
                                         result: { targets },
-                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target.isEnemiesOf(player))
+                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target != player)
                                         .set('ai', (t) => -get.attitude(player, t));
                                     if (targets && targets[0]) {
                                         num--;
@@ -7838,8 +7842,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             targets[0].CS();
                                             game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
                                             player.when({ player: 'phaseAfter' }).then(() => {
-                                                npc.addSkill(npc.storage.HL_wufan);
-                                                npc.storage.HL_wufan = [];
+                                                if (npc.isAlive()) {
+                                                    npc.addSkill(npc.storage.HL_wufan);
+                                                    npc.storage.HL_wufan = [];
+                                                }
                                             }).vars({ npc: targets[0] });
                                         }
                                     }
@@ -7867,6 +7873,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_wufan_1', 'HL_wufan_2'],
                             subSkill: {
                                 1: {
+                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_1.png style="width:100%; height:100%; top:0; left:0; position: fixed;">',
                                     intro: {
                                         content: 'mark',
                                     },
@@ -7878,6 +7885,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) { }
                                 }, // 受伤语音
                                 2: {
+                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_2.jpg style="width:100%; height:100%; top:0; left:0; position: fixed;">',
                                     intro: {
                                         content: 'mark',
                                     },
@@ -7951,17 +7959,26 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每五个任意回合后,你回复1点体力
                         // 你回复体力时,若此回复溢出,将之转变为护甲
                         HL_ziyu: {
+                            marktext: '<img src=extension/火灵月影/image/HL_ziyu.png style="width:100%; height:100%; top:0; left:0; position: fixed;">',
                             intro: {
-                                content: 'mark',
+                                content(storage) {
+                                    return `还有${storage}回合自愈`;
+                                },
                             },
                             trigger: {
                                 global: ['phaseEnd'],
                             },
                             forced: true,
+                            init(player) {
+                                player.addMark('HL_ziyu', 5);
+                                player.isHealthy = function () {
+                                    return false;
+                                };//回血溢出
+                            },
                             async content(event, trigger, player) {
-                                player.addMark('HL_ziyu');
-                                if (player.storage.HL_ziyu > 4) {
-                                    player.storage.HL_ziyu = 0;
+                                player.removeMark('HL_ziyu');
+                                if (player.storage.HL_ziyu < 1) {
+                                    player.addMark('HL_ziyu', 5);
                                     game.playAudio(`../extension/火灵月影/audio/qinli_ziyu${[1, 2, 3].randomGet()}.mp3`);
                                     player.recover();
                                 }
@@ -7980,6 +7997,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         const num = player.hp + trigger.num - player.maxHp;
                                         trigger.num -= num;
+                                        game.log(player, '将回复转变为护甲');
                                         player.changeHujia(num);
                                     }
                                 },
