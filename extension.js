@@ -756,7 +756,6 @@ const kangxing2 = function () {
                 usable: 2, //AAA
                 audio: 'ext:火灵月影/audio:32',
                 async content(event, trigger, player) {
-                    //QQQ
                     let count = Math.min(numberq1(trigger.num), 9);
                     while (count-- > 0) {
                         if (Math.random() < 0.6) {
@@ -963,140 +962,92 @@ const kangxing2 = function () {
                                 .set('displayIndex', false)
                                 .set('prompt', `评鉴·${namex}·${namey}:请选择发动的技能`);
                             HL.PJban.skill.push(control);
-                            const info = lib.skill[control];
                             game.log(`<b style='color:rgb(17, 228, 69);'>评鉴发动技能·${control}</b>`);
                             await game.delay(2);
-                            if (info.init) {
-                                info.init(player, control);
-                            }
-                            let indexedData, targets;
-                            if (typeof info.getIndex === 'function') {
-                                indexedData = info.getIndex(trigger, player, namey);
-                            }
-                            if (typeof info.logTarget === 'string') {
-                                targets = trigger[info.logTarget];
-                            } else if (typeof info.logTarget === 'function') {
-                                targets = info.logTarget(trigger, player, namey, indexedData);
-                            }
-                            if (get.itemtype(targets) === 'player') {
-                                targets = [targets];
-                            }
-                            if (!trigger.source) {
-                                trigger.source = player.getEnemies().randomGet();
-                            }
-                            if (!trigger.targets) {
-                                trigger.targets = player.getEnemies();
-                            } //QQQ
-                            if (!trigger.target) {
-                                trigger.target = trigger.targets[0];
-                            }
-                            if (!trigger.cards || !trigger.cards[0]) {
-                                trigger.cards = get.cards(3);
-                            }
-                            if (!trigger.card) {
-                                trigger.card = ui.cardPile.firstChild;
-                            }
-                            if (!trigger.num) {
-                                trigger.num = 1;
-                            }
-                            if (!trigger.skill) {
-                                trigger.skill = 'HL_pingjian';
-                            }
-                            if (!trigger.sourceSkill) {
-                                trigger.sourceSkill = 'HL_pingjian';
-                            }
-                            if (!trigger.respondTo || !trigger.respondTo[0]) {
-                                trigger.respondTo = [trigger.source, trigger.card];
-                            }
-                            const start = [];
-                            if (info.group) {
-                                if (Array.isArray(info.group)) {
-                                    start.addArray(info.group);
-                                } else {
-                                    start.push(info.group);
+                            const triggershuju = function () {
+                                if (!trigger.source) {
+                                    trigger.source = player.getEnemies().randomGet();
                                 }
-                            }
-                            start.push(control);
-                            for (const i of start) {
-                                const infox = lib.skill[i];
-                                if (!infox || !infox.trigger || !infox.trigger.player) continue;
-                                if (infox.trigger.player == 'enterGame' || (Array.isArray(infox.trigger.player) && infox.trigger.player.includes('enterGame'))) {
-                                    game.log(i + '是游戏开始时技能');
-                                    if (typeof infox.cost === 'function') {
-                                        var next = game.createEvent(`${i}_cost`, false);
-                                        next.player = player;
-                                        next._trigger = _status.event;
-                                        next.skill = i;
-                                        const { result } = await next.setContent(infox.cost);
-                                        if (result && result.bool) {
-                                            var next = game.createEvent(i, false);
-                                            next.skill = i;
-                                            next.player = player;
-                                            next._trigger = _status.event;
-                                            if (result.targets && result.targets[0]) {
-                                                next.targets = result.targets;
-                                            }
-                                            if (result.cards) {
-                                                next.cards = result.cards;
-                                            }
-                                            if (result.cost_data) {
-                                                next.cost_data = result.cost_data;
-                                            }
-                                            await next.setContent(infox.content);
-                                        }
-                                    } else {
-                                        const next = game.createEvent(i, false);
-                                        next.skill = i;
-                                        next.player = player;
-                                        next._trigger = _status.event;
-                                        await next.setContent(infox.content);
-                                    }
+                                if (!trigger.targets) {
+                                    trigger.targets = player.getEnemies();
                                 }
-                            }
-                            if (typeof info.cost === 'function') {
-                                var next = game.createEvent(`${control}_cost`);
-                                next.player = player;
-                                next._trigger = trigger;
-                                next.triggername = namey;
-                                next.skill = control;
-                                const { result } = await next.setContent(info.cost);
-                                if (result && result.bool) {
-                                    var next = game.createEvent(control, false);
-                                    if (targets) next.targets = targets;
-                                    next.skill = control;
+                                if (!trigger.target) {
+                                    trigger.target = trigger.targets[0];
+                                }
+                                if (!trigger.cards || !trigger.cards[0]) {
+                                    trigger.cards = get.cards(3);
+                                }
+                                if (!trigger.card) {
+                                    trigger.card = get.cards()[0];
+                                }
+                                if (!trigger.num) {
+                                    trigger.num = 1;
+                                }
+                                if (!trigger.skill) {
+                                    trigger.skill = 'HL_pingjian';
+                                }
+                                if (!trigger.sourceSkill) {
+                                    trigger.sourceSkill = 'HL_pingjian';
+                                }
+                                if (!trigger.respondTo || !trigger.respondTo[0]) {
+                                    trigger.respondTo = [trigger.source, trigger.card];
+                                }
+                            };
+                            triggershuju();
+                            const runevent = async function (skillx) {
+                                const infox = lib.skill[skillx];
+                                if (infox.init) {
+                                    infox.init(player, skillx);
+                                }
+                                let indexedData, targets;
+                                if (typeof infox.getIndex === 'function') {
+                                    indexedData = infox.getIndex(trigger, player, namey);
+                                }
+                                if (typeof infox.logTarget === 'string') {
+                                    targets = trigger[infox.logTarget];
+                                } else if (typeof infox.logTarget === 'function') {
+                                    targets = infox.logTarget(trigger, player, namey, indexedData);
+                                }
+                                if (get.itemtype(targets) === 'player') {
+                                    targets = [targets];
+                                }
+                                let result;
+                                if (typeof infox.cost === 'function') {
+                                    const next = game.createEvent(`${skillx}_cost`, false);
+                                    next.skill = skillx;
                                     next.player = player;
                                     next._trigger = trigger;
                                     next.triggername = namey;
-                                    if (result.targets && result.targets[0]) {
-                                        next.targets = result.targets;
-                                    }
+                                    result = await next.setContent(infox.cost).forResult();
+                                    if (result && result.bool) { }
+                                    else {
+                                        return;
+                                    }//cost没通过就返回
+                                }
+                                const next = game.createEvent(skillx, false);
+                                next.skill = skillx;
+                                next.player = player;
+                                next._trigger = trigger;
+                                next.triggername = namey;
+                                if (targets) {
+                                    next.targets = targets;
+                                }//先logtarget
+                                if (indexedData) {
+                                    next.indexedData = indexedData;
+                                }
+                                if (result && result.bool) {
                                     if (result.cards) {
                                         next.cards = result.cards;
+                                    }
+                                    if (result.targets && result.targets[0]) {
+                                        next.targets = result.targets;
                                     }
                                     if (result.cost_data) {
                                         next.cost_data = result.cost_data;
                                     }
-                                    if (!next.cards) {
-                                        next.cards = [ui.cardPile.firstChild];
-                                    }
-                                    if (!next.targets) {
-                                        next.targets = player.getEnemies();
-                                    }
-                                    if (!next.target) {
-                                        next.target = next.targets[0];
-                                    }
-                                    next.setContent(info.content);
-                                }
-                            } else {
-                                const next = game.createEvent(control, false);
-                                if (targets) {
-                                    next.targets = targets;
-                                }
-                                if (indexedData) {
-                                    next.indexedData = indexedData;
-                                }
+                                }//再载入cost的结果
                                 if (!next.cards) {
-                                    next.cards = [ui.cardPile.firstChild];
+                                    next.cards = get.cards();
                                 }
                                 if (!next.targets) {
                                     next.targets = player.getEnemies();
@@ -1104,12 +1055,22 @@ const kangxing2 = function () {
                                 if (!next.target) {
                                     next.target = next.targets[0];
                                 }
-                                next.skill = control;
-                                next.player = player;
-                                next._trigger = trigger;
-                                next.triggername = namey;
-                                next.setContent(info.content);
+                                await next.setContent(infox.content);
+                            };
+                            const start = game.expandSkills([control]);
+                            for (const skillx of start) {
+                                const infox = lib.skill[skillx];
+                                if (infox?.trigger?.player) {
+                                    if (typeof infox.trigger.player == 'string') {
+                                        infox.trigger.player = [infox.trigger.player];
+                                    }
+                                    if (['enterGame', 'gameStart'].some((tri) => infox.trigger.player.includes(tri))) {
+                                        game.log(skillx + '是游戏开始时技能');
+                                        await runevent(skillx);
+                                    }
+                                }
                             }
+                            await runevent(control);
                         }
                     },
                     _priority: 20,
@@ -1127,7 +1088,7 @@ const kangxing2 = function () {
                         return get.cards(3);
                     };
                     player.addToExpansion = function () {
-                        const card = ui.cardPile.firstChild;
+                        const card = get.cards()[0];
                         player.gain(card, 'gain2');
                         return card;
                     };
@@ -1374,7 +1335,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                         for (const j in lib.character) {
                             if ((lib.translate[j] && lib.translate[j].includes(input.value)) || j.includes(input.value)) {
-                                //QQQ
                                 const JUESE = document.createElement('div');
                                 JUESE.style.backgroundImage = `url(${game.src(j)})`;
                                 JUESE.className = 'characterQ';

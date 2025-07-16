@@ -781,15 +781,14 @@ window.shanhe = {
             player.ai.shown = 1;
             player.setIdentity();
         });
-        shanhe.gameStart = _status.event.trigger('gameStart');
-        await shanhe.gameStart;
+        _status.event.trigger('gameStart');
         shanhe.gameDraw = game.gameDraw(game.zhu, () => 4);
         await shanhe.gameDraw;
         shanhe.zhongzhi = false;
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 获得<战法/技能/体力上限/初始手牌/手牌上限/装备>奖励
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 获得<战法/技能/体力上限/初始手牌/手牌上限/装备>奖励 清空历史记录
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
