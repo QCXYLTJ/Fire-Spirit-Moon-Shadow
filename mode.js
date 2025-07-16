@@ -637,7 +637,7 @@ game.addMode(
 lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
 //—————————————————————————————————————————————————————————————————————————————山河图模式
 window.shanhe = {
-    // 初始页面 点将 城池选择 山河册 开始/继续战斗 挑战过的城池变灰色
+    // 初始页面 点将 城池选择 开始/继续战斗 挑战过的城池变灰色 山河册
     shanhetustart() {
         if (shanhe.beijing2) {
             shanhe.beijing2.remove();
@@ -695,7 +695,7 @@ window.shanhe = {
             shanhe.dianjiang();
         }
     },
-    // 大厅页面 商店 关卡选择 战法调整 技能栏 卡牌栏 装备栏 挑战过的关卡变灰色
+    // 大厅页面 关卡选择 挑战过的关卡变灰色 商店 <战法/技能/装备>调整
     chengchistart() {
         shanhe.beijing1.remove();
         shanhe.beijing2 = document.createElement('div');
@@ -789,7 +789,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 获得<战法/技能/体力上限/初始手牌/手牌上限/装备>奖励
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
@@ -912,13 +912,23 @@ window.shanhe = {
         touxiang.className = 'touxiangQ';
         dianjiang.appendChild(touxiang);
     },
+    // 重置通关记录
     chongzhijilu() {
         const skills = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]);
         const characterlist = Object.keys(lib.character);
-        const nandu = Number(lib.config.mode_config.shanhetu.难度);
-        const chengchinum = Number(lib.config.mode_config.shanhetu.城池数量);
-        const guankanum = Number(lib.config.mode_config.shanhetu.关卡数量);
-        const bossnum = Number(lib.config.mode_config.shanhetu.boss数量);
+        if (!lib.config.mode_config.shanhetu) {
+            lib.config.mode_config.shanhetu = {
+                难度: '3',
+                城池数量: '3',
+                关卡数量: '3',
+                boss数量: '3',
+            };
+        }
+        const config = lib.config.mode_config.shanhetu;
+        const nandu = Number(config.难度);
+        const chengchinum = Number(config.城池数量);
+        const guankanum = Number(config.关卡数量);
+        const bossnum = Number(config.boss数量);
         lib.config.shanhe.chengchi = {};
         const shanheinfo = lib.config.shanhe.chengchi;
         let num = chengchinum + 1;
@@ -954,10 +964,10 @@ game.addMode(
                 lib.config.shanhe = {};
             }
             lib.config.shanhe = {
-                cur_xuanjiang: lib.config.shanhe.cur_xuanjiang,//当前选将记录
-                cur_chengchi: lib.config.shanhe.cur_chengchi,//当前城池
-                cur_guanka: lib.config.shanhe.cur_guanka,//当前关卡
-                chengchi: lib.config.shanhe.chengchi,//通关记录
+                cur_xuanjiang: lib.config.shanhe.cur_xuanjiang, //当前选将记录
+                cur_chengchi: lib.config.shanhe.cur_chengchi, //当前城池
+                cur_guanka: lib.config.shanhe.cur_guanka, //当前关卡
+                chengchi: lib.config.shanhe.chengchi, //通关记录
             };
             if (!lib.config.shanhe.chengchi) {
                 shanhe.chongzhijilu();
