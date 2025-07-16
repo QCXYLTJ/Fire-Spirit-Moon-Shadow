@@ -7873,7 +7873,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_wufan_1', 'HL_wufan_2'],
                             subSkill: {
                                 1: {
-                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_1.png style="width:100%; height:100%; top:0; left:0; position: fixed;">',
+                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_1.png class="markimg">',
                                     intro: {
                                         content: 'mark',
                                     },
@@ -7885,7 +7885,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) { }
                                 }, // 受伤语音
                                 2: {
-                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_2.jpg style="width:100%; height:100%; top:0; left:0; position: fixed;">',
+                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_2.png class="markimg">',
                                     intro: {
                                         content: 'mark',
                                     },
@@ -7959,7 +7959,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每五个任意回合后,你回复1点体力
                         // 你回复体力时,若此回复溢出,将之转变为护甲
                         HL_ziyu: {
-                            marktext: '<img src=extension/火灵月影/image/HL_ziyu.png style="width:100%; height:100%; top:0; left:0; position: fixed;">',
+                            marktext: '<img src=extension/火灵月影/image/HL_ziyu.png class="markimg">',
                             intro: {
                                 content(storage) {
                                     return `还有${storage}回合自愈`;
