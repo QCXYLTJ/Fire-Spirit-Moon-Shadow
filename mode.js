@@ -645,15 +645,15 @@ window.shanhe = {
         shanhe.beijing1 = document.createElement('div');
         shanhe.beijing1.id = 'shanhetu1';
         document.body.appendChild(shanhe.beijing1);
-        for (const i in shanhe.chengchi) {
-            const chengchiinfo = shanhe.chengchi[i];
+        for (const i in lib.config.shanhe.chengchi) {
+            const chengchiinfo = lib.config.shanhe.chengchi[i];
             const chengchi = document.createElement('div');
             chengchi.className = 'chengchi';
             chengchi.style.top = `${40 + 40 * Math.random()}%`;
             chengchi.style.left = `${10 + 80 * Math.random()}%`;
             chengchi.style.backgroundImage = `url(extension/火灵月影/image/${i}.png)`;
             chengchi.name = i;
-            if (i == shanhe.cur_chengchi) {
+            if (i == lib.config.shanhe.cur_chengchi) {
                 if (shanhe.gongji) {
                     shanhe.gongji.remove();
                 }
@@ -666,7 +666,8 @@ window.shanhe = {
             } else {
                 chengchi.onclick = function () {
                     const chengchi = this;
-                    shanhe.cur_chengchi = chengchi.name;
+                    lib.config.shanhe.cur_chengchi = chengchi.name;
+                    game.saveConfig('shanhe', lib.config.shanhe);
                     if (shanhe.gongji) {
                         shanhe.gongji.remove();
                     }
@@ -681,14 +682,14 @@ window.shanhe = {
         start.className = 'startQ';
         start.innerHTML = '开始游戏';
         start.onclick = function () {
-            if (!shanhe.cur_chengchi) {
+            if (!lib.config.shanhe.cur_chengchi) {
                 alert('请先选择要挑战的城池');
                 return;
             }
             shanhe.chengchistart();
         };
         shanhe.beijing1.appendChild(start);
-        if (!shanhe.cur_xuanjiang) {
+        if (!lib.config.shanhe.cur_xuanjiang) {
             shanhe.xuanjiang();
         } else {
             shanhe.dianjiang();
@@ -700,7 +701,7 @@ window.shanhe = {
         shanhe.beijing2 = document.createElement('div');
         shanhe.beijing2.id = 'shanhetu2';
         document.body.appendChild(shanhe.beijing2);
-        const cur_chengchi = shanhe.chengchi[shanhe.cur_chengchi];
+        const cur_chengchi = lib.config.shanhe.chengchi[lib.config.shanhe.cur_chengchi];
         for (const i in cur_chengchi) {
             const guankainfo = cur_chengchi[i];
             const guanka = document.createElement('div');
@@ -714,7 +715,8 @@ window.shanhe = {
             } else {
                 guanka.onclick = function () {
                     const guanka = this;
-                    shanhe.cur_guanka = guanka.name;
+                    lib.config.shanhe.cur_guanka = guanka.name;
+                    game.saveConfig('shanhe', lib.config.shanhe);
                     const guankazhanshi = document.createElement('div');
                     guankazhanshi.className = 'guankazhanshi';
                     shanhe.beijing2.appendChild(guankazhanshi);
@@ -753,7 +755,7 @@ window.shanhe = {
     // 进入关卡开始战斗
     async guankastart() {
         shanhe.beijing2.remove();
-        const cur_guanka = shanhe.chengchi[shanhe.cur_chengchi][shanhe.cur_guanka];
+        const cur_guanka = lib.config.shanhe.chengchi[lib.config.shanhe.cur_chengchi][lib.config.shanhe.cur_guanka];
         const bosslist = Object.keys(cur_guanka);
         game.prepareArena(bosslist.length + 1);
         game.zhu = game.me;
@@ -763,7 +765,7 @@ window.shanhe = {
             if (player == game.me) {
                 player.identity = 'zhu';
                 player.side = true;
-                player.init(shanhe.cur_xuanjiang);
+                player.init(lib.config.shanhe.cur_xuanjiang);
             } else {
                 const info = cur_guanka[bosslist[index - 1]];
                 player.identity = 'fan';
@@ -771,7 +773,7 @@ window.shanhe = {
                 player.init(info.name);
                 player.addSkill(info.skills);
                 player.maxHp = info.maxHp;
-                player.hp = info.hp;
+                player.hp = info.maxHp;
                 player.hujia = info.hujia;
             }
             player.node.identity.classList.remove('guessing');
@@ -806,9 +808,10 @@ window.shanhe = {
             }
         } //清空中央区卡牌
         if (bool) {
-            const chengchiinfo = shanhe.chengchi[shanhe.cur_chengchi];
-            const guankainfo = chengchiinfo[shanhe.cur_guanka];
+            const chengchiinfo = lib.config.shanhe.chengchi[lib.config.shanhe.cur_chengchi];
+            const guankainfo = chengchiinfo[lib.config.shanhe.cur_guanka];
             guankainfo.tongguan = true;
+            game.saveConfig('shanhe', lib.config.shanhe);
             let alltongguan = true;
             for (const i in chengchiinfo) {
                 if (!chengchiinfo[i].tongguan) {
@@ -817,6 +820,7 @@ window.shanhe = {
             }
             if (alltongguan) {
                 chengchiinfo.tongguan = true;
+                game.saveConfig('shanhe', lib.config.shanhe);
                 shanhe.shanhetustart();
                 return;
             }
@@ -860,7 +864,8 @@ window.shanhe = {
                     playImp2.setBackground(play, 'character');
                     nameText.innerHTML = lib.translate[play];
                     touxiang.listen(function () {
-                        shanhe.cur_xuanjiang = play;
+                        lib.config.shanhe.cur_xuanjiang = play;
+                        game.saveConfig('shanhe', lib.config.shanhe);
                         if (playBody.touxiang) {
                             playBody.touxiang.style.boxShadow = 'none';
                         }
@@ -871,12 +876,12 @@ window.shanhe = {
                         ui.click.charactercard(play, null, null, true, this);
                     };
                     touxiang.onmouseover = function () {
-                        if (shanhe.cur_xuanjiang != play) {
+                        if (lib.config.shanhe.cur_xuanjiang != play) {
                             touxiang.style.boxShadow = '-5px 0px 5px rgba(255,255,0,0.75),0px -5px 5px rgba(255,255,0,0.75),5px 0px 5px rgba(255,255,0,0.75),0px 5px 5px rgba(255,255,0,0.75)';
                         }
                     };
                     touxiang.onmouseout = function () {
-                        if (shanhe.cur_xuanjiang != play) {
+                        if (lib.config.shanhe.cur_xuanjiang != play) {
                             touxiang.style.boxShadow = 'none';
                         }
                     };
@@ -899,92 +904,44 @@ window.shanhe = {
             shanhe.xuanjiang();
         };
         dianjiang.oncontextmenu = function () {
-            ui.click.charactercard(shanhe.cur_xuanjiang, null, null, true, dianjiang);
+            ui.click.charactercard(lib.config.shanhe.cur_xuanjiang, null, null, true, dianjiang);
         };
         shanhe.beijing1.appendChild(dianjiang);
         const touxiang = document.createElement('div');
-        touxiang.style.backgroundImage = `url(${game.src(shanhe.cur_xuanjiang)})`;
+        touxiang.style.backgroundImage = `url(${game.src(lib.config.shanhe.cur_xuanjiang)})`;
         touxiang.className = 'touxiangQ';
         dianjiang.appendChild(touxiang);
     },
-    // 可挑战城池 关卡 boss
-    chengchi: {
-        chengchi1: {
-            guanka1: {
-                boss1: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-                boss2: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-            },
-            guanka2: {
-                boss1: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-                boss2: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-            },
-        },
-        chengchi2: {
-            guanka1: {
-                boss1: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-                boss2: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-            },
-            guanka2: {
-                boss1: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-                boss2: {
-                    name: 'guojia',
-                    sex: 'female',
-                    skills: ['zhaxiang', 'ranshang'],
-                    hujia: 1,
-                    maxHp: 1,
-                    hp: 1,
-                },
-            },
-        },
+    chongzhijilu() {
+        const skills = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]);
+        const characterlist = Object.keys(lib.character);
+        const nandu = Number(lib.config.mode_config.shanhetu.难度);
+        const chengchinum = Number(lib.config.mode_config.shanhetu.城池数量);
+        const guankanum = Number(lib.config.mode_config.shanhetu.关卡数量);
+        const bossnum = Number(lib.config.mode_config.shanhetu.boss数量);
+        lib.config.shanhe.chengchi = {};
+        const shanheinfo = lib.config.shanhe.chengchi;
+        let num = chengchinum + 1;
+        while (num-- > 1) {
+            shanheinfo[`chengchi${num}`] = {};
+            const chengchiinfo = shanheinfo[`chengchi${num}`];
+            let numx = guankanum + 1;
+            while (numx-- > 1) {
+                chengchiinfo[`guanka${numx}`] = {};
+                const guankainfo = chengchiinfo[`guanka${numx}`];
+                let numy = bossnum + 1;
+                while (numy-- > 1) {
+                    guankainfo[`boss${numy}`] = {
+                        name: characterlist.randomGet(),
+                        sex: 'female',
+                        skills: skills.randomGets(nandu),
+                        hujia: Math.ceil(Math.random() * nandu),
+                        maxHp: Math.ceil(Math.random() * nandu),
+                    };
+                }
+            }
+        }
+        game.saveConfig('shanhe', lib.config.shanhe);
     },
 };
 game.addMode(
@@ -993,6 +950,18 @@ game.addMode(
         start() {
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
+            if (!lib.config.shanhe) {
+                lib.config.shanhe = {};
+            }
+            lib.config.shanhe = {
+                cur_xuanjiang: lib.config.shanhe.cur_xuanjiang,//当前选将记录
+                cur_chengchi: lib.config.shanhe.cur_chengchi,//当前城池
+                cur_guanka: lib.config.shanhe.cur_guanka,//当前关卡
+                chengchi: lib.config.shanhe.chengchi,//通关记录
+            };
+            if (!lib.config.shanhe.chengchi) {
+                shanhe.chongzhijilu();
+            }
             shanhe.shanhetustart();
         },
         game: {
@@ -1364,7 +1333,10 @@ game.addMode(
             // 传说	应急战略	回合外成为敌方角色使用牌唯一目标,随机弃置来源1张牌
         },
         card: {},
-        translate: {},
+        translate: {
+            fan: '反',
+            zhu: '主',
+        },
     },
     {
         translate: '山河图',
@@ -1373,6 +1345,79 @@ game.addMode(
                 name: '山河图',
                 frequent: true,
                 clear: true,
+            },
+            难度: {
+                name: '<span class=Qmenu>难度</span>',
+                intro: '设置关卡中boss的强度(技能数/护甲值/体力值),修改后需要重置山河图通关记录',
+                frequent: true,
+                init: '3',
+                item: {
+                    1: '<span class=Qmenu>1</span>',
+                    2: '<span class=Qmenu>2</span>',
+                    3: '<span class=Qmenu>3</span>',
+                    4: '<span class=Qmenu>4</span>',
+                    5: '<span class=Qmenu>5</span>',
+                    6: '<span class=Qmenu>6</span>',
+                    7: '<span class=Qmenu>7</span>',
+                    8: '<span class=Qmenu>8</span>',
+                },
+            },
+            城池数量: {
+                name: '<span class=Qmenu>城池数量</span>',
+                intro: '设置山河图总共城池的数量,修改后需要重置山河图通关记录',
+                frequent: true,
+                init: '3',
+                item: {
+                    1: '<span class=Qmenu>1</span>',
+                    2: '<span class=Qmenu>2</span>',
+                    3: '<span class=Qmenu>3</span>',
+                    4: '<span class=Qmenu>4</span>',
+                    5: '<span class=Qmenu>5</span>',
+                    6: '<span class=Qmenu>6</span>',
+                    7: '<span class=Qmenu>7</span>',
+                    8: '<span class=Qmenu>8</span>',
+                },
+            },
+            关卡数量: {
+                name: '<span class=Qmenu>关卡数量</span>',
+                intro: '设置城池中关卡的数量,修改后需要重置山河图通关记录',
+                frequent: true,
+                init: '3',
+                item: {
+                    1: '<span class=Qmenu>1</span>',
+                    2: '<span class=Qmenu>2</span>',
+                    3: '<span class=Qmenu>3</span>',
+                    4: '<span class=Qmenu>4</span>',
+                    5: '<span class=Qmenu>5</span>',
+                    6: '<span class=Qmenu>6</span>',
+                    7: '<span class=Qmenu>7</span>',
+                    8: '<span class=Qmenu>8</span>',
+                },
+            },
+            boss数量: {
+                name: '<span class=Qmenu>boss数量</span>',
+                intro: '设置关卡中boss的数量,修改后需要重置山河图通关记录',
+                frequent: true,
+                init: '3',
+                item: {
+                    1: '<span class=Qmenu>1</span>',
+                    2: '<span class=Qmenu>2</span>',
+                    3: '<span class=Qmenu>3</span>',
+                    4: '<span class=Qmenu>4</span>',
+                    5: '<span class=Qmenu>5</span>',
+                    6: '<span class=Qmenu>6</span>',
+                    7: '<span class=Qmenu>7</span>',
+                    8: '<span class=Qmenu>8</span>',
+                },
+            },
+            重置通关记录: {
+                name: '<span class=Qmenu>重置通关记录</span>',
+                frequent: true,
+                clear: true,
+                onclick() {
+                    shanhe.chongzhijilu();
+                    alert('重置通关记录成功');
+                },
             },
         },
     }
