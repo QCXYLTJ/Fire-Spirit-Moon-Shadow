@@ -828,22 +828,67 @@ window.shanhe = {
         if (shanhe.xuanjiangkuang) {
             shanhe.xuanjiangkuang.remove();
         }
-        shanhe.xuanjiangkuang = document.createElement('div');
-        shanhe.xuanjiangkuang.className = 'xuanjiang';
-        shanhe.xuanjiangkuang.innerHTML = '请选择一个出战武将';
-        shanhe.beijing1.appendChild(shanhe.xuanjiangkuang);
-        const list = Object.keys(lib.character).randomGets(5);
-        for (const i of list) {
-            const touxiang = ui.create.button(i, 'character');
-            touxiang.classList.add('touxiangQ');
-            touxiang.onclick = function () {
-                const touxiang = this;
-                shanhe.cur_xuanjiang = touxiang.link;
-                shanhe.xuanjiangkuang.remove();
-                shanhe.dianjiang();
-            };
-            shanhe.xuanjiangkuang.appendChild(touxiang);
+        const body = ui.create.div('.xuanjiangkuang', shanhe.beijing1);
+        const groupBody = ui.create.div('.packlist', body);
+        lib.setScroll(groupBody);
+        if (!lib.config.touchscreen && lib.config.mousewheel) {
+            groupBody._scrollspeed = 30;
+            groupBody._scrollnum = 10;
+            groupBody.onmousewheel = ui.click.mousewheel;
+        } //水平滚动
+        const playBody = ui.create.div('.wujiangkuang', body);
+        lib.setScroll(playBody);
+        const packlist = Object.keys(lib.characterPack); //QQQ点将全扩
+        for (const pack of packlist) {
+            const packpoint = ui.create.div('.packpoint', groupBody); //QQQ
+            packpoint.innerHTML = get.translation(pack + '_character_config');
+            packpoint.listen(function () {
+                while (playBody.firstChild) {
+                    playBody.firstChild.remove();
+                }
+                if (groupBody.packpoint) {
+                    groupBody.packpoint.style.backgroundImage = 'none';
+                }
+                groupBody.packpoint = packpoint;
+                packpoint.setBackgroundImage('extension/火灵月影/image/icon_point1.png');
+                const playlist = Object.keys(lib.characterPack[pack]);
+                for (const play of playlist) {
+                    const touxiang = ui.create.div('.touxiang', playBody);
+                    const playImp1 = ui.create.div('.touxiang1', touxiang);
+                    const playImp2 = ui.create.div('.touxiang2', playImp1);
+                    const nameText = ui.create.div('.touxiangtext', playImp1);
+                    playImp2.setBackground(play, 'character');
+                    nameText.innerHTML = lib.translate[play];
+                    touxiang.listen(function () {
+                        shanhe.cur_xuanjiang = play;
+                        if (playBody.touxiang) {
+                            playBody.touxiang.style.boxShadow = 'none';
+                        }
+                        playBody.touxiang = touxiang;
+                        touxiang.style.boxShadow = '-5px 0px 5px rgba(0,255,0,0.75),0px -5px 5px rgba(0,255,0,0.75),5px 0px 5px rgba(0,255,0,0.75),0px 5px 5px rgba(0,255,0,0.75)';
+                    });
+                    touxiang.oncontextmenu = function () {
+                        ui.click.charactercard(play, null, null, true, this);
+                    };
+                    touxiang.onmouseover = function () {
+                        if (shanhe.cur_xuanjiang != play) {
+                            touxiang.style.boxShadow = '-5px 0px 5px rgba(255,255,0,0.75),0px -5px 5px rgba(255,255,0,0.75),5px 0px 5px rgba(255,255,0,0.75),0px 5px 5px rgba(255,255,0,0.75)';
+                        }
+                    };
+                    touxiang.onmouseout = function () {
+                        if (shanhe.cur_xuanjiang != play) {
+                            touxiang.style.boxShadow = 'none';
+                        }
+                    };
+                }
+            });
         }
+        const okButton = ui.create.div('.xuanjiangok', '确认选择', body);
+        okButton.listen(function () {
+            body.remove();
+            shanhe.dianjiang();
+        });
+        shanhe.xuanjiangkuang = body;
     },
     // 展示点将框
     dianjiang() {
@@ -853,7 +898,7 @@ window.shanhe = {
         dianjiang.onclick = function () {
             shanhe.xuanjiang();
         };
-        dianjiang.oncontextmenu = function (e) {
+        dianjiang.oncontextmenu = function () {
             ui.click.charactercard(shanhe.cur_xuanjiang, null, null, true, dianjiang);
         };
         shanhe.beijing1.appendChild(dianjiang);
