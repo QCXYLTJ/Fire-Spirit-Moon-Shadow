@@ -1426,7 +1426,8 @@ game.addMode(
                 clear: true,
                 onclick() {
                     shanhe.chongzhijilu();
-                    alert('重置通关记录成功');
+                    alert('重置通关记录成功,将会为您重启');
+                    game.reload();
                 },
             },
         },
