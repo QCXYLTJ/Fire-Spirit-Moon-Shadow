@@ -2987,6 +2987,50 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 player.storage[yinji] += 2;
                 player.addSkill(yinji);
             };
+            lib.element.player.yanli = async function () {
+                const player = this;
+                player.storage.HL_wufan_1 = 0;
+                const {
+                    result: { links },
+                } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')])
+                    .set('ai', (button) => 6 - get.value(button.link));
+                if (links && links[0]) {
+                    await player.discard(links);
+                }
+                game.playAudio(`../extension/火灵月影/audio/qinli_yanli${[1, 2, 3].randomGet()}.mp3`);
+                if (game.players.some((q) => q != player && q.countCards('h'))) {
+                    const {
+                        result: { targets },
+                    } = await player
+                        .chooseTarget('严厉:观看一名其他角色的手牌,获得其一张牌')
+                        .set('filterTarget', (c, p, t) => p != t && t.countCards('h'))
+                        .set('ai', (t) => -get.attitude(player, t));
+                    if (targets && targets[0]) {
+                        player.gainPlayerCard(targets[0], 'hej', 'visible').set('ai', (b) => get.value(b.link));
+                    }
+                }
+            };
+            lib.element.player.canku = async function () {
+                const player = this;
+                player.storage.HL_wufan_2 = 0;
+                const {
+                    result: { targets },
+                } = await player
+                    .chooseTarget('残酷:移除一名其他角色的全部技能,直到你的回合结束')
+                    .set('filterTarget', (c, p, t) => p != t)
+                    .set('ai', (t) => -get.attitude(player, t));
+                if (targets && targets[0]) {
+                    targets[0].storage.HL_wufan = targets[0].GS();
+                    targets[0].CS();
+                    game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
+                    player.when({ player: 'phaseAfter' }).then(() => {
+                        if (npc.isAlive()) {
+                            npc.addSkill(npc.storage.HL_wufan);
+                            npc.storage.HL_wufan = [];
+                        }
+                    }).vars({ npc: targets[0] });
+                }
+            };
             lib.init.css('extension/火灵月影/HL.css'); //火灵月影专属CSS
             lib.init.css('extension/火灵月影/QQQ.css'); //通用CSS
             game.import('character', function (lib, game, ui, get, ai, _status) {
@@ -7790,49 +7834,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     await player.chooseToDiscard(true, num, 'h').set('ai', (c) => 6 - get.value(c));
                                     player.addMark('HL_wufan_2', num);
                                     if (player.storage.HL_wufan_2 > 9) {
-                                        player.storage.HL_wufan_2 = 0;
-                                        const {
-                                            result: { targets },
-                                        } = await player
-                                            .chooseTarget('残酷:移除一名其他角色的全部技能,直到你的回合结束')
-                                            .set('filterTarget', (c, p, t) => p != t)
-                                            .set('ai', (t) => -get.attitude(player, t));
-                                        if (targets && targets[0]) {
-                                            targets[0].storage.HL_wufan = targets[0].GS();
-                                            targets[0].CS();
-                                            game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
-                                            player.when({ player: 'phaseAfter' }).then(() => {
-                                                if (npc.isAlive()) {
-                                                    npc.addSkill(npc.storage.HL_wufan);
-                                                    npc.storage.HL_wufan = [];
-                                                }
-                                            }).vars({ npc: targets[0] });
-                                        }
+                                        player.canku();
                                     }
                                 } else {
                                     await player.draw(-num);
                                     player.addMark('HL_wufan_1', -num);
                                     if (player.storage.HL_wufan_1 > 9) {
-                                        player.storage.HL_wufan_1 = 0;
-                                        const {
-                                            result: { links },
-                                        } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')])
-                                            .set('ai', (button) => 6 - get.value(button.link));
-                                        if (links && links[0]) {
-                                            await player.discard(links);
-                                        }
-                                        game.playAudio(`../extension/火灵月影/audio/qinli_yanli${[1, 2, 3].randomGet()}.mp3`);
-                                        if (game.players.some((q) => q != player && q.countCards('h'))) {
-                                            const {
-                                                result: { targets },
-                                            } = await player
-                                                .chooseTarget('严厉:观看一名其他角色的手牌,获得其一张牌')
-                                                .set('filterTarget', (c, p, t) => p != t && t.countCards('h'))
-                                                .set('ai', (t) => -get.attitude(player, t));
-                                            if (targets && targets[0]) {
-                                                player.gainPlayerCard(targets[0], 'hej', 'visible').set('ai', (b) => get.value(b.link));
-                                            }
-                                        }
+                                        player.yanli();
                                     }
                                 }
                             },
@@ -7871,8 +7879,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 狂暴
-                        // 当你死亡前,选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡
-                        // 若对方死亡,你取消你的死亡结算,将体力调整至1点
+                        // 当你死亡前,若你处于狂暴状态则取消之
+                        // 否则你进入狂暴状态,清除所有【严厉】/【残酷】标记并发动一次对应效果
+                        // 你选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡
+                        // 若对方死亡,你取消你的死亡结算,退出狂暴状态,将体力调整至1点
                         HL_kuangbao: {
                             trigger: {
                                 player: ['dieBefore'],
@@ -7889,6 +7899,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.hp = 1;
                                 }
                                 else {
+                                    await player.canku();
+                                    await player.yanli();
                                     const {
                                         result: { targets },
                                     } = await player
@@ -7994,7 +8006,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_wufan_2: '残酷',
                         HL_wufan_2_info: '移除一名其他角色的全部技能,直到你的回合结束',
                         HL_kuangbao: '狂暴',
-                        HL_kuangbao_info: '当你死亡前,选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,将体力调整至1点',
+                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,清除所有【严厉】/【残酷】标记并发动一次对应效果<br>你选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,退出狂暴状态,将体力调整至1点',
                         HL_ziyu: '自愈',
                         HL_ziyu_info: '每五个任意回合后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         //————————————————————————————————————————————扑克牌
