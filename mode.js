@@ -795,16 +795,6 @@ window.shanhe = {
                 if (lib.config.shanhe.cur_maxHp > 0) {
                     player.maxHp += lib.config.shanhe.cur_maxHp;
                 }
-                if (lib.config.shanhe.cur_equip.length) {
-                    for (const equip of lib.config.shanhe.cur_equip) {
-                        player.equip(game.createCard(equip));
-                    }
-                }
-                if (lib.config.shanhe.cur_startcard.length) {
-                    for (const card of lib.config.shanhe.cur_startcard) {
-                        player.gain(game.createCard(card), 'gain2');
-                    }
-                }
             } else {
                 const info = cur_guanka[bosslist[index - 1]];
                 player.identity = 'fan';
@@ -812,9 +802,9 @@ window.shanhe = {
                 player.init(info.name);
                 player.addSkill(info.skills);
                 player.maxHp += info.maxHp;
-                player.hp = info.maxHp;
                 player.hujia = info.hujia;
             }
+            player.hp = player.maxHp;
             player.node.identity.classList.remove('guessing');
             player.identityShown = true;
             player.ai.shown = 1;
@@ -824,6 +814,16 @@ window.shanhe = {
             for (const friend of lib.config.shanhe.cur_friend) {
                 const fellow = game.me.addFellow(friend);
                 game.log(game.me, '加入盟友', fellow);
+            }
+        }
+        if (lib.config.shanhe.cur_equip.length) {
+            for (const equip of lib.config.shanhe.cur_equip) {
+                await game.me.equip(game.createCard(equip));
+            }
+        }
+        if (lib.config.shanhe.cur_startcard.length) {
+            for (const card of lib.config.shanhe.cur_startcard) {
+                await game.me.gain(game.createCard(card), 'gain2');
             }
         }
         _status.event.trigger('gameStart');
