@@ -1291,7 +1291,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 async function () {
                     const div = document.createElement('div');
                     div.id = 'divQ';
-                    const JUESELIST = [];
                     const remove = [];
                     //————————————————————————————————————————————————————————重置设置
                     const chongzhi = document.createElement('div');
@@ -1330,13 +1329,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     FIND.className = 'findQ';
                     FIND.innerHTML = '搜索';
                     FIND.onclick = function () {
-                        for (const x of JUESELIST) {
-                            x.remove();
+                        while (div.firstChild) {
+                            div.firstChild.remove();
                         }
                         for (const j in lib.character) {
                             if ((lib.translate[j] && lib.translate[j].includes(input.value)) || j.includes(input.value)) {
                                 const JUESE = document.createElement('div');
-                                JUESE.style.backgroundImage = `url(${game.src(j)})`;
+                                div.appendChild(JUESE);
+                                JUESE.setBackground(j, 'character');
                                 JUESE.className = 'characterQ';
                                 JUESE.innerHTML = get.translation(j);
                                 JUESE.link = j;
@@ -1347,8 +1347,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     div.log = this;
                                     this.classList.add('selected');
                                 };
-                                JUESELIST.push(JUESE);
-                                div.appendChild(JUESE);
                             }
                         }
                     };
@@ -1363,12 +1361,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         PACK.innerHTML = get.translation(i + '_character_config');
                         PACK.link = i;
                         PACK.onclick = function () {
-                            for (const x of JUESELIST) {
-                                x.remove();
+                            while (div.firstChild) {
+                                div.firstChild.remove();
                             }
                             for (const j in lib.characterPack[this.link]) {
                                 const JUESE = document.createElement('div');
-                                JUESE.style.backgroundImage = `url(${game.src(j)})`;
+                                div.appendChild(JUESE);
+                                JUESE.setBackground(j, 'character');
                                 JUESE.className = 'characterQ';
                                 JUESE.innerHTML = get.translation(j);
                                 JUESE.link = j;
@@ -1379,8 +1378,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     div.log = this;
                                     this.classList.add('selected');
                                 };
-                                JUESELIST.push(JUESE);
-                                div.appendChild(JUESE);
                             }
                         };
                         div.appendChild(PACK);
@@ -2438,27 +2435,42 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     });
                     return video;
                 }; //给父元素添加一个覆盖的背景mp4
-                game.src = function (name) {
-                    let extimage = null,
-                        nameinfo = get.character(name),
-                        imgPrefixUrl;
-                    if (nameinfo && nameinfo.trashBin) {
-                        for (const value of nameinfo.trashBin) {
+                game.charactersrc = function (name) {
+                    const info = lib.character[name];
+                    if (info && info.trashBin) {
+                        for (const value of info.trashBin) {
                             if (value.startsWith('img:')) {
-                                imgPrefixUrl = value.slice(4);
-                                break;
-                            } else if (value.startsWith('ext:')) {
-                                extimage = value;
-                                break;
-                            } else if (value.startsWith('character:')) {
+                                return value.slice(4);
+                            }
+                            if (value.startsWith('ext:')) {
+                                return value.replace(/^ext:/, 'extension/');
+                            }
+                            if (value.startsWith('character:')) {
                                 name = value.slice(10);
                                 break;
                             }
                         }
                     }
-                    if (imgPrefixUrl) return imgPrefixUrl;
-                    else if (extimage) return extimage.replace(/^ext:/, 'extension/');
                     return `image/character/${name}.jpg`;
+                }; //获取武将名对应立绘路径
+                game.cardsrc = function (name) {
+                    const info = lib.card[name];
+                    if (info) {
+                        if (info.image) {
+                            if (info.image.startsWith('ext:')) {
+                                return info.image.replace(/^ext:/, 'extension/');
+                            }
+                            return info.image;
+                        }
+                        const ext = info.fullskin ? 'png' : 'jpg';
+                        if (info.modeimage) {
+                            return `image/mode/${info.modeimage}/card/${name}.${ext}`;
+                        }
+                        if (info.cardimage) {
+                            name = info.cardimage;
+                        }
+                        return `image/card/${name}.${ext}`;
+                    }
                 }; //获取武将名对应立绘路径
                 HTMLElement.prototype.HL_BG = function (name) {
                     const src = `extension/火灵月影/mp4/${name}.mp4`;
@@ -3499,6 +3511,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.wudi = true;
                                         player.when({ global: 'roundStart' }).then(() => (player.wudi = false));
                                         player.hp = Math.ceil(player.maxHp / 2);
+                                        player.update();
                                     },
                                 },
                             },
@@ -3682,6 +3695,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 document.body.HL_BG('HL_amiya2');
                                 player.node.avatar.HL_BG('HL_amiya1');
                                 player.hp = player.maxHp;
+                                player.update();
                                 player.wudi = true;
                                 player.when({ global: 'roundStart' }).then(() => (player.wudi = false));
                                 player.restoreSkill('HL_buyingcunzai_1');
@@ -4743,6 +4757,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_shengzhe_1');
                                         player.hp = 50;
+                                        player.update();
                                         const boss = player.addFellow('HL_fengletinghou');
                                         boss.shibing = true;
                                         game.nkangxing(boss, 'HL_fengletinghou');
@@ -6964,6 +6979,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     npc.addSkillLog(links);
                                     npc.maxHp = numx * 3;
                                     npc.hp = numx * 3;
+                                    npc.update();
                                     npc.draw(numx * 4 - 4);
                                     npc.ai.modAttitudeFrom = function (from, to, att) {
                                         if (to == from.boss) return 99;
@@ -7031,6 +7047,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (npc) {
                                             game.log(`<b style='color:rgb(228, 17, 28);'>${get.translation(player)}令${get.translation(npc)}死亡,并将自身体力值回复至上限</b>`);
                                             player.hp = player.maxHp;
+                                            player.update();
                                             await npc.die();
                                             npc.HL_kuilei = false;
                                         }
@@ -7836,13 +7853,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     await player.chooseToDiscard(true, num, 'h').set('ai', (c) => 6 - get.value(c));
                                     player.addMark('HL_wufan_2', num);
                                     if (player.storage.HL_wufan_2 > 9) {
-                                        player.canku();
+                                        await player.canku();
                                     }
                                 } else {
                                     await player.draw(-num);
                                     player.addMark('HL_wufan_1', -num);
                                     if (player.storage.HL_wufan_1 > 9) {
-                                        player.yanli();
+                                        await player.yanli();
                                     }
                                 }
                             },
@@ -7898,7 +7915,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (player.HL_kuangbao) {
                                     game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                     trigger.cancel();
-                                    player.hp = 1;
                                 }
                                 else {
                                     await player.canku();
@@ -7922,14 +7938,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     }
                                                 });
                                             if (!result.bool) {
+                                                player.HL_kuangbao = false;
                                                 break;
                                             }
                                         }
-                                        player.HL_kuangbao = false;
                                         if (targets[0].isDead()) {
                                             game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                             trigger.cancel();
                                             player.hp = 1;
+                                            player.update();
                                         }
                                     }
                                 }

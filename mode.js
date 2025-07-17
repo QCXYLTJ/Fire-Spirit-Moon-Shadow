@@ -695,12 +695,13 @@ window.shanhe = {
             shanhe.dianjiang();
         }
     },
-    // 大厅页面 关卡选择 挑战过的关卡变灰色————————————商店 <战法/技能/装备>调整
+    // 大厅页面 关卡选择 挑战过的关卡变灰色
     chengchistart() {
         shanhe.beijing1.remove();
         shanhe.beijing2 = document.createElement('div');
         shanhe.beijing2.id = 'shanhetu2';
         document.body.appendChild(shanhe.beijing2);
+        //—————————————————————————————————————————————————————关卡选择
         const cur_chengchi = lib.config.shanhe.chengchi[lib.config.shanhe.cur_chengchi];
         for (const i in cur_chengchi) {
             const guankainfo = cur_chengchi[i];
@@ -770,6 +771,9 @@ window.shanhe = {
         };
         shanhe.beijing2.appendChild(fanhui);
         //—————————————————————————————————————————————————————集市
+        shanhe.jishi();
+        //—————————————————————————————————————————————————————<战法/技能/装备>调整
+        shanhe.tiaozheng();
     },
     // 进入关卡开始战斗
     async guankastart() {
@@ -834,6 +838,119 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
+    // 商店 购买<战法/技能/体力上限/手牌上限/初始手牌/装备/队友>
+    jishi() {
+        const jishi = document.createElement('div');
+        jishi.className = 'jishi';
+        jishi.onclick = function () {
+            if (shanhe.jishikuang) {
+                shanhe.jishikuang.remove();
+                delete shanhe.jishikuang;
+                return;
+            }
+            const jishikuang = document.createElement('div');
+            jishikuang.className = 'jishikuang';
+            shanhe.beijing2.appendChild(jishikuang);// 商品大框
+            shanhe.jishikuang = jishikuang;
+            const jishilist = document.createElement('div');
+            jishilist.className = 'jishilist';
+            jishikuang.appendChild(jishilist);// 商品类型栏
+            const jishibox = document.createElement('div');
+            jishibox.className = 'jishibox';
+            jishikuang.appendChild(jishibox);// 商品框
+            const leixinglist = ['zhanfa', 'skill', 'equip', 'card', 'friend'];
+            for (const leixing of leixinglist) {
+                const leixingpoint = document.createElement('div');
+                leixingpoint.className = 'leixingpoint';
+                jishilist.appendChild(leixingpoint);// 商品类型点
+                leixingpoint.innerHTML = get.translation(leixing);
+                leixingpoint.onclick = function () {
+                    while (jishibox.firstChild) {
+                        jishibox.firstChild.remove();
+                    }
+                    const list = shanhe[`${leixing}list`].randomGets(16);
+                    for (const name of list) {
+                        const shangpinpoint = document.createElement('div');
+                        shangpinpoint.className = 'jianglipoint';
+                        jishibox.appendChild(shangpinpoint);
+                        const shangpintitle = document.createElement('div');
+                        shangpintitle.className = 'jianglititle';
+                        shangpinpoint.appendChild(shangpintitle);
+                        shangpintitle.innerHTML = get.translation(leixing);
+                        const shangpinbox = document.createElement('div');
+                        shangpinbox.className = 'jianglibox';
+                        shangpinbox.innerHTML = get.translation(name);
+                        shangpinpoint.appendChild(shangpinbox);
+                        if (leixing == 'friend') {
+                            shangpinpoint.oncontextmenu = function () {
+                                ui.click.charactercard(name, null, null, true, shangpinpoint);
+                            };
+                        }
+                        else {
+                            shangpinpoint.oncontextmenu = function () {
+                                const info = document.createElement('div');
+                                info.className = 'jiangli-info';
+                                document.body.appendChild(info);
+                                info.innerHTML = get.translation(`${name}_info`);
+                                setTimeout(() => {
+                                    info.remove();
+                                }, 2000);
+                            };
+                        }
+                        if (['equip', 'card'].includes(leixing)) {
+                            shangpinbox.setBackgroundImage(game.cardsrc(name, 'card'));
+                        }
+                        if ('friend' == leixing) {
+                            shangpinbox.setBackground(name, 'character');
+                        }
+                        if ('zhanfa' == leixing) {
+                            shangpinbox.setBackground(shanhe.zhanfamap[name], 'character');
+                        }
+                        shangpinpoint.jiage = 500;
+                        shangpinpoint.onclick = function () {
+                            const okkuang = document.createElement('div');
+                            okkuang.className = 'okkuang';
+                            jishibox.appendChild(okkuang);
+                            const ok = document.createElement('div');
+                            ok.innerHTML = '确认购买';
+                            ok.className = 'ok-button';
+                            okkuang.appendChild(ok);
+                            ok.onclick = function () {
+                                okkuang.remove();
+                                const gongxi = document.createElement('div');
+                                gongxi.className = 'gongxi';
+                                document.body.appendChild(gongxi);
+                                setTimeout(() => {
+                                    gongxi.remove();
+                                }, 2000);
+                                if (lib.config.shanhe.jinbi >= shangpinpoint.jiage) {
+                                    lib.config.shanhe.jinbi -= shangpinpoint.jiage;
+                                    lib.config.shanhe[`cur_${leixing}`].push(name);
+                                    game.saveConfig('shanhe', lib.config.shanhe);
+                                    gongxi.innerHTML = '购买成功';
+                                }
+                                else {
+                                    gongxi.innerHTML = '金币不足';
+                                }
+                            };
+                            const cancel = document.createElement('div');
+                            cancel.innerHTML = '取消购买';
+                            cancel.className = 'cancel-button';
+                            okkuang.appendChild(cancel);
+                            cancel.onclick = function () {
+                                okkuang.remove();
+                            };
+                        };
+                    }
+                };
+            }
+        };
+        shanhe.beijing2.appendChild(jishi);
+    },
+    // <战法/技能/装备>调整
+    tiaozheng() {
+
+    },
     // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录
     jiesuan(bool) {
         shanhe.zhongzhi = true;
@@ -879,7 +996,7 @@ window.shanhe = {
         const jianglikuang = document.createElement('div');
         jianglikuang.className = 'jianglikuang';
         document.body.appendChild(jianglikuang);
-        const jiangliku = ['zhanfa', 'skill', 'maxHp', 'maxhandcard', 'equip', 'startcard', 'friend'];
+        const jiangliku = ['zhanfa', 'skill', 'maxHp', 'maxhandcard', 'equip', 'card', 'friend'];
         const jianglilist = jiangliku.randomGets(3);
         for (const jiangli of jianglilist) {
             const jianglipoint = document.createElement('div');
@@ -893,37 +1010,6 @@ window.shanhe = {
             jianglibox.className = 'jianglibox';
             jianglipoint.appendChild(jianglibox);
             switch (jiangli) {
-                case 'zhanfa':
-                    {
-                        jianglipoint.name = shanhe.zhanfanamelist.randomGet();
-                        jianglipoint.oncontextmenu = function () {
-                            const info = document.createElement('div');
-                            info.className = 'jiangli-info';
-                            document.body.appendChild(info);
-                            info.innerHTML = get.translation(`${jianglipoint.name}_info`);
-                            setTimeout(() => {
-                                info.remove();
-                            }, 2000);
-                        };
-                        jianglibox.innerHTML = get.translation(jianglipoint.name);
-                        jianglibox.setBackground(shanhe.zhanfalist[jianglipoint.name], 'character');
-                    }
-                    break;
-                case 'skill':
-                    {
-                        jianglipoint.name = shanhe.skilllist.randomGet();
-                        jianglipoint.oncontextmenu = function () {
-                            const info = document.createElement('div');
-                            info.className = 'jiangli-info';
-                            document.body.appendChild(info);
-                            info.innerHTML = get.translation(`${jianglipoint.name}_info`);
-                            setTimeout(() => {
-                                info.remove();
-                            }, 2000);
-                        };
-                        jianglibox.innerHTML = get.translation(jianglipoint.name);
-                    }
-                    break;
                 case 'maxHp':
                     {
                         jianglibox.setBackground('extension/火灵月影/image/maxHp.jpg');
@@ -934,46 +1020,35 @@ window.shanhe = {
                         jianglibox.setBackground('extension/火灵月影/image/maxhandcard.jpg');
                     }
                     break;
-                case 'equip':
+                default:
                     {
-                        jianglipoint.name = shanhe.equiplist.randomGet();
-                        jianglipoint.oncontextmenu = function () {
-                            const info = document.createElement('div');
-                            info.className = 'jiangli-info';
-                            document.body.appendChild(info);
-                            info.innerHTML = get.translation(`${jianglipoint.name}_info`);
-                            setTimeout(() => {
-                                info.remove();
-                            }, 2000);
-                        };
+                        jianglipoint.name = shanhe[`${jiangli}list`].randomGet();
                         jianglibox.innerHTML = get.translation(jianglipoint.name);
-                        jianglibox.setBackground(jianglipoint.name, 'card');
-                    }
-                    break;
-                case 'startcard':
-                    {
-                        jianglipoint.name = shanhe.cardlist.randomGet();
-                        jianglipoint.oncontextmenu = function () {
-                            const info = document.createElement('div');
-                            info.className = 'jiangli-info';
-                            document.body.appendChild(info);
-                            info.innerHTML = get.translation(`${jianglipoint.name}_info`);
-                            setTimeout(() => {
-                                info.remove();
-                            }, 2000);
-                        };
-                        jianglibox.innerHTML = get.translation(jianglipoint.name);
-                        jianglibox.setBackground(jianglipoint.name, 'card');
-                    }
-                    break;
-                case 'friend':
-                    {
-                        jianglipoint.name = shanhe.characterlist.randomGet();
-                        jianglipoint.oncontextmenu = function () {
-                            ui.click.charactercard(jianglipoint.name, null, null, true, jianglipoint);
-                        };
-                        jianglibox.innerHTML = get.translation(jianglipoint.name);
-                        jianglibox.setBackground(jianglipoint.name, 'character');
+                        if (jiangli == 'friend') {
+                            jianglipoint.oncontextmenu = function () {
+                                ui.click.charactercard(jianglipoint.name, null, null, true, jianglipoint);
+                            };
+                        }
+                        else {
+                            jianglipoint.oncontextmenu = function () {
+                                const info = document.createElement('div');
+                                info.className = 'jiangli-info';
+                                document.body.appendChild(info);
+                                info.innerHTML = get.translation(`${jianglipoint.name}_info`);
+                                setTimeout(() => {
+                                    info.remove();
+                                }, 2000);
+                            };
+                        }
+                        if (['equip', 'card'].includes(jiangli)) {
+                            jianglibox.setBackgroundImage(game.cardsrc(jianglipoint.name, 'card'));
+                        }
+                        if ('friend' == jiangli) {
+                            jianglibox.setBackground(jianglipoint.name, 'character');
+                        }
+                        if ('zhanfa' == jiangli) {
+                            jianglibox.setBackground(shanhe.zhanfamap[jianglipoint.name], 'character');
+                        }
                     }
                     break;
             }
@@ -1035,7 +1110,7 @@ window.shanhe = {
                         gongxi.innerHTML = `获得了装备${get.translation(jianglikuang.selectname)}`;
                     }
                     break;
-                case 'startcard':
+                case 'card':
                     {
                         lib.config.shanhe.cur_startcard.push(jianglikuang.selectname);
                         gongxi.innerHTML = `获得了初始手牌${get.translation(jianglikuang.selectname)}`;
@@ -1132,7 +1207,7 @@ window.shanhe = {
         };
         shanhe.beijing1.appendChild(dianjiang);
         const touxiang = document.createElement('div');
-        touxiang.style.backgroundImage = `url(${game.src(lib.config.shanhe.cur_xuanjiang)})`;
+        touxiang.setBackground(lib.config.shanhe.cur_xuanjiang, 'character');
         touxiang.className = 'touxiangQ';
         dianjiang.appendChild(touxiang);
     },
@@ -1164,7 +1239,7 @@ window.shanhe = {
                 let numy = bossnum + 1;
                 while (numy-- > 1) {
                     guankainfo[`boss${numy}`] = {
-                        name: shanhe.characterlist.randomGet(),
+                        name: shanhe.friendlist.randomGet(),
                         sex: 'female',
                         skills: shanhe.skilllist.randomGets(nandu),
                         hujia: Math.ceil(Math.random() * nandu),
@@ -1187,22 +1262,22 @@ game.addMode(
             if (!shanhe.skilllist) {
                 shanhe.skilllist = Object.keys(lib.skill).filter((i) => lib.translate[i] && lib.translate[`${i}_info`]);
             }
-            if (!shanhe.characterlist) {
-                shanhe.characterlist = Object.keys(lib.character);
+            if (!shanhe.friendlist) {
+                shanhe.friendlist = Object.keys(lib.character);
             }
-            if (!shanhe.zhanfalist) {
-                shanhe.zhanfalist = {};
+            if (!shanhe.zhanfamap) {
+                shanhe.zhanfamap = {};
                 for (const i in lib.character) {
                     const info = lib.character[i];
                     if (info.skills) {
                         for (const skill of info.skills) {
                             if (lib.translate[skill] && lib.translate[`${skill}_info`]) {
-                                shanhe.zhanfalist[skill] = i;
+                                shanhe.zhanfamap[skill] = i;
                             }
                         }
                     }
                 }
-                shanhe.zhanfanamelist = Object.keys(shanhe.zhanfalist);
+                shanhe.zhanfalist = Object.keys(shanhe.zhanfamap);
             } // 键为战法技能名,值为来源的武将名,方便设置战法头像
             if (!shanhe.equiplist) {
                 shanhe.equiplist = [];
@@ -1218,7 +1293,7 @@ game.addMode(
                 for (const i in lib.card) {
                     const info = lib.card[i];
                     if (info.mode && !info.mode.includes(lib.config.mode)) continue;
-                    if (lib.translate[i] && lib.translate[`${i}_info`]) {
+                    if (info.type != 'equip' && lib.translate[i] && lib.translate[`${i}_info`]) {
                         shanhe.cardlist.push(i);
                     }
                 }
@@ -1238,6 +1313,7 @@ game.addMode(
                 cur_equip: lib.config.shanhe.cur_equip || [], // 当前初始装备
                 cur_startcard: lib.config.shanhe.cur_startcard || [], // 当前初始手牌
                 cur_friend: lib.config.shanhe.cur_friend || [], // 当前队友
+                jinbi: lib.config.shanhe.jinbi || 0, // 当前金币
             };
             if (!lib.config.shanhe.chengchi) {
                 shanhe.chongzhijilu();
@@ -1624,13 +1700,14 @@ game.addMode(
         card: {},
         translate: {
             fan: '反',
+            zhong: '忠',
             zhu: '主',
             zhanfa: '战法',
             skill: '技能',
             maxHp: '体力上限',
             maxhandcard: '手牌上限',
             equip: '装备',
-            startcard: '初始手牌',
+            card: '初始手牌',
             friend: '盟友',
         },
     },
