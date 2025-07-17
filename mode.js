@@ -1207,7 +1207,7 @@ game.addMode(
                 shanhe.equiplist = [];
                 for (const i in lib.card) {
                     const info = lib.card[i];
-                    if (info.type == 'equip') {
+                    if (info.type == 'equip' && lib.translate[i] && lib.translate[`${i}_info`]) {
                         shanhe.equiplist.push(i);
                     }
                 }
@@ -1217,8 +1217,9 @@ game.addMode(
                 for (const i in lib.card) {
                     const info = lib.card[i];
                     if (info.mode && !info.mode.includes(lib.config.mode)) continue;
-                    if (!lib.translate[`${i}_info`]) continue;
-                    shanhe.cardlist.push(i);
+                    if (lib.translate[i] && lib.translate[`${i}_info`]) {
+                        shanhe.cardlist.push(i);
+                    }
                 }
             }
             if (!lib.config.shanhe) {
