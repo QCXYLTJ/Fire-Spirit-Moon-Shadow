@@ -827,8 +827,8 @@ window.shanhe = {
                 await game.me.equip(game.createCard(equip));
             }
         }
-        if (lib.config.shanhe.cur_startcard.length) {
-            for (const card of lib.config.shanhe.cur_startcard) {
+        if (lib.config.shanhe.cur_card.length) {
+            for (const card of lib.config.shanhe.cur_card) {
                 await game.me.gain(game.createCard(card), 'gain2');
             }
         }
@@ -838,7 +838,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 商店 购买<战法/技能/体力上限/手牌上限/初始手牌/装备/队友>
+    // 商店 购买<战法/技能/体力上限/手牌上限/初始手牌/装备/队友>——————商品价格显示 金币显示
     jishi() {
         const jishi = document.createElement('div');
         jishi.className = 'jishi';
@@ -923,8 +923,8 @@ window.shanhe = {
                                 setTimeout(() => {
                                     gongxi.remove();
                                 }, 2000);
-                                if (lib.config.shanhe.jinbi >= shangpinpoint.jiage) {
-                                    lib.config.shanhe.jinbi -= shangpinpoint.jiage;
+                                if (lib.config.shanhe.cur_jinbi >= shangpinpoint.jiage) {
+                                    lib.config.shanhe.cur_jinbi -= shangpinpoint.jiage;
                                     lib.config.shanhe[`cur_${leixing}`].push(name);
                                     game.saveConfig('shanhe', lib.config.shanhe);
                                     gongxi.innerHTML = '购买成功';
@@ -947,7 +947,7 @@ window.shanhe = {
         };
         shanhe.beijing2.appendChild(jishi);
     },
-    // <战法/技能/装备>调整
+    // <战法/技能/装备>调整 
     tiaozheng() {
 
     },
@@ -991,12 +991,12 @@ window.shanhe = {
         }
         shanhe.chengchistart();
     },
-    // 获得<战法/技能/体力上限/手牌上限/初始手牌/装备/队友>奖励
+    // 获得<金币/战法/技能/体力上限/手牌上限/初始手牌/装备/队友>奖励
     jiangli() {
         const jianglikuang = document.createElement('div');
         jianglikuang.className = 'jianglikuang';
         document.body.appendChild(jianglikuang);
-        const jiangliku = ['zhanfa', 'skill', 'maxHp', 'maxhandcard', 'equip', 'card', 'friend'];
+        const jiangliku = ['jinbi', 'zhanfa', 'skill', 'maxHp', 'maxhandcard', 'equip', 'card', 'friend'];
         const jianglilist = jiangliku.randomGets(3);
         for (const jiangli of jianglilist) {
             const jianglipoint = document.createElement('div');
@@ -1010,6 +1010,11 @@ window.shanhe = {
             jianglibox.className = 'jianglibox';
             jianglipoint.appendChild(jianglibox);
             switch (jiangli) {
+                case 'jinbi':
+                    {
+                        jianglibox.setBackground('extension/火灵月影/image/jinbi.jpg');
+                    }
+                    break;
                 case 'maxHp':
                     {
                         jianglibox.setBackground('extension/火灵月影/image/maxHp.jpg');
@@ -1080,16 +1085,10 @@ window.shanhe = {
                 gongxi.remove();
             }, 2000);
             switch (jianglikuang.selecttype) {
-                case 'zhanfa':
+                case 'jinbi':
                     {
-                        lib.config.shanhe.cur_zhanfa.push(jianglikuang.selectname);
-                        gongxi.innerHTML = `获得了战法${get.translation(jianglikuang.selectname)}`;
-                    }
-                    break;
-                case 'skill':
-                    {
-                        lib.config.shanhe.cur_skill.push(jianglikuang.selectname);
-                        gongxi.innerHTML = `获得了技能${get.translation(jianglikuang.selectname)}`;
+                        lib.config.shanhe.cur_jinbi += 100;
+                        gongxi.innerHTML = `获得了100金币`;
                     }
                     break;
                 case 'maxHp':
@@ -1104,6 +1103,18 @@ window.shanhe = {
                         gongxi.innerHTML = `手牌上限增加了`;
                     }
                     break;
+                case 'zhanfa':
+                    {
+                        lib.config.shanhe.cur_zhanfa.push(jianglikuang.selectname);
+                        gongxi.innerHTML = `获得了战法${get.translation(jianglikuang.selectname)}`;
+                    }
+                    break;
+                case 'skill':
+                    {
+                        lib.config.shanhe.cur_skill.push(jianglikuang.selectname);
+                        gongxi.innerHTML = `获得了技能${get.translation(jianglikuang.selectname)}`;
+                    }
+                    break;
                 case 'equip':
                     {
                         lib.config.shanhe.cur_equip.push(jianglikuang.selectname);
@@ -1112,7 +1123,7 @@ window.shanhe = {
                     break;
                 case 'card':
                     {
-                        lib.config.shanhe.cur_startcard.push(jianglikuang.selectname);
+                        lib.config.shanhe.cur_card.push(jianglikuang.selectname);
                         gongxi.innerHTML = `获得了初始手牌${get.translation(jianglikuang.selectname)}`;
                     }
                     break;
@@ -1311,9 +1322,9 @@ game.addMode(
                 cur_maxHp: lib.config.shanhe.cur_maxHp || 0, // 当前额外体力
                 cur_maxhandcard: lib.config.shanhe.cur_maxhandcard || 0, // 当前额外手牌上限
                 cur_equip: lib.config.shanhe.cur_equip || [], // 当前初始装备
-                cur_startcard: lib.config.shanhe.cur_startcard || [], // 当前初始手牌
+                cur_card: lib.config.shanhe.cur_card || [], // 当前初始手牌
                 cur_friend: lib.config.shanhe.cur_friend || [], // 当前队友
-                jinbi: lib.config.shanhe.jinbi || 0, // 当前金币
+                cur_jinbi: lib.config.shanhe.cur_jinbi || 0, // 当前金币
             };
             if (!lib.config.shanhe.chengchi) {
                 shanhe.chongzhijilu();
@@ -1702,6 +1713,7 @@ game.addMode(
             fan: '反',
             zhong: '忠',
             zhu: '主',
+            jinbi: '金币',
             zhanfa: '战法',
             skill: '技能',
             maxHp: '体力上限',
