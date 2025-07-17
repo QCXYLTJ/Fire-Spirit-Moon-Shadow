@@ -1180,6 +1180,7 @@ game.addMode(
     'shanhetu',
     {
         start() {
+            document.removeEventListener('contextmenu', ui.click.right); //移除右键事件
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
             game.finishCards();
@@ -1230,13 +1231,13 @@ game.addMode(
                 cur_chengchi: lib.config.shanhe.cur_chengchi, //当前城池
                 cur_guanka: lib.config.shanhe.cur_guanka, //当前关卡
                 chengchi: lib.config.shanhe.chengchi, //通关记录
-                cur_zhanfa: lib.config.shanhe.cur_zhanfa || [],// 当前战法
-                cur_skill: lib.config.shanhe.cur_skill || [],// 当前额外技能
-                cur_maxHp: lib.config.shanhe.cur_maxHp || 0,// 当前额外体力
-                cur_maxhandcard: lib.config.shanhe.cur_maxhandcard || 0,// 当前额外手牌上限
-                cur_equip: lib.config.shanhe.cur_equip || [],// 当前初始装备
-                cur_startcard: lib.config.shanhe.cur_startcard || [],// 当前初始手牌
-                cur_friend: lib.config.shanhe.cur_friend || [],// 当前队友
+                cur_zhanfa: lib.config.shanhe.cur_zhanfa || [], // 当前战法
+                cur_skill: lib.config.shanhe.cur_skill || [], // 当前额外技能
+                cur_maxHp: lib.config.shanhe.cur_maxHp || 0, // 当前额外体力
+                cur_maxhandcard: lib.config.shanhe.cur_maxhandcard || 0, // 当前额外手牌上限
+                cur_equip: lib.config.shanhe.cur_equip || [], // 当前初始装备
+                cur_startcard: lib.config.shanhe.cur_startcard || [], // 当前初始手牌
+                cur_friend: lib.config.shanhe.cur_friend || [], // 当前队友
             };
             if (!lib.config.shanhe.chengchi) {
                 shanhe.chongzhijilu();
