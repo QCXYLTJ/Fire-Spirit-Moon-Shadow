@@ -637,7 +637,7 @@ game.addMode(
 lib.mode.jiguchuanhua.splash = 'ext:火灵月影/image/jiguchuanhua.jpg';
 //—————————————————————————————————————————————————————————————————————————————山河图模式
 window.shanhe = {
-    // 初始页面 点将 城池选择 开始/继续战斗 挑战过的城池变灰色 山河册
+    // 初始页面 点将 城池选择 开始/继续战斗 挑战过的城池变灰色————————————山河册战法
     shanhetustart() {
         if (shanhe.beijing2) {
             shanhe.beijing2.remove();
@@ -695,7 +695,7 @@ window.shanhe = {
             shanhe.dianjiang();
         }
     },
-    // 大厅页面 关卡选择 挑战过的关卡变灰色 商店 <战法/技能/装备>调整
+    // 大厅页面 关卡选择 挑战过的关卡变灰色————————————商店 <战法/技能/装备>调整
     chengchistart() {
         shanhe.beijing1.remove();
         shanhe.beijing2 = document.createElement('div');
@@ -788,7 +788,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 获得<战法/技能/体力上限/初始手牌/手牌上限/装备>奖励 清空历史记录
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面————————————获得<战法/技能/体力上限/初始手牌/手牌上限/装备>奖励 清空历史记录
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
