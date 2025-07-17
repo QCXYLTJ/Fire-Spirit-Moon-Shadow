@@ -816,6 +816,8 @@ window.shanhe = {
                 game.log(game.me, '加入盟友', fellow);
             }
         }
+        // 人员准备完毕
+        _status.event.trigger('gameStart');
         if (lib.config.shanhe.cur_equip.length) {
             for (const equip of lib.config.shanhe.cur_equip) {
                 await game.me.equip(game.createCard(equip));
@@ -826,7 +828,6 @@ window.shanhe = {
                 await game.me.gain(game.createCard(card), 'gain2');
             }
         }
-        _status.event.trigger('gameStart');
         shanhe.gameDraw = game.gameDraw(game.zhu, () => 4);
         await shanhe.gameDraw;
         shanhe.zhongzhi = false;
