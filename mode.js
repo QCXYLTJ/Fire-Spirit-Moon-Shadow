@@ -1708,9 +1708,13 @@ game.addMode(
                 frequent: true,
                 clear: true,
                 onclick() {
-                    shanhe.chongzhijilu();
-                    alert('重置通关记录成功,将会为您重启');
-                    game.reload();
+                    if (_status.mode == 'shanhetu') {
+                        shanhe.chongzhijilu();
+                        alert('重置通关记录成功,将会为您重启');
+                        game.reload();
+                    } else {
+                        alert('只有在山河图模式下才可以重置通关记录');
+                    }
                 },
             },
         },
