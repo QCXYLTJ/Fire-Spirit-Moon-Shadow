@@ -318,15 +318,17 @@
 }
 
 .bosstitle {
+    z-index: 9;
     top: 0;
     left: 0;
     font-size: 25px;
     font-weight: bold;
     text-align: center;
+    white-space: nowrap;
     color: #d34701;
     width: 100%;
     height: 10%;
-    line-height: 50px;
+    line-height: 130%;
 }
 
 .bossbox {
@@ -338,10 +340,11 @@
 }
 
 .bossinfo {
+    z-index: 9;
     left: 0;
     width: 100%;
     top: 60%;
-    font-size: 25px;
+    font-size: 15px;
     font-weight: bold;
     color: #d34701;
     text-align: center;
