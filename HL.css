@@ -118,7 +118,7 @@
     left: 0%;
     overflow: hidden;
     border-radius: 10px;
-    background-position: center center;
+    background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     background-image: url(./image/icon_point2.png);
@@ -144,7 +144,7 @@
     left: 0%;
     top: 0%;
     z-index: 9;
-    background-position: center center;
+    background-position: center;
     background-size: cover;
     background-repeat: no-repeat;
 }
@@ -183,7 +183,7 @@
     color: #FFEC8B;
     font-family: HanYiZhongLiShuFan;
     border-radius: 8px;
-    background-position: center center;
+    background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
     background-image: url(./image/icon_Button3.png);
@@ -191,15 +191,18 @@
 
 .packpoint {
     position: relative;
-    width: 12.5%;
-    height: 82.15%;
-    top: 5%;
-    left: 0%;
+    width: 10%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 700%;
+    overflow-y: hidden;
     border-radius: 8px;
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;
-    margin: 0% 1% 0% 0%;
 }
 
 .wujiangkuang {
@@ -212,7 +215,7 @@
     overflow: auto;
     z-index: 10;
     border-radius: 10px;
-    background-position: center center;
+    background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-image: url(./image/bg-touming-6.png);
