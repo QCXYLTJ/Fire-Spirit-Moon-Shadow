@@ -7841,6 +7841,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player != player;
                             },
                             forced: true,
+                            mark: true,
+                            marktext: '<img src=extension/火灵月影/image/HL_jiaozhan.png class="markimg">',
+                            intro: {
+                                markcount(storage, player) {
+                                    return player.maxHp - player.hp + 1 - number0(player.storage.counttrigger?.HL_jiaozhan);
+                                },
+                                content(storage, player) {
+                                    return `本回合还可发动${player.maxHp - player.hp + 1 - number0(player.storage.counttrigger?.HL_jiaozhan)}次`;
+                                },
+                            },
                             async content(event, trigger, player) {
                                 const info = get.translation(trigger.card);
                                 const {
@@ -7855,6 +7865,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (cards[0].suit == trigger.card.suit && trigger.cards?.length) {
                                         player.gain(trigger.cards, 'gain2');
                                     }
+                                    player.markSkill('HL_jiaozhan');
                                 }
                                 else {
                                     player.storage.counttrigger.HL_jiaozhan--;

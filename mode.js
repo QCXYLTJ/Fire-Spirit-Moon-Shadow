@@ -949,7 +949,7 @@ window.shanhe = {
         };
         shanhe.beijing2.appendChild(jishi);
     },
-    // <战法/技能/装备/手牌/队友>展示与调整
+    // <战法/技能/装备/手牌/队友>展示与调整——————装备展示
     tiaozheng() {
         const tiaozhengkuang = document.createElement('div');
         tiaozhengkuang.className = 'tiaozhengkuang';
