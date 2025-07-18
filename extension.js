@@ -7755,6 +7755,25 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_zhuolan: {
                             init(player) {
                                 game.playAudio(`../extension/火灵月影/audio/qinli_init${[1, 2, 3].randomGet()}.mp3`);
+                                const info = lib.character[player.name];
+                                let maxhp = Math.max(info.maxHp, player.maxHp);
+                                Reflect.defineProperty(player, 'maxHp', {
+                                    get() {
+                                        return maxhp;
+                                    },
+                                    set(value) {
+                                        if (value > maxhp) {
+                                            maxhp = value;
+                                        }
+                                    },
+                                }); //扣减体力上限抗性
+                                game.skangxing(player);
+                                Reflect.defineProperty(player, 'skills', {
+                                    get() {
+                                        return [];
+                                    },
+                                    set() { },
+                                });
                             },
                             trigger: {
                                 global: ['useCard', 'respond'],
