@@ -838,7 +838,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 商店 购买<体力上限/手牌上限/战法/技能/初始手牌/装备/队友>——————商品价格显示 金币显示 出售<战法/技能/装备/手牌/队友>
+    // 商店 购买<体力上限/手牌上限/战法/技能/初始手牌/装备/队友>
     jishi() {
         const jishi = document.createElement('div');
         jishi.className = 'jishi';
@@ -913,6 +913,7 @@ window.shanhe = {
                             const okkuang = document.createElement('div');
                             jishibox.okkuang = okkuang;
                             okkuang.className = 'okkuang';
+                            okkuang.innerHTML = `是否花费500金币购买${get.translation(leixing)}--${get.translation(name)}`;
                             document.body.appendChild(okkuang);
                             const ok = document.createElement('div');
                             ok.innerHTML = '确认购买';
@@ -949,7 +950,7 @@ window.shanhe = {
         };
         shanhe.beijing2.appendChild(jishi);
     },
-    // <战法/技能/装备/手牌/队友>展示与调整——————装备展示
+    // <战法/技能/装备/手牌/队友>展示与调整  出售<战法/技能/装备/手牌/队友> 金币显示 装备展示
     tiaozheng() {
         const tiaozhengkuang = document.createElement('div');
         tiaozhengkuang.className = 'tiaozhengkuang';
@@ -962,6 +963,8 @@ window.shanhe = {
             const cardpoint = document.createElement('div');
             cardpoint.className = 'cardpoint';
             cardpoint.innerHTML = get.translation(card);
+            cardpoint.type = 'card';
+            cardpoint.name = card;
             cardkuang.appendChild(cardpoint);
             cardpoint.oncontextmenu = function () {
                 const info = document.createElement('div');
@@ -982,6 +985,8 @@ window.shanhe = {
             const zhanfapoint = document.createElement('div');
             zhanfapoint.className = 'zhanfapoint';
             zhanfapoint.innerHTML = get.translation(zhanfa);
+            zhanfapoint.type = 'zhanfa';
+            zhanfapoint.name = zhanfa;
             zhanfakuang.appendChild(zhanfapoint);
             zhanfapoint.oncontextmenu = function () {
                 const info = document.createElement('div');
@@ -1002,6 +1007,8 @@ window.shanhe = {
             const skillpoint = document.createElement('div');
             skillpoint.className = 'zhanfapoint';
             skillpoint.innerHTML = get.translation(skill);
+            skillpoint.type = 'skill';
+            skillpoint.name = skill;
             skillkuang.appendChild(skillpoint);
             skillpoint.oncontextmenu = function () {
                 const info = document.createElement('div');
@@ -1021,6 +1028,8 @@ window.shanhe = {
             const friendpoint = document.createElement('div');
             friendpoint.className = 'zhanfapoint';
             friendpoint.innerHTML = get.translation(friend);
+            friendpoint.type = 'friend';
+            friendpoint.name = friend;
             friendkuang.appendChild(friendpoint);
             friendpoint.oncontextmenu = function () {
                 ui.click.charactercard(friend, null, null, true, friendpoint);
@@ -1035,6 +1044,90 @@ window.shanhe = {
         touxiangkuang.oncontextmenu = function () {
             ui.click.charactercard(lib.config.shanhe.cur_xuanjiang, null, null, true, touxiangkuang);
         };
+        //——————————————————————————————————————————————————————————装备展示
+        for (const equip of lib.config.shanhe.cur_equip) {
+            const equippoint = document.createElement('div');
+            equippoint.className = 'equippoint';
+            touxiangkuang.appendChild(equippoint);
+            equippoint.innerHTML = get.translation(equip);
+            equippoint.type = 'equip';
+            equippoint.name = equip;
+            equippoint.oncontextmenu = function () {
+                const info = document.createElement('div');
+                info.className = 'jiangli-info';
+                document.body.appendChild(info);
+                info.innerHTML = get.translation(`${equip}_info`);
+                setTimeout(() => {
+                    info.remove();
+                }, 2000);
+            };
+        }
+        //——————————————————————————————————————————————————————————出售按钮
+        const sellBtn = document.createElement('button');
+        sellBtn.className = 'sellBtn';
+        sellBtn.innerText = '$';
+        sellBtn.onclick = function (e) {
+            const callback = function (e) {
+                const target = e.target;
+                if (target) {
+                    const type = target.type;
+                    const name = target.name;
+                    if (type && name) {
+                        if (sellBtn.okkuang) {
+                            sellBtn.okkuang.remove();
+                        }
+                        const okkuang = document.createElement('div');
+                        sellBtn.okkuang = okkuang;
+                        okkuang.className = 'okkuang';
+                        okkuang.innerHTML = `是否将${get.translation(type)}--${get.translation(name)}出售为100金币`;
+                        document.body.appendChild(okkuang);
+                        const ok = document.createElement('div');
+                        ok.className = 'ok-button';
+                        ok.innerHTML = '确认出售';
+                        okkuang.appendChild(ok);
+                        ok.onclick = function () {
+                            okkuang.remove();
+                            lib.config.shanhe[`cur_${type}`] = lib.config.shanhe[`cur_${type}`].filter(c => c !== name);
+                            lib.config.shanhe.cur_jinbi += 100;
+                            target.remove(); // 从 DOM 中移除 
+                            game.saveConfig('shanhe', lib.config.shanhe);
+                            const gongxi = document.createElement('div');
+                            gongxi.className = 'gongxi';
+                            document.body.appendChild(gongxi);
+                            setTimeout(() => {
+                                gongxi.remove();
+                            }, 2000);
+                            gongxi.innerHTML = `将${get.translation(type)}--${get.translation(name)}出售为100金币`;
+                        };
+                        const cancel = document.createElement('div');
+                        cancel.innerHTML = '取消出售';
+                        cancel.className = 'cancel-button';
+                        okkuang.appendChild(cancel);
+                        cancel.onclick = function () {
+                            okkuang.remove();
+                        };
+                    }
+                }
+            };
+            if (!sellBtn.Sell) {
+                // 启用出售模式
+                sellBtn.Sell = true;
+                document.body.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'30\' height=\'30\'><text x=\'0\' y=\'16\' font-size=\'20\'>$</text></svg>"), auto';
+                // 监听一次点击
+                document.addEventListener('click', callback);
+            } else {
+                // 退出出售模式
+                sellBtn.Sell = false;
+                document.body.style.cursor = 'default';
+                document.removeEventListener('click', callback);
+            }
+        };
+        shanhe.beijing2.appendChild(sellBtn);
+        //——————————————————————————————————————————————————————————金币展示
+        const jinbikuang = document.createElement('div');
+        jinbikuang.className = 'jinbikuang';
+        jinbikuang.innerHTML = `当前金币数量:${lib.config.shanhe.cur_jinbi}`;
+        shanhe.beijing2.appendChild(jinbikuang);
     },
     // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录
     jiesuan(bool) {
@@ -1446,7 +1539,10 @@ game.addMode(
                         current.seatNum = num;
                         current = current.next;
                         num++;
-                    }
+                    }// 不手动设置seatnum会导致phaseloop自动设置,导致_status.seatNumSettled是真值,导致用phase抢回合会增加轮数
+                    // 只有身份模式下,由于手动设置了seatnum,抢回合不会更新轮数
+                    // 解决方法:删除所有setseatnum,修改setseatnum,手动设置seatnum,修改phaseloop,锁定_status.seatNumSettled
+                    // 但是insertphase抢回合就不会刷新轮数,因为lib.onround检测此回合有event.skill
                     while (true) {
                         if (game.players.includes(event.player)) {
                             lib.onphase.forEach((i) => i());

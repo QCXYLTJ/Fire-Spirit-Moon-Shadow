@@ -1682,7 +1682,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (evt) {
                             evt.finish();
                         }
-                        boss.phase();
+                        boss.phase().set('skill', 'nodelay');
                     },
                 };
                 lib.boss.HL_libai_boss = {
@@ -4852,7 +4852,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 for (const npc of game.players.filter((q) => q.shibing)) {
-                                    await npc.phase();
+                                    await npc.phase().set('skill', 'nodelay');
                                 }
                             },
                             group: ['HL_tongxin_1'],
@@ -5941,7 +5941,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (evt) {
                                     evt.finish();
                                 }
-                                player.phase();
+                                player.phase().set('skill', 'nodelay');
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————绝灭者
@@ -6790,7 +6790,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (evt) {
                                         evt.finish();
                                     }
-                                    player.phase();
+                                    player.phase().set('skill', 'nodelay');
                                 }
                             },
                         },
@@ -6828,7 +6828,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (evt) {
                                         evt.finish();
                                     }
-                                    player.phase();
+                                    player.phase().set('skill', 'nodelay');
                                     delete HL.fangbaozhan;
                                 }
                             },
