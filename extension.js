@@ -3035,12 +3035,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     targets[0].storage.HL_wufan = targets[0].GS();
                     targets[0].CS();
                     game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
-                    player.when({ player: 'phaseAfter' }).then(() => {
-                        if (npc.isAlive()) {
-                            npc.addSkill(npc.storage.HL_wufan);
-                            npc.storage.HL_wufan = [];
-                        }
-                    }).vars({ npc: targets[0] });
                 }
             };
             lib.init.css('extension/火灵月影/HL.css'); //火灵月影专属CSS
@@ -7882,7 +7876,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 }
                             },
-                            group: ['HL_wufan_1', 'HL_wufan_2'],
+                            group: ['HL_wufan_1', 'HL_wufan_2', 'HL_wufan_3'],
                             subSkill: {
                                 1: {
                                     marktext: '<img src=extension/火灵月影/image/HL_wufan_1.png class="markimg">',
@@ -7914,6 +7908,22 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     }
                                 },
+                                3: {
+                                    trigger: {
+                                        player: ['phaseAfter'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return game.players.some((q) => q.storage.HL_wufan);
+                                    },
+                                    async content(event, trigger, player) {
+                                        for (const npc of game.players.filter((q) => q.storage.HL_wufan)) {
+                                            npc.addSkill(npc.storage.HL_wufan);
+                                            delete npc.storage.HL_wufan;
+                                            game.log(player, '归还了', npc, '的技能');
+                                        }
+                                    },
+                                }
                             },
                         },
                         // 狂暴
