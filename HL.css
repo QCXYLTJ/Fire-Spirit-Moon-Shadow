@@ -2,7 +2,7 @@
     width: 100px;
     height: 100px;
     background-image: url(./image/jishi1.png);
-    background-size: cover;
+    background-size: contain;
     background-position: center;
     top: 10%;
     left: 10%;
@@ -197,12 +197,14 @@
     margin-top: 10px;
 }
 
+/* 结算奖励/商店商品 */
 .jianglibox {
     top: 20%;
     left: 0;
     width: 100%;
     height: 80%;
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain !important;
     background-position: center;
     line-height: 700%;
     font-size: 16px;
@@ -221,15 +223,14 @@
     left: 0%;
     overflow: hidden;
     border-radius: 10px;
-    background-position: center;
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: contain;
+    background-position: center;
     background-image: url(./image/icon_point2.png);
     margin: 0% 1.12% 0.75% 1.12%;
 }
 
 .touxiang1 {
-    position: absolute;
     width: 80%;
     height: 0;
     left: 10%;
@@ -240,20 +241,19 @@
     overflow: hidden;
 }
 
+/* 选将头像 */
 .touxiang2 {
-    position: absolute;
     width: 100%;
-    height: 200%;
+    height: 100%;
     left: 0%;
     top: 0%;
     z-index: 9;
-    background-position: center;
-    background-size: cover;
     background-repeat: no-repeat;
+    background-size: contain !important;
+    background-position: center;
 }
 
 .touxiangtext {
-    position: absolute;
     width: 100%;
     height: 22%;
     right: 0%;
@@ -273,7 +273,6 @@
 }
 
 .xuanjiangok {
-    position: absolute;
     width: 14%;
     height: 12%;
     bottom: 1.5%;
@@ -286,9 +285,9 @@
     color: #FFEC8B;
     font-family: HanYiZhongLiShuFan;
     border-radius: 8px;
-    background-position: center;
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: contain;
+    background-position: center;
     background-image: url(./image/icon_Button3.png);
 }
 
@@ -304,13 +303,12 @@
     padding-top: 3%;
     overflow-y: hidden;
     border-radius: 8px;
-    background-position: center center;
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: contain;
+    background-position: center;
 }
 
 .wujiangkuang {
-    position: absolute;
     width: 98%;
     height: 70%;
     left: 1%;
@@ -329,7 +327,6 @@
     white-space: nowrap;
     overflow-x: scroll;
     /*水平滚动*/
-    position: absolute;
     width: 100%;
     height: 15%;
     left: 0%;
@@ -339,7 +336,6 @@
 }
 
 .xuanjiangkuang {
-    position: absolute;
     width: 92%;
     height: 82%;
     left: 4%;
@@ -347,6 +343,7 @@
     text-align: center;
     z-index: 10;
     background-image: url(./image/frame1.png);
+    background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
 }
@@ -359,17 +356,18 @@
     height: 100px;
     width: 100px;
     z-index: 99;
-    position: absolute;
     font-size: 25px;
     text-align: center;
     white-space: nowrap;
     background-image: url(./image/dianjiang.png);
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
 }
 
 /* 点将头像 */
 .touxiangQ {
+    background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
     width: 60%;
@@ -380,7 +378,6 @@
 }
 
 .guankazhanshi {
-    position: absolute;
     top: 10%;
     left: 10%;
     width: 80%;
@@ -415,12 +412,14 @@
     line-height: 130%;
 }
 
+/* 关卡boss展示 */
 .bossbox {
     left: 0;
     top: 10%;
     width: 100%;
     height: 50%;
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain !important;
     background-position: center;
 }
 
@@ -443,14 +442,14 @@
     height: 80px;
     width: 200px;
     z-index: 99;
-    position: absolute;
     color: #3500ff;
     font-size: 25px;
     line-height: 400%;
     text-align: center;
     white-space: nowrap;
     background-image: url(./image/hallicon1.png);
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
 }
 
@@ -459,7 +458,8 @@
     filter: brightness(0.8) contrast(1.5) hue-rotate(0deg);
     height: 100px;
     width: 100px;
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
 }
 
@@ -468,7 +468,8 @@
     width: 100%;
     height: 100%;
     background-image: url(./image/gongji1.png);
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
 }
 
@@ -477,13 +478,15 @@
     filter: brightness(0.8) contrast(1.5) hue-rotate(0deg);
     height: 100px;
     width: 100px;
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
 }
 
 /* 山河图开始游戏之后界面背景 */
 #shanhetu2 {
     background-image: url(./image/shanhetu2.jpg);
+    background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
     position: fixed;
@@ -504,20 +507,21 @@
     height: 80px;
     width: 200px;
     z-index: 9;
-    position: absolute;
     color: #3500ff;
     font-size: 25px;
     line-height: 400%;
     text-align: center;
     white-space: nowrap;
     background-image: url(./image/hallicon1.png);
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
 }
 
 /* 山河图初始界面背景 */
 #shanhetu1 {
     background-image: url(./image/shanhetu1.jpg);
+    background-repeat: no-repeat;
     background-size: cover;
     background-position: center;
     position: fixed;
@@ -539,7 +543,8 @@
     height: 100px;
     text-align: center;
     background-image: url(./image/HL_button.png);
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
     z-index: 20;
     display: flex;
@@ -557,7 +562,8 @@
     height: 20%;
     text-align: center;
     background-image: url(./image/HL_dialog.png);
-    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
     background-position: center;
     z-index: 30;
     display: flex;
