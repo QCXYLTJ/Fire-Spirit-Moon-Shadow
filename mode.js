@@ -838,7 +838,7 @@ window.shanhe = {
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
-    // 商店 购买<战法/技能/体力上限/手牌上限/初始手牌/装备/队友>——————商品价格显示 金币显示
+    // 商店 购买<体力上限/手牌上限/战法/技能/初始手牌/装备/队友>——————商品价格显示 金币显示 出售<战法/技能/装备/手牌/队友>
     jishi() {
         const jishi = document.createElement('div');
         jishi.className = 'jishi';
@@ -850,19 +850,19 @@ window.shanhe = {
             }
             const jishikuang = document.createElement('div');
             jishikuang.className = 'jishikuang';
-            shanhe.beijing2.appendChild(jishikuang);// 商品大框
+            shanhe.beijing2.appendChild(jishikuang); // 商品大框
             shanhe.jishikuang = jishikuang;
             const jishilist = document.createElement('div');
             jishilist.className = 'jishilist';
-            jishikuang.appendChild(jishilist);// 商品类型栏
+            jishikuang.appendChild(jishilist); // 商品类型栏
             const jishibox = document.createElement('div');
             jishibox.className = 'jishibox';
-            jishikuang.appendChild(jishibox);// 商品框
+            jishikuang.appendChild(jishibox); // 商品框
             const leixinglist = ['zhanfa', 'skill', 'equip', 'card', 'friend'];
             for (const leixing of leixinglist) {
                 const leixingpoint = document.createElement('div');
                 leixingpoint.className = 'leixingpoint';
-                jishilist.appendChild(leixingpoint);// 商品类型点
+                jishilist.appendChild(leixingpoint); // 商品类型点
                 leixingpoint.innerHTML = get.translation(leixing);
                 leixingpoint.onclick = function () {
                     while (jishibox.firstChild) {
@@ -885,8 +885,7 @@ window.shanhe = {
                             shangpinpoint.oncontextmenu = function () {
                                 ui.click.charactercard(name, null, null, true, shangpinpoint);
                             };
-                        }
-                        else {
+                        } else {
                             shangpinpoint.oncontextmenu = function () {
                                 const info = document.createElement('div');
                                 info.className = 'jiangli-info';
@@ -908,9 +907,13 @@ window.shanhe = {
                         }
                         shangpinpoint.jiage = 500;
                         shangpinpoint.onclick = function () {
+                            if (jishibox.okkuang) {
+                                jishibox.okkuang.remove();
+                            }
                             const okkuang = document.createElement('div');
+                            jishibox.okkuang = okkuang;
                             okkuang.className = 'okkuang';
-                            jishibox.appendChild(okkuang);
+                            document.body.appendChild(okkuang);
                             const ok = document.createElement('div');
                             ok.innerHTML = '确认购买';
                             ok.className = 'ok-button';
@@ -928,8 +931,7 @@ window.shanhe = {
                                     lib.config.shanhe[`cur_${leixing}`].push(name);
                                     game.saveConfig('shanhe', lib.config.shanhe);
                                     gongxi.innerHTML = '购买成功';
-                                }
-                                else {
+                                } else {
                                     gongxi.innerHTML = '金币不足';
                                 }
                             };
@@ -947,9 +949,92 @@ window.shanhe = {
         };
         shanhe.beijing2.appendChild(jishi);
     },
-    // <战法/技能/装备>调整 
+    // <战法/技能/装备/手牌/队友>展示与调整
     tiaozheng() {
-
+        const tiaozhengkuang = document.createElement('div');
+        tiaozhengkuang.className = 'tiaozhengkuang';
+        shanhe.beijing2.appendChild(tiaozhengkuang);
+        //——————————————————————————————————————————————————————————初始手牌展示
+        const cardkuang = document.createElement('div');
+        cardkuang.className = 'cardkuang';
+        tiaozhengkuang.appendChild(cardkuang);
+        for (const card of lib.config.shanhe.cur_card) {
+            const cardpoint = document.createElement('div');
+            cardpoint.className = 'cardpoint';
+            cardpoint.innerHTML = get.translation(card);
+            cardkuang.appendChild(cardpoint);
+            cardpoint.oncontextmenu = function () {
+                const info = document.createElement('div');
+                info.className = 'jiangli-info';
+                document.body.appendChild(info);
+                info.innerHTML = get.translation(`${card}_info`);
+                setTimeout(() => {
+                    info.remove();
+                }, 2000);
+            };
+            cardpoint.setBackgroundImage(game.cardsrc(card, 'card'));
+        }
+        //——————————————————————————————————————————————————————————当前战法展示
+        const zhanfakuang = document.createElement('div');
+        zhanfakuang.className = 'zhanfakuang';
+        tiaozhengkuang.appendChild(zhanfakuang);
+        for (const zhanfa of lib.config.shanhe.cur_zhanfa) {
+            const zhanfapoint = document.createElement('div');
+            zhanfapoint.className = 'zhanfapoint';
+            zhanfapoint.innerHTML = get.translation(zhanfa);
+            zhanfakuang.appendChild(zhanfapoint);
+            zhanfapoint.oncontextmenu = function () {
+                const info = document.createElement('div');
+                info.className = 'jiangli-info';
+                document.body.appendChild(info);
+                info.innerHTML = get.translation(`${zhanfa}_info`);
+                setTimeout(() => {
+                    info.remove();
+                }, 2000);
+            };
+            zhanfapoint.setBackground(shanhe.zhanfamap[zhanfa], 'character');
+        }
+        //——————————————————————————————————————————————————————————当前技能展示
+        const skillkuang = document.createElement('div');
+        skillkuang.className = 'skillkuang';
+        tiaozhengkuang.appendChild(skillkuang);
+        for (const skill of lib.config.shanhe.cur_skill) {
+            const skillpoint = document.createElement('div');
+            skillpoint.className = 'zhanfapoint';
+            skillpoint.innerHTML = get.translation(skill);
+            skillkuang.appendChild(skillpoint);
+            skillpoint.oncontextmenu = function () {
+                const info = document.createElement('div');
+                info.className = 'jiangli-info';
+                document.body.appendChild(info);
+                info.innerHTML = get.translation(`${skill}_info`);
+                setTimeout(() => {
+                    info.remove();
+                }, 2000);
+            };
+        }
+        //——————————————————————————————————————————————————————————当前队友展示
+        const friendkuang = document.createElement('div');
+        friendkuang.className = 'friendkuang';
+        tiaozhengkuang.appendChild(friendkuang);
+        for (const friend of lib.config.shanhe.cur_friend) {
+            const friendpoint = document.createElement('div');
+            friendpoint.className = 'zhanfapoint';
+            friendpoint.innerHTML = get.translation(friend);
+            friendkuang.appendChild(friendpoint);
+            friendpoint.oncontextmenu = function () {
+                ui.click.charactercard(friend, null, null, true, friendpoint);
+            };
+            friendpoint.setBackground(friend, 'character');
+        }
+        //——————————————————————————————————————————————————————————当前选将头像展示
+        const touxiangkuang = document.createElement('div');
+        touxiangkuang.className = 'touxiangkuang';
+        tiaozhengkuang.appendChild(touxiangkuang);
+        touxiangkuang.setBackground(lib.config.shanhe.cur_xuanjiang, 'character');
+        touxiangkuang.oncontextmenu = function () {
+            ui.click.charactercard(lib.config.shanhe.cur_xuanjiang, null, null, true, touxiangkuang);
+        };
     },
     // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录
     jiesuan(bool) {
@@ -960,7 +1045,12 @@ window.shanhe = {
         for (const i of players) {
             game.removePlayer(i);
         }
-        ui.arenalog.innerHTML = ''; //清除历史记录
+        delete _status.roundStart; // 轮数重置
+        game.roundNumber = 0;
+        ui.arenalog.innerHTML = ''; /*清除历史记录*/
+        ui.historybar.innerHTML = ''; /*清除出牌记录*/
+        ui.sidebar.innerHTML = ''; /*清除暂停记录*/
+        ui.sidebar3.innerHTML = ''; /*清除暂停记录*/
         ui.me.remove();
         ui.mebg.remove();
         ui.handcards1Container.remove();
@@ -1033,8 +1123,7 @@ window.shanhe = {
                             jianglipoint.oncontextmenu = function () {
                                 ui.click.charactercard(jianglipoint.name, null, null, true, jianglipoint);
                             };
-                        }
-                        else {
+                        } else {
                             jianglipoint.oncontextmenu = function () {
                                 const info = document.createElement('div');
                                 info.className = 'jiangli-info';
@@ -1222,7 +1311,7 @@ window.shanhe = {
         touxiang.className = 'touxiangQ';
         dianjiang.appendChild(touxiang);
     },
-    // 重置通关记录
+    // 重置通关记录/城池与关卡boss刷新
     chongzhijilu() {
         if (!lib.config.mode_config.shanhetu) {
             lib.config.mode_config.shanhetu = {
@@ -1313,7 +1402,7 @@ game.addMode(
                 lib.config.shanhe = {};
             }
             lib.config.shanhe = {
-                cur_xuanjiang: lib.config.shanhe.cur_xuanjiang, //当前选将记录
+                cur_xuanjiang: lib.config.shanhe.cur_xuanjiang, //当前已选武将
                 cur_chengchi: lib.config.shanhe.cur_chengchi, //当前城池
                 cur_guanka: lib.config.shanhe.cur_guanka, //当前关卡
                 chengchi: lib.config.shanhe.chengchi, //通关记录

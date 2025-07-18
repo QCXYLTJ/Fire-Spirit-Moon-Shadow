@@ -1,3 +1,82 @@
+.tiaozhengkuang {
+    height: 15%;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    padding: 10px;
+}
+
+.cardpoint {
+    position: relative;
+    width: 20%;
+    height: 100%;
+    border-radius: 8px;
+    text-align: center;
+    background-color: rgba(240, 149, 13, 0.8);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+}
+
+.zhanfapoint {
+    position: relative;
+    height: 60px;
+    width: 60px;
+    border-radius: 50%;
+    text-align: center;
+    background-color: rgba(240, 149, 13, 0.8);
+}
+
+.cardkuang,
+.zhanfakuang,
+.skillkuang,
+.friendkuang,
+.touxiangkuang {
+    z-index: 20;
+    top: 0;
+    height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cardkuang {
+    background-color: rgba(47, 14, 233, 0.8);
+    left: 0;
+    width: 30%;
+}
+
+.zhanfakuang {
+    background-color: rgba(110, 216, 17, 0.8);
+    left: 30%;
+    width: 20%;
+}
+
+.skillkuang {
+    background-color: rgba(207, 188, 17, 0.8);
+    left: 50%;
+    width: 20%;
+}
+
+.friendkuang {
+    background-color: rgba(122, 17, 207, 0.8);
+    left: 70%;
+    width: 20%;
+}
+
+.touxiangkuang {
+    background-size: contain !important;
+    background-repeat: no-repeat;
+    background-position: center;
+    left: 90%;
+    width: 10%;
+}
+
+/* 鼠标悬停时放大 */
+.tiaozhengkuang>div:hover {
+    z-index: 30;
+    transform: scale(1.05);
+}
+
 .jishi {
     width: 100px;
     height: 100px;
@@ -101,7 +180,7 @@
 }
 
 .cancel-button {
-    left: 60%;
+    right: 10%;
     top: 40%;
     width: 30%;
     height: 10%;
@@ -122,9 +201,9 @@
 .gongxi {
     position: fixed;
     top: 50%;
-    left: 40%;
+    left: 30%;
     height: 5%;
-    width: 30%;
+    width: 40%;
     background-color: rgba(0, 0, 0, 0.8);
     box-shadow: 0 0 15px #000;
     border: 3px solid #444;
@@ -195,7 +274,6 @@
     text-align: center;
     white-space: nowrap;
     font-weight: bold;
-    margin-top: 10px;
 }
 
 /* 结算奖励/商店商品 */

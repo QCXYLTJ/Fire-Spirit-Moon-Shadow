@@ -7986,6 +7986,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             }
                                         }
                                         if (targets[0].isDead()) {
+                                            player.HL_kuangbao = false;
                                             game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                             trigger.cancel();
                                             player.hp = 1;
