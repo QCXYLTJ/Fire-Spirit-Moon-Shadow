@@ -300,7 +300,8 @@
     left: 0;
     text-align: center;
     white-space: nowrap;
-    line-height: 700%;
+    /* 文字位置下移 */
+    padding-top: 3%;
     overflow-y: hidden;
     border-radius: 8px;
     background-position: center center;
