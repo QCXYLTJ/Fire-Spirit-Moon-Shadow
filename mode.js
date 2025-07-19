@@ -1039,7 +1039,7 @@ window.shanhe = {
         //——————————————————————————————————————————————————————————当前选将头像展示
         const touxiangkuang = document.createElement('div');
         touxiangkuang.className = 'touxiangkuang';
-        tiaozhengkuang.appendChild(touxiangkuang);
+        shanhe.beijing2.appendChild(touxiangkuang);
         touxiangkuang.setBackground(lib.config.shanhe.cur_xuanjiang, 'character');
         touxiangkuang.oncontextmenu = function () {
             ui.click.charactercard(lib.config.shanhe.cur_xuanjiang, null, null, true, touxiangkuang);

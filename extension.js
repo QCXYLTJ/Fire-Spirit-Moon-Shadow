@@ -978,7 +978,7 @@ const kangxing2 = function () {
                                     trigger.cards = get.cards(3);
                                 }
                                 if (!trigger.card) {
-                                    trigger.card = get.cards()[0];
+                                    trigger.card = new lib.element.VCard(trigger.cards[0], trigger.cards);
                                 }
                                 if (!trigger.num) {
                                     trigger.num = 1;
@@ -991,6 +991,9 @@ const kangxing2 = function () {
                                 }
                                 if (!trigger.respondTo || !trigger.respondTo[0]) {
                                     trigger.respondTo = [trigger.source, trigger.card];
+                                }
+                                if (!trigger.excluded) {
+                                    trigger.excluded = [player];
                                 }
                             };
                             triggershuju();
@@ -1029,17 +1032,17 @@ const kangxing2 = function () {
                                 next.player = player;
                                 next._trigger = trigger;
                                 next.triggername = namey;
-                                if (targets) {
+                                if (targets?.length) {
                                     next.targets = targets;
                                 } //先logtarget
                                 if (indexedData) {
                                     next.indexedData = indexedData;
                                 }
                                 if (result && result.bool) {
-                                    if (result.cards) {
+                                    if (result.cards?.length) {
                                         next.cards = result.cards;
                                     }
-                                    if (result.targets && result.targets[0]) {
+                                    if (result.targets?.length) {
                                         next.targets = result.targets;
                                     }
                                     if (result.cost_data) {

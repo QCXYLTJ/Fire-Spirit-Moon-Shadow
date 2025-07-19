@@ -1,16 +1,34 @@
 .equippoint {
-    height: 15%;
+    height: 10%;
     margin: 1%;
     width: 80%;
-    background-color: rgba(223, 198, 161, 0.8);
+    background-color: rgb(173 22 64 / 80%);
     position: relative;
+    border-radius: 10px;
+    font-size: 150%;
+    text-align: center;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.touxiangkuang {
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    bottom: 0;
+    right: 0;
+    width: 10%;
+    height: 25%;
+    overflow: auto;
+    z-index: 2;
+    border-radius: 8px;
 }
 
 .jinbikuang {
     position: fixed;
     height: 5%;
     width: 15%;
-    right: 10%;
+    left: 10%;
     top: 80%;
     border-radius: 20%;
     background-color: rgba(240, 149, 13, 0.8);
@@ -24,8 +42,8 @@
     position: fixed;
     height: 80px;
     width: 80px;
-    right: 0;
-    top: 80%;
+    left: 0;
+    top: 75%;
     border-radius: 50%;
     background-color: rgba(240, 149, 13, 0.8);
     font-size: 400%;
@@ -36,10 +54,9 @@
 
 .tiaozhengkuang {
     height: 10%;
-    width: 100%;
+    width: 90%;
     left: 0;
     bottom: 0;
-    padding: 10px;
 }
 
 .cardpoint {
@@ -66,46 +83,35 @@
 .cardkuang,
 .zhanfakuang,
 .skillkuang,
-.friendkuang,
-.touxiangkuang {
+.friendkuang {
     z-index: 2;
     top: 0;
     height: 100%;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .cardkuang {
     background-color: rgba(47, 14, 233, 0.8);
     left: 0;
-    width: 30%;
+    width: 40%;
 }
 
 .zhanfakuang {
     background-color: rgba(110, 216, 17, 0.8);
-    left: 30%;
+    left: 40%;
     width: 20%;
 }
 
 .skillkuang {
     background-color: rgba(207, 188, 17, 0.8);
-    left: 50%;
+    left: 60%;
     width: 20%;
 }
 
 .friendkuang {
     background-color: rgba(122, 17, 207, 0.8);
-    left: 70%;
+    left: 80%;
     width: 20%;
-}
-
-.touxiangkuang {
-    background-size: contain !important;
-    background-repeat: no-repeat;
-    background-position: center;
-    left: 90%;
-    width: 10%;
-    overflow: auto;
 }
 
 /* 鼠标悬停时放大 */
