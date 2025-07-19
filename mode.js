@@ -792,7 +792,7 @@ window.shanhe = {
         game.prepareArena(bosslist.length + 1);
         game.zhu = game.me;
         lib.init.onfree();
-        game.players.forEach(async function (player, index, array) {
+        for (const [index, player] of game.players.entries()) {
             player.getId();
             if (player == game.me) {
                 player.identity = 'zhu';
@@ -842,7 +842,7 @@ window.shanhe = {
             player.identityShown = true;
             player.ai.shown = 1;
             player.setIdentity();
-        });
+        };
         if (lib.config.shanhe.cur_friend.length) {
             for (const friend of lib.config.shanhe.cur_friend) {
                 const fellow = game.me.addFellow(friend);

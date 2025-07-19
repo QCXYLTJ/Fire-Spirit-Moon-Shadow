@@ -7980,6 +7980,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } else {
                                     await player.canku();
                                     await player.yanli();
+                                    game.log(player, '进入狂暴');
                                     player.HL_kuangbao = true;
                                     let bool = true;
                                     while (player.HL_kuangbao) {
@@ -7993,6 +7994,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 }
                                             });
                                         if (!result.bool) {
+                                            game.log(player, '退出狂暴');
                                             player.HL_kuangbao = false;
                                             bool = false;
                                         }
@@ -8014,9 +8016,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return event.player.isEnemiesOf(player) && player.HL_kuangbao;
+                                        return event.player.isEnemiesOf(player, true) && player.HL_kuangbao;
                                     },
                                     async content(event, trigger, player) {
+                                        game.log(player, '退出狂暴');
                                         player.HL_kuangbao = false;
                                     },
                                 },
