@@ -1019,10 +1019,10 @@ const kangxing2 = function () {
                                     next._trigger = trigger;
                                     next.triggername = namey;
                                     result = await next.setContent(infox.cost).forResult();
-                                    if (result && result.bool) { }
-                                    else {
+                                    if (result && result.bool) {
+                                    } else {
                                         return;
-                                    }//cost没通过就返回
+                                    } //cost没通过就返回
                                 }
                                 const next = game.createEvent(skillx, false);
                                 next.skill = skillx;
@@ -1031,7 +1031,7 @@ const kangxing2 = function () {
                                 next.triggername = namey;
                                 if (targets) {
                                     next.targets = targets;
-                                }//先logtarget
+                                } //先logtarget
                                 if (indexedData) {
                                     next.indexedData = indexedData;
                                 }
@@ -1045,7 +1045,7 @@ const kangxing2 = function () {
                                     if (result.cost_data) {
                                         next.cost_data = result.cost_data;
                                     }
-                                }//再载入cost的结果
+                                } //再载入cost的结果
                                 if (!next.cards) {
                                     next.cards = get.cards();
                                 }
@@ -3004,8 +3004,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 player.storage.HL_wufan_1 = 0;
                 const {
                     result: { links },
-                } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')])
-                    .set('ai', (button) => 6 - get.value(button.link));
+                } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')]).set('ai', (button) => 6 - get.value(button.link));
                 if (links && links[0]) {
                     await player.discard(links);
                 }
@@ -4779,9 +4778,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             async content(event, trigger, player) {
-                                if (!HL.wangzuoboss) {
+                                if (HL.wangzuoboss && game.players.includes(HL.wangzuoboss)) {
+                                } else {
                                     HL.wangzuoboss = player;
-                                }
+                                } // 场上只能有一个boss
                                 const shibing = game.players.filter((q) => q.shibing);
                                 let numx = player.getEnemies().length;
                                 if (shibing.length) {
@@ -7078,7 +7078,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                                 player.isHealthy = function () {
                                     return false;
-                                };//回血溢出
+                                }; //回血溢出
                             },
                             trigger: {
                                 global: ['roundStart'],
@@ -7104,9 +7104,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (links && links[0]) {
                                     game.log(player, '加入律法', links);
                                     HL.lvfa = links;
-                                    if (!HL.jielvboss) {
+                                    if (HL.jielvboss && game.players.includes(HL.jielvboss)) {
+                                    } else {
                                         HL.jielvboss = player;
-                                    }
+                                    } // 场上只能有一个boss
                                 }
                             },
                             group: ['HL_tianqi_1'],
@@ -7134,9 +7135,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         HL.zhenlicaijue += 3;
                                         player.markSkill('_HL_zhenlicaijue');
                                         HL.lvfa = player.storage.HL_tianqi.slice();
-                                        if (!HL.jielvboss) {
+                                        if (HL.jielvboss && game.players.includes(HL.jielvboss)) {
+                                        } else {
                                             HL.jielvboss = player;
-                                        }
+                                        } // 场上只能有一个boss
                                     },
                                 },
                             },
@@ -7761,7 +7763,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     },
                                 }); //扣减体力上限抗性
-                                game.skangxing(player);//移除/赋空技能抗性
+                                game.skangxing(player); //移除/赋空技能抗性
                                 // let skills = [];
                                 // Reflect.defineProperty(player, 'skills', {
                                 //     get() {
@@ -7770,18 +7772,24 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 //     },
                                 //     set() { },
                                 // });//添加技能抗性
-                                player.disabledSkills = new Proxy({}, {
-                                    get(u, i) {
-                                        return [];
-                                    },
-                                });//技能失效抗性
-                                player.storage = new Proxy({}, {
-                                    get(u, i) {
-                                        if (i == 'skill_blocker') return [];
-                                        if (i.startsWith('temp_ban_')) return false;
-                                        return u[i];
-                                    },
-                                });//技能失效抗性//直接用空对象初始化,防止多次代理包裹
+                                player.disabledSkills = new Proxy(
+                                    {},
+                                    {
+                                        get(u, i) {
+                                            return [];
+                                        },
+                                    }
+                                ); //技能失效抗性
+                                player.storage = new Proxy(
+                                    {},
+                                    {
+                                        get(u, i) {
+                                            if (i == 'skill_blocker') return [];
+                                            if (i.startsWith('temp_ban_')) return false;
+                                            return u[i];
+                                        },
+                                    }
+                                ); //技能失效抗性//直接用空对象初始化,防止多次代理包裹
                             },
                             trigger: {
                                 global: ['useCard', 'respond'],
@@ -7799,8 +7807,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 while (num > 0) {
                                     const {
                                         result: { targets },
-                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target != player)
-                                        .set('ai', (t) => -get.attitude(player, t));
+                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target != player).set('ai', (t) => -get.attitude(player, t));
                                     if (targets && targets[0]) {
                                         num--;
                                         const index = list.get(targets[0]);
@@ -7816,8 +7823,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (list.size > 0) {
                                     if (trigger.player == player) {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_zhuolan${[4, 5, 6].randomGet()}.mp3`);
-                                    }
-                                    else {
+                                    } else {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_zhuolan${[1, 2, 3].randomGet()}.mp3`);
                                     }
                                     for (const [target, num] of list) {
@@ -7866,8 +7872,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.gain(trigger.cards, 'gain2');
                                     }
                                     player.markSkill('HL_jiaozhan');
-                                }
-                                else {
+                                } else {
                                     player.storage.counttrigger.HL_jiaozhan--;
                                 }
                             },
@@ -7913,7 +7918,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['damageEnd'],
                                     },
                                     forced: true,
-                                    async content(event, trigger, player) { }
+                                    async content(event, trigger, player) { },
                                 }, // 受伤语音
                                 2: {
                                     marktext: '<img src=extension/火灵月影/image/HL_wufan_2.png class="markimg">',
@@ -7927,11 +7932,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         if (player.HL_kuangbao) {
                                             game.playAudio(`../extension/火灵月影/audio/qinli_sourcedamage${[4, 5, 6].randomGet()}.mp3`);
-                                        }
-                                        else {
+                                        } else {
                                             game.playAudio(`../extension/火灵月影/audio/qinli_sourcedamage${[1, 2, 3].randomGet()}.mp3`);
                                         }
-                                    }
+                                    },
                                 },
                                 3: {
                                     trigger: {
@@ -7948,7 +7952,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             game.log(player, '归还了', npc, '的技能');
                                         }
                                     },
-                                }
+                                },
                             },
                         },
                         // 狂暴
@@ -7969,8 +7973,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (player.HL_kuangbao) {
                                     game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                     trigger.cancel();
-                                }
-                                else {
+                                } else {
                                     await player.canku();
                                     await player.yanli();
                                     const {
@@ -8025,7 +8028,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.addMark('HL_ziyu', 5);
                                 player.isHealthy = function () {
                                     return false;
-                                };//回血溢出
+                                }; //回血溢出
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');
@@ -8051,7 +8054,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         trigger.num -= num;
                                         game.log(player, '将回复转变为护甲');
                                         player.changeHujia(num);
-                                    }
+                                    },
                                 },
                             },
                         },
@@ -8074,8 +8077,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 for (const npc of game.players) {
                                     if (npc == player) {
                                         npc.removeMark('g_lejishengbei');
-                                    }
-                                    else {
+                                    } else {
                                         npc.addMark('g_lejishengbei');
                                     }
                                 }
@@ -8092,14 +8094,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         game.removeGlobalSkill('g_lejishengbei');
                                         game.removeGlobalSkill('g_lejishengbei_1');
-                                        let maxnum = Math.max(...game.players.map(q => q.countMark('g_lejishengbei')));
+                                        let maxnum = Math.max(...game.players.map((q) => q.countMark('g_lejishengbei')));
                                         if (maxnum > 0) {
-                                            const maxplayer = game.players.filter(q => q.countMark('g_lejishengbei') == maxnum);
+                                            const maxplayer = game.players.filter((q) => q.countMark('g_lejishengbei') == maxnum);
                                             for (const npc of game.players) {
                                                 if (maxplayer.includes(npc)) {
                                                     npc.randomDiscard('he', npc.countMark('g_lejishengbei'));
-                                                }
-                                                else {
+                                                } else {
                                                     npc.draw(npc.countMark('g_lejishengbei'));
                                                 }
                                                 npc.clearMark('g_lejishengbei');
