@@ -8022,7 +8022,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     marktext: '<img src=extension/火灵月影/image/HL_kuangbao_2.png class="markimg">',
                                     intro: {
                                         content(storage) {
-                                            return `下一次造成的伤害翻${storage}倍`;
+                                            return `下一次造成的伤害翻${Math.pow(2, storage)}倍`;
                                         },
                                     },
                                     filter(event, player) {
