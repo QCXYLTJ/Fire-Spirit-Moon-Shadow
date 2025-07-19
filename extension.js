@@ -7780,8 +7780,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         },
                                     }
                                 ); //技能失效抗性
-                                player.storage = new Proxy(
-                                    {},
+                                const storage = Object.assign({}, player.storage);//清空代理
+                                player.storage = new Proxy(storage,
                                     {
                                         get(u, i) {
                                             if (i == 'skill_blocker') return [];
@@ -7789,7 +7789,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             return u[i];
                                         },
                                     }
-                                ); //技能失效抗性//直接用空对象初始化,防止多次代理包裹
+                                ); //技能失效抗性//不能直接用空对象初始化,会清空之前技能的init里面的storage
+                                // 也不能直接用player.sotrage初始化,导致多次代理包裹
                             },
                             trigger: {
                                 global: ['useCard', 'respond'],
