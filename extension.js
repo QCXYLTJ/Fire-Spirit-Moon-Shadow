@@ -7078,6 +7078,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮
                         HL_tianqi: {
                             init(player) {
+                                HL.zhenlicaijue = 0;
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                                 player.isHealthy = function () {
                                     return false;
@@ -7132,9 +7133,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         });
                                     },
                                     async content(event, trigger, player) {
-                                        if (!HL.zhenlicaijue) {
-                                            HL.zhenlicaijue = 0;
-                                        }
                                         HL.zhenlicaijue += 3;
                                         player.markSkill('_HL_zhenlicaijue');
                                         HL.lvfa = player.storage.HL_tianqi.slice();
@@ -7682,7 +7680,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     async content(event, trigger, player) {
                                         trigger.cancel();
-                                        trigger.result = {};
+                                        trigger.result = { card: {} };
                                     },
                                 },
                             },
