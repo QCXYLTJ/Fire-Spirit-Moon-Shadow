@@ -7762,14 +7762,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                 }); //扣减体力上限抗性
                                 game.skangxing(player);//移除/赋空技能抗性
-                                let skills = [];
-                                Reflect.defineProperty(player, 'skills', {
-                                    get() {
-                                        skills = skills.filter((s) => ['counttrigger', 'jiu'].includes(s));
-                                        return skills;//喝酒技能无法添加导致无限红温,counttrigger技能无法添加导致触发技无限发动
-                                    },
-                                    set() { },
-                                });//添加技能抗性
+                                // let skills = [];
+                                // Reflect.defineProperty(player, 'skills', {
+                                //     get() {
+                                //         skills = skills.filter((s) => ['counttrigger', 'jiu'].includes(s));
+                                //         return skills;//喝酒技能无法添加导致无限红温,counttrigger技能无法添加导致触发技无限发动
+                                //     },
+                                //     set() { },
+                                // });//添加技能抗性
                                 player.disabledSkills = new Proxy({}, {
                                     get(u, i) {
                                         return [];
@@ -8063,6 +8063,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageEnd'],
                             },
                             forced: true,
+                            marktext: '<img src=extension/火灵月影/image/lejishengbei.jpg class="markimg">',
                             intro: {
                                 content: 'mark',
                             },
