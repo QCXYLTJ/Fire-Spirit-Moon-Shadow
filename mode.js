@@ -748,7 +748,7 @@ window.shanhe = {
                         bossbox.setBackground(name, 'character');
                         bosszhanshi.appendChild(bossbox);
                         const bossinfo = document.createElement('div');
-                        bossinfo.innerHTML = `额外护甲值:${info.hujia}<br>额外体力值:${info.maxHp}<br>额外技能:<br>${get.translation(info.skills)}`;
+                        bossinfo.innerHTML = `额外初始手牌:${info.card}<br>额外装备:${info.equip}<br>额外护甲值:${info.hujia}<br>额外体力值:${info.maxHp}<br>额外技能:<br>${get.translation(info.skills)}`;
                         bossinfo.className = 'bossinfo';
                         bosszhanshi.appendChild(bossinfo);
                     }
@@ -792,7 +792,7 @@ window.shanhe = {
         game.prepareArena(bosslist.length + 1);
         game.zhu = game.me;
         lib.init.onfree();
-        game.players.forEach((player, index, array) => {
+        game.players.forEach(async function (player, index, array) {
             player.getId();
             if (player == game.me) {
                 player.identity = 'zhu';
@@ -808,6 +808,16 @@ window.shanhe = {
                 if (lib.config.shanhe.cur_maxHp > 0) {
                     player.maxHp += lib.config.shanhe.cur_maxHp;
                 }
+                if (lib.config.shanhe.cur_equip.length) {
+                    for (const equip of lib.config.shanhe.cur_equip) {
+                        await player.equip(game.createCard(equip)).set('_triggered', null);
+                    }
+                }
+                if (lib.config.shanhe.cur_card.length) {
+                    for (const card of lib.config.shanhe.cur_card) {
+                        await player.gain(game.createCard(card), 'gain2').set('_triggered', null);
+                    }
+                }
             } else {
                 const info = cur_guanka[bosslist[index - 1]];
                 player.identity = 'fan';
@@ -816,6 +826,16 @@ window.shanhe = {
                 player.addSkill(info.skills);
                 player.maxHp += info.maxHp;
                 player.hujia = info.hujia;
+                if (info.card > 0) {
+                    await player.gain(get.cards(info.card), 'gain2').set('_triggered', null);
+                }
+                let equipnum = info.equip;
+                while (equipnum-- > 0) {
+                    const equip = get.cardPile((c) => get.type(c) == 'equip', 'cardPile');
+                    if (equip) {
+                        await player.equip(equip).set('_triggered', null);
+                    }
+                }
             }
             player.hp = player.maxHp;
             player.node.identity.classList.remove('guessing');
@@ -831,16 +851,6 @@ window.shanhe = {
         }
         // 人员准备完毕
         _status.event.trigger('gameStart');
-        if (lib.config.shanhe.cur_equip.length) {
-            for (const equip of lib.config.shanhe.cur_equip) {
-                await game.me.equip(game.createCard(equip));
-            }
-        }
-        if (lib.config.shanhe.cur_card.length) {
-            for (const card of lib.config.shanhe.cur_card) {
-                await game.me.gain(game.createCard(card), 'gain2');
-            }
-        }
         shanhe.gameDraw = game.gameDraw(game.zhu, () => 4);
         await shanhe.gameDraw;
         shanhe.zhongzhi = false;
@@ -1138,7 +1148,7 @@ window.shanhe = {
         jinbikuang.innerHTML = `当前金币数量:${lib.config.shanhe.cur_jinbi}`;
         shanhe.beijing2.appendChild(jinbikuang);
     },
-    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录——————————————————结算伤害击杀框
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录 结算伤害击杀框
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
@@ -1446,6 +1456,8 @@ window.shanhe = {
                         skills: shanhe.skilllist.randomGets(nandu),
                         hujia: Math.ceil(Math.random() * nandu),
                         maxHp: Math.ceil(Math.random() * nandu),
+                        equip: Math.ceil(Math.random() * nandu),
+                        card: Math.ceil(Math.random() * nandu),
                     };
                 }
             }

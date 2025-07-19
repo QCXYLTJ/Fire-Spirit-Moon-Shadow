@@ -3029,10 +3029,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     result: { targets },
                 } = await player
                     .chooseTarget('残酷:移除一名其他角色的全部技能,直到你的回合结束')
-                    .set('filterTarget', (c, p, t) => p != t)
+                    .set('filterTarget', (c, p, t) => {
+                        if (t.storage.HL_wufan?.length) {
+                            return false;
+                        }
+                        return p != t;
+                    })
                     .set('ai', (t) => -get.attitude(player, t));
                 if (targets && targets[0]) {
-                    targets[0].storage.HL_wufan = targets[0].GS();
+                    if (!targets[0].storage.HL_wufan) {
+                        targets[0].storage.HL_wufan = [];
+                    }
+                    targets[0].storage.HL_wufan.addArray(targets[0].GS());
                     targets[0].CS();
                     game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
                 }
@@ -7941,12 +7949,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return game.players.some((q) => q.storage.HL_wufan);
+                                        return game.players.some((q) => q.storage.HL_wufan?.length);
                                     },
                                     async content(event, trigger, player) {
-                                        for (const npc of game.players.filter((q) => q.storage.HL_wufan)) {
+                                        for (const npc of game.players.filter((q) => q.storage.HL_wufan?.length)) {
                                             npc.addSkill(npc.storage.HL_wufan);
-                                            delete npc.storage.HL_wufan;
+                                            npc.storage.HL_wufan = [];
                                             game.log(player, '归还了', npc, '的技能');
                                         }
                                     },
