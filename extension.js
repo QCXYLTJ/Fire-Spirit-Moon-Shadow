@@ -7781,16 +7781,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         },
                                     }
                                 ); //技能失效抗性
-                                const storage = Object.assign({}, player.storage);//清空代理
-                                player.storage = new Proxy(storage,
-                                    {
-                                        get(u, i) {
-                                            if (i == 'skill_blocker') return [];
-                                            if (i.startsWith('temp_ban_')) return false;
-                                            return u[i];
-                                        },
-                                    }
-                                ); //技能失效抗性//不能直接用空对象初始化,会清空之前技能的init里面的storage
+                                const storage = Object.assign({}, player.storage); //清空代理
+                                player.storage = new Proxy(storage, {
+                                    get(u, i) {
+                                        if (i == 'skill_blocker') return [];
+                                        if (i.startsWith('temp_ban_')) return false;
+                                        return u[i];
+                                    },
+                                }); //技能失效抗性//不能直接用空对象初始化,会清空之前技能的init里面的storage
                                 // 也不能直接用player.sotrage初始化,导致多次代理包裹
                             },
                             trigger: {
@@ -7959,18 +7957,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 狂暴
                         // 当你死亡前,若你处于狂暴状态则取消之
-                        // 否则你进入狂暴状态,清除所有【严厉】/【残酷】标记并发动一次对应效果
-                        // 你选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡
-                        // 若对方死亡,你取消你的死亡结算,退出狂暴状态,将体力调整至1点
+                        // 否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
+                        // 清除所有【严厉】/【残酷】标记,并发动一次对应效果
+                        // 狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍
+                        // 若有敌方被你击杀,你取消你的死亡结算,将体力调整至1点
                         HL_kuangbao: {
                             trigger: {
                                 player: ['dieBefore'],
                             },
                             audio: 'ext:火灵月影/audio:3',
                             forced: true,
-                            filter(event, player) {
-                                return player.countCards('h', (c) => get.tag(c, 'damage'));
-                            },
                             async content(event, trigger, player) {
                                 if (player.HL_kuangbao) {
                                     game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
@@ -7978,38 +7974,76 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } else {
                                     await player.canku();
                                     await player.yanli();
-                                    const {
-                                        result: { targets },
-                                    } = await player
-                                        .chooseTarget('选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡')
-                                        .set('filterTarget', (c, p, t) => p != t)
-                                        .set('ai', (t) => -get.attitude(player, t));
-                                    if (targets && targets[0]) {
-                                        player.HL_kuangbao = true;
-                                        while (targets[0].isAlive()) {
-                                            const { result } = await player
-                                                .chooseToUse()
-                                                .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
-                                                .set('filterTarget', (c, p, t) => t == targets[0])
-                                                .set('ai1', (card, arg) => {
-                                                    if (lib.card[card.name]) {
-                                                        return number0(player.getUseValue(card, null, true)) + 10;
-                                                    }
-                                                });
-                                            if (!result.bool) {
-                                                player.HL_kuangbao = false;
-                                                break;
-                                            }
-                                        }
-                                        if (targets[0].isDead()) {
+                                    player.HL_kuangbao = true;
+                                    let bool = true;
+                                    while (player.HL_kuangbao) {
+                                        const { result } = await player
+                                            .chooseToUse()
+                                            .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
+                                            .set('filterTarget', (c, p, t) => t != p)
+                                            .set('ai1', (card, arg) => {
+                                                if (lib.card[card.name]) {
+                                                    return number0(player.getUseValue(card, null, true)) + 10;
+                                                }
+                                            });
+                                        if (!result.bool) {
                                             player.HL_kuangbao = false;
-                                            game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
-                                            trigger.cancel();
-                                            player.hp = 1;
-                                            player.update();
+                                            bool = false;
                                         }
                                     }
+                                    player.clearMark('HL_kuangbao_2');
+                                    if (bool) {
+                                        game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
+                                        trigger.cancel();
+                                        player.hp = 1;
+                                        player.update();
+                                    }
                                 }
+                            },
+                            group: ['HL_kuangbao_1', 'HL_kuangbao_2', 'HL_kuangbao_3'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        source: ['dieAfter'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.player.isEnemiesOf(player) && player.HL_kuangbao;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.HL_kuangbao = false;
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['useCard'],
+                                    },
+                                    forced: true,
+                                    marktext: '<img src=extension/火灵月影/image/HL_kuangbao_2.png class="markimg">',
+                                    intro: {
+                                        content(storage) {
+                                            return `下一次造成的伤害翻${storage}倍`;
+                                        },
+                                    },
+                                    filter(event, player) {
+                                        return get.tag(event.card, 'damage') && player.HL_kuangbao;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.addMark('HL_kuangbao_2');
+                                    },
+                                },
+                                3: {
+                                    trigger: {
+                                        source: ['damageBegin4'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return player.countMark('HL_kuangbao_2') && player.HL_kuangbao;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num = numberq1(trigger.num) * Math.pow(2, player.countMark('HL_kuangbao_2'));
+                                    },
+                                },
                             },
                         },
                         // 自愈
@@ -8146,7 +8180,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_ziyu_info: '每五个任意回合后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         HL_ziyu_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">治愈之炎,无论多么严重的伤势都能快速愈合</b>',
                         HL_kuangbao: '狂暴',
-                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,清除所有【严厉】/【残酷】标记并发动一次对应效果<br>你选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,退出狂暴状态,将体力调整至1点',
+                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力调整至1点',
                         HL_kuangbao_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">来吧!我们还能继续厮杀!这是你所期盼的战斗!这是你所渴望的战争!</b>',
                         //————————————————————————————————————————————扑克
                         pukepai_duizi: '对子',
