@@ -1546,6 +1546,7 @@ game.addMode(
                 fanhuidating.innerHTML = '返回大厅';
                 document.body.appendChild(fanhuidating);
                 fanhuidating.onclick = function () {
+                    fanhuidating.remove();
                     _status.over = false;
                     const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
                     elements.forEach((el) => {
