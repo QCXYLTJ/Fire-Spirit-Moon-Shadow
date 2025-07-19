@@ -1387,7 +1387,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 },
                 true
             ); //火灵月影
-            if (lib.config.extension_火灵月影_扑克牌模式) {
+            if (lib.config.extension_火灵月影_扑克模式) {
                 const list = [];
                 for (const num of lib.number) {
                     for (const suit of lib.suit) {
@@ -3307,9 +3307,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_qinli: `<b style='color:rgba(230, 87, 21, 1); font-size: 25px;'>Efreet</b>`,
                     },
                     skill: {
-                        //————————————————————————————————————————————扑克牌
+                        //————————————————————————————————————————————扑克
                         // 对子
-                        // 将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌
+                        // 将两张同点数扑克对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克
                         // 直到某一方打出失败,此人受到1点伤害
                         pukepai_duizi: {
                             enable: 'phaseUse',
@@ -3335,7 +3335,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const numbers = player.getCards('hs', { name: 'pukepai' }).map((card) => card.number);
                                 return new Set(numbers).size < numbers.length;
                             }, //set的长度小于原数组,就说明有点数相同的牌
-                            prompt: '将两张同点数扑克牌一起对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',
+                            prompt: '将两张同点数扑克一起对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克<br>直到某一方打出失败,此人受到1点伤害',
                             async content(event, trigger, player) {
                                 let num = event.cards[0].number;
                                 const players = [event.target, player];
@@ -3343,7 +3343,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 while (true) {
                                     const npc = players[index];
                                     const { result } = await npc
-                                        .chooseToRespond('打出两张更大的同点数扑克牌,否则受到2点伤害', 2, (c) => {
+                                        .chooseToRespond('打出两张更大的同点数扑克,否则受到2点伤害', 2, (c) => {
                                             if (ui.selected.cards.length) {
                                                 return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
                                             }
@@ -3367,7 +3367,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 炸弹
-                        // 将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害
+                        // 将四张同点数扑克对一名其他角色使用,对目标造成2点伤害
                         pukepai_zhadan: {
                             enable: 'phaseUse',
                             filterCard(c, p) {
@@ -3399,7 +3399,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                                 return false;
                             },
-                            prompt: '将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害',
+                            prompt: '将四张同点数扑克对一名其他角色使用,对目标造成2点伤害',
                             async content(event, trigger, player) {
                                 event.target.damage(2);
                             },
@@ -8055,6 +8055,59 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————乐极生悲
+                        // 任意角色受伤害后,其去除一枚<乐>,所有其他角色获得一枚<乐>
+                        // 此领域被移除时,场上<乐>最多的角色随机弃置其<乐>数的牌,其他角色摸其<乐>数的牌,清除全场所有<乐>
+                        g_lejishengbei: {
+                            trigger: {
+                                player: ['damageEnd'],
+                            },
+                            forced: true,
+                            intro: {
+                                content: 'mark',
+                            },
+                            filter(event, player) {
+                                return HL.lejishengbei;
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of game.players) {
+                                    if (npc == player) {
+                                        npc.removeMark('g_lejishengbei');
+                                    }
+                                    else {
+                                        npc.addMark('g_lejishengbei');
+                                    }
+                                }
+                            },
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['phaseBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return HL.lejishengbei && (HL.lejishengbei == player || !game.players.includes(HL.lejishengbei));
+                                    },
+                                    async content(event, trigger, player) {
+                                        game.removeGlobalSkill('g_lejishengbei');
+                                        game.removeGlobalSkill('g_lejishengbei_1');
+                                        let maxnum = Math.max(...game.players.map(q => q.countMark('g_lejishengbei')));
+                                        if (maxnum > 0) {
+                                            const maxplayer = game.players.filter(q => q.countMark('g_lejishengbei') == maxnum);
+                                            for (const npc of game.players) {
+                                                if (maxplayer.includes(npc)) {
+                                                    npc.randomDiscard('he', npc.countMark('g_lejishengbei'));
+                                                }
+                                                else {
+                                                    npc.draw(npc.countMark('g_lejishengbei'));
+                                                }
+                                                npc.clearMark('g_lejishengbei');
+                                            }
+                                        }
+                                    },
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -8067,6 +8120,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————乐极生悲
+                        g_lejishengbei: '乐极生悲',
+                        g_lejishengbei_info: '任意角色受伤害后,其去除一枚<乐>,所有其他角色获得一枚<乐><br>此领域被移除时,场上<乐>最多的角色随机弃置其<乐>数的牌,其他角色摸其<乐>数的牌,清除全场所有<乐>',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
                         HL_qinli: '五河琴里',
                         HL_zhuolan: '灼烂歼鬼',
@@ -8088,11 +8144,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_kuangbao: '狂暴',
                         HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,清除所有【严厉】/【残酷】标记并发动一次对应效果<br>你选择任意一名角色,你对其依次使用伤害牌,直至无伤害牌可出或对方死亡<br>若对方死亡,你取消你的死亡结算,退出狂暴状态,将体力调整至1点',
                         HL_kuangbao_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">来吧!我们还能继续厮杀!这是你所期盼的战斗!这是你所渴望的战争!</b>',
-                        //————————————————————————————————————————————扑克牌
+                        //————————————————————————————————————————————扑克
                         pukepai_duizi: '对子',
-                        pukepai_duizi_info: '将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害',
+                        pukepai_duizi_info: '将两张同点数扑克对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克<br>直到某一方打出失败,此人受到1点伤害',
                         pukepai_zhadan: '炸弹',
-                        pukepai_zhadan_info: '将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害',
+                        pukepai_zhadan_info: '将四张同点数扑克对一名其他角色使用,对目标造成2点伤害',
                         pukepai_wangzha: '王炸',
                         pukepai_wangzha_info: '将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————太初弈无终·戒律    神      7/7
@@ -8469,7 +8525,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             discard: false,
                             lose: false,
                             async content(event, trigger, player) {
-                                player.give(event.cards, event.target);
+                                if (event.cards?.length) {
+                                    player.give(event.cards, event.target);
+                                }
                             },
                             ai: {
                                 basic: {
@@ -8483,7 +8541,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             global: ['g_shuidan'],
                         },
-                        // 回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌
+                        // 回合限一次,将一张扑克对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克
                         // 直到某一方打出失败,此人受到1点伤害
                         pukepai: {
                             fullskin: true,
@@ -8500,7 +8558,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 let index = 0;
                                 while (true) {
                                     const npc = players[index];
-                                    const { result } = await npc.chooseToRespond('打出一张更大的扑克牌,否则受到1点伤害', (c) => c.name == 'pukepai' && c.number > num);
+                                    const { result } = await npc.chooseToRespond('打出一张更大的扑克,否则受到1点伤害', (c) => c.name == 'pukepai' && c.number > num);
                                     if (result?.cards?.length) {
                                         index = (index + 1) % 2;
                                         num = result.cards[0].number;
@@ -8525,12 +8583,40 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             global: ['pukepai_duizi', 'pukepai_zhadan', 'pukepai_wangzha'],
                         },
+                        // 乐极生悲
+                        // 出牌阶段对自己使用,目标摸2张牌,将全场添加<乐极生悲>领域直到目标下个回合开始时或死亡
+                        lejishengbei: {
+                            type: 'trick',
+                            enable: true,
+                            filterTarget(card, player, target) {
+                                return target == player;
+                            },
+                            selectTarget: -1,
+                            async content(event, trigger, player) {
+                                event.target.draw(2);
+                                game.addGlobalSkill('g_lejishengbei');
+                                game.addGlobalSkill('g_lejishengbei_1');
+                                HL.lejishengbei = event.target;
+                            },
+                            ai: {
+                                order: 10,
+                                result: {
+                                    target: 2,
+                                },
+                                basic: {
+                                    useful: 1,
+                                    value: 5,
+                                },
+                            },
+                        },
                     },
                     translate: {
                         shuidan: '水弹',
                         shuidan_info: '回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害',
-                        pukepai: '扑克牌',
-                        pukepai_info: '回合限一次,将一张扑克牌对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克牌<br>直到某一方打出失败,此人受到1点伤害<br>对子<br>将两张同点数扑克牌对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克牌<br>直到某一方打出失败,此人受到1点伤害<br>炸弹<br>将四张同点数扑克牌对一名其他角色使用,对目标造成2点伤害<br>王炸<br>将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
+                        pukepai: '扑克',
+                        pukepai_info: '回合限一次,将一张扑克对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克<br>直到某一方打出失败,此人受到1点伤害<br>对子<br>将两张同点数扑克对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克<br>直到某一方打出失败,此人受到1点伤害<br>炸弹<br>将四张同点数扑克对一名其他角色使用,对目标造成2点伤害<br>王炸<br>将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
+                        lejishengbei: '乐极生悲',
+                        lejishengbei_info: '出牌阶段对自己使用,目标摸2张牌,将全场添加<乐极生悲>领域直到目标下个回合开始时或死亡',
                     },
                 };
                 for (const i in QQQ.card) {
@@ -8604,9 +8690,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 intro: '开启后,部分文字会附加闪烁动画效果',
                 init: true,
             },
-            扑克牌模式: {
-                name: '<span class=Qmenu>扑克牌模式</span>',
-                intro: '开启后,将牌堆改为54张扑克牌',
+            扑克模式: {
+                name: '<span class=Qmenu>扑克模式</span>',
+                intro: '开启后,将牌堆改为54张扑克',
                 init: false,
             },
             关闭本体BOSS: {
