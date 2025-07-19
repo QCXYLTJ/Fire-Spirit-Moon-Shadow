@@ -59,6 +59,9 @@ game.addMode(
         },
         game: {
             checkResult() {
+                if (game.players.map((q) => q.side).unique().length > 1) {
+                    return;
+                }
                 game.over(game.me.isAlive());
             },
         },
@@ -104,9 +107,10 @@ game.addMode(
                         boss.setIdentity();
                         game.removePlayer(player);
                     }
-                    if (game.players.length < 2) {
-                        game.checkResult();
+                    if (game.players.map((q) => q.side).unique().length > 1) {
+                        return;
                     }
+                    game.checkResult();
                 },
             },
         },
@@ -114,7 +118,7 @@ game.addMode(
             rawAttitude(from, to) {
                 if (!from) return 0;
                 if (!to) return 0;
-                if (from.identity == to.identity) return 10;
+                if (from.side == to.side) return 10;
                 return -10;
             },
         },
@@ -206,13 +210,16 @@ game.addMode(
         },
         game: {
             checkResult() {
-                game.over(game.players[0]?.identity == game.me.identity);
+                if (game.players.map((q) => q.side).unique().length > 1) {
+                    return;
+                }
+                game.over(game.players[0]?.side == game.me.side);
             },
         },
         element: {
             player: {
                 dieAfter() {
-                    if (game.players.map((q) => q.identity).unique().length > 1) {
+                    if (game.players.map((q) => q.side).unique().length > 1) {
                         return;
                     }
                     game.checkResult();
@@ -284,7 +291,7 @@ game.addMode(
             rawAttitude(from, to) {
                 if (!from) return 0;
                 if (!to) return 0;
-                if (from.identity == to.identity) return 10;
+                if (from.side == to.side) return 10;
                 return -10;
             },
         },
@@ -474,7 +481,9 @@ game.addMode(
         },
         game: {
             checkResult() {
-                game.over(game.players[0]?.identity == game.me.identity);
+                for (const i of game.dead) {
+                    i.qrevive();
+                }
             },
         },
         element: {
@@ -491,7 +500,7 @@ game.addMode(
             rawAttitude(from, to) {
                 if (!from) return 0;
                 if (!to) return 0;
-                if (from.identity == to.identity) return 10;
+                if (from.side == to.side) return 10;
                 return -10;
             },
         },
@@ -1129,7 +1138,7 @@ window.shanhe = {
         jinbikuang.innerHTML = `当前金币数量:${lib.config.shanhe.cur_jinbi}`;
         shanhe.beijing2.appendChild(jinbikuang);
     },
-    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录
+    // 结算页面 清除ui.me 终止phaseloop 返回大厅或者初始页面 清空历史记录——————————————————结算伤害击杀框
     jiesuan(bool) {
         shanhe.zhongzhi = true;
         shanhe.gameDraw.finish();
@@ -1515,11 +1524,26 @@ game.addMode(
         },
         game: {
             checkResult() {
-                if (game.players[0]?.side == game.me.side) {
-                    shanhe.jiesuan(true);
-                } else {
-                    shanhe.jiesuan(false);
+                if (game.players.map((q) => q.side).unique().length > 1) {
+                    return;
                 }
+                const bool = (game.players[0]?.side == game.me.side) ? true : false;
+                game.over(bool);
+                const fanhuidating = document.createElement('div');
+                fanhuidating.className = 'fanhuidating';
+                fanhuidating.innerHTML = '返回大厅';
+                document.body.appendChild(fanhuidating);
+                fanhuidating.onclick = function () {
+                    _status.over = false;
+                    const elements = document.querySelectorAll('.dialog.scroll1.scroll2');
+                    elements.forEach((el) => {
+                        el.remove();
+                    }); //移除结算框
+                    while (ui.control.firstChild) {
+                        ui.control.firstChild.remove();
+                    } //移除重开再战按钮
+                    shanhe.jiesuan(bool);
+                };
             },
         },
         element: {
@@ -1590,7 +1614,7 @@ game.addMode(
             rawAttitude(from, to) {
                 if (!from) return 0;
                 if (!to) return 0;
-                if (from.identity == to.identity) return 10;
+                if (from.side == to.side) return 10;
                 return -10;
             },
         },

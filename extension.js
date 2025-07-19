@@ -664,10 +664,9 @@ const kangxing1 = function () {
         },
         configurable: false,
     }); //禁止强制结束游戏
-    let over = false;
     Reflect.defineProperty(_status, 'over', {
         get() {
-            return over;
+            return _status.pauseManager.over.isStarted;
         },
         set(v) {
             if (v) {
@@ -685,11 +684,10 @@ const kangxing1 = function () {
                         } //移除重开再战按钮
                     }, 500);
                 } else {
-                    over = true;
-                    _status.pauseManager.waitPause = async function () {
-                        await new Promise(() => { });
-                    };
+                    _status.pauseManager.over.start();
                 }
+            } else {
+                _status.pauseManager.over.resolve();
             }
         },
         configurable: false,

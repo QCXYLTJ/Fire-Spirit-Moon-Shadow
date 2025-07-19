@@ -1,3 +1,21 @@
+.fanhuidating {
+    height: 10%;
+    width: 20%;
+    left: 40%;
+    top: 30%;
+    background: rgba(223, 9, 88);
+    border-radius: 10px;
+    font-size: 150%;
+    text-align: center;
+    white-space: nowrap;
+    font-weight: bold;
+    line-height: 300%;
+}
+
+.fanhuidating:hover {
+    background: rgb(192, 99, 99);
+}
+
 .equippoint {
     height: 10%;
     margin: 1%;
