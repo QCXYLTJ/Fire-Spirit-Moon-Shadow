@@ -822,12 +822,16 @@ window.shanhe = {
                 }
                 if (lib.config.shanhe.cur_equip.length) {
                     for (const equip of lib.config.shanhe.cur_equip) {
-                        player.qequip(game.createCard(equip));
+                        if (lib.card[equip]) {
+                            player.qequip(game.createCard(equip));
+                        }
                     }
                 }
                 if (lib.config.shanhe.cur_card.length) {
                     for (const card of lib.config.shanhe.cur_card) {
-                        player.directgain(game.createCard(card));
+                        if (lib.card[card]) {
+                            player.directgain(game.createCard(card));
+                        }
                     }
                 }
             } else {
@@ -1488,7 +1492,7 @@ game.addMode(
     'shanhetu',
     {
         start() {
-            document.removeEventListener('contextmenu', ui.click.right); //移除右键事件
+            //document.removeEventListener('contextmenu', ui.click.right); //移除右键事件
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
             game.finishCards();
