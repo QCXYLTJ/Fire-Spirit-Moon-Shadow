@@ -54,6 +54,9 @@ game.addMode(
                 }
             }
             await event.trigger('gameStart');
+            for (const npc of game.players) {
+                await game.triggerEnter(npc);
+            }
             await game.gameDraw(game.zhu, () => 4);
             game.phaseLoop(game.zhu);
         },
@@ -205,6 +208,9 @@ game.addMode(
                 npc.hp = 10 * npc.hp;
             }
             await event.trigger('gameStart');
+            for (const npc of game.players) {
+                await game.triggerEnter(npc);
+            }
             await game.gameDraw(game.zhu, () => 4);
             game.phaseLoop(game.zhu);
         },
@@ -476,6 +482,9 @@ game.addMode(
                 }
             }
             await event.trigger('gameStart');
+            for (const npc of game.players) {
+                await game.triggerEnter(npc);
+            }
             await game.gameDraw(game.zhu, () => 4);
             game.phaseLoop(game.zhu);
         },
@@ -850,10 +859,17 @@ window.shanhe = {
             }
         }
         // 人员准备完毕
-        _status.event.trigger('gameStart');
+        game.log(`<b style='color:rgb(228, 17, 28);'>山河图游戏开始</b>`);
+        await _status.event.trigger('gameStart');
+        for (const npc of game.players) {
+            game.log(`<b style='color:rgb(228, 17, 28);'>${get.translation(npc)}进入山河图</b>`);
+            await game.triggerEnter(npc);
+        }
+        game.log(`<b style='color:rgb(228, 17, 28);'>山河图发牌开始</b>`);
         shanhe.gameDraw = game.gameDraw(game.zhu, () => 4);
         await shanhe.gameDraw;
         shanhe.zhongzhi = false;
+        game.log(`<b style='color:rgb(228, 17, 28);'>山河图轮次开始</b>`);
         shanhe.phaseLoop = game.phaseLoop(game.zhu);
         await shanhe.phaseLoop;
     },
