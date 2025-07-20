@@ -843,7 +843,7 @@ window.shanhe = {
                 player.init(info.name);
                 player.addSkill(info.skills);
                 player.maxHp += info.maxHp;
-                player.hujia = info.hujia;
+                player.hujia += info.hujia;
                 if (info.card > 0) {
                     const cards = basicpile.randomGets(info.card);
                     basicpile.removeArray(cards);
