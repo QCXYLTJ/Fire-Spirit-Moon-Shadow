@@ -1554,10 +1554,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             set() { },
                         });
                         if (get.tag(trigger.card, 'damage')) {
+                            const targets = player.getEnemies();
                             Reflect.defineProperty(trigger, 'targets', {
                                 get() {
-                                    return player.getEnemies();
-                                },
+                                    return targets;
+                                },//用变量保存一下,防止杀死一名敌人之后targets数组变化导致漏过一个
                                 set() { },
                             });
                         } //用牌击穿
