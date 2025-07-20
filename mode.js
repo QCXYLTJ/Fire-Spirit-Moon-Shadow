@@ -828,11 +828,13 @@ window.shanhe = {
                     }
                 }
                 if (lib.config.shanhe.cur_card.length) {
+                    const list = [];
                     for (const card of lib.config.shanhe.cur_card) {
                         if (lib.card[card]) {
-                            player.directgain(game.createCard(card));
+                            list.push(game.createCard(card));
                         }
                     }
+                    player.directgain(list);
                 }
             } else {
                 const info = cur_guanka[bosslist[index - 1]];
@@ -861,8 +863,10 @@ window.shanhe = {
         };
         if (lib.config.shanhe.cur_friend.length) {
             for (const friend of lib.config.shanhe.cur_friend) {
-                const fellow = game.me.addFellow(friend);
-                game.log(game.me, '加入盟友', fellow);
+                if (lib.character[friend]) {
+                    const fellow = game.me.addFellow(friend);
+                    game.log(game.me, '加入盟友', fellow);
+                }
             }
         }
         // 人员准备完毕
