@@ -127,7 +127,7 @@ const kangxing1 = function () {
     const kplayers = [];
     const obj = {
         get players() {
-            if (!_status.gameStarted && lib.config.mode != 'boss') {
+            if (!_status.gameStarted && !['boss', 'shanhetu'].includes(lib.config.mode)) {
                 return startplayers.filter((q) => q.playerid); // 乱斗/挑战模式的ui.create.player例外//挑战模式加入抗性过早,会强制玩家当boss
             } // 游戏没开始前,禁止即死
             return kplayers.filter((q) => {
