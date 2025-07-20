@@ -819,12 +819,12 @@ window.shanhe = {
                 }
                 if (lib.config.shanhe.cur_equip.length) {
                     for (const equip of lib.config.shanhe.cur_equip) {
-                        await player.equip(game.createCard(equip)).set('_triggered', null);
+                        player.qequip(game.createCard(equip));
                     }
                 }
                 if (lib.config.shanhe.cur_card.length) {
                     for (const card of lib.config.shanhe.cur_card) {
-                        await player.gain(game.createCard(card), 'gain2').set('_triggered', null);
+                        player.directgain(game.createCard(card));
                     }
                 }
             } else {
@@ -836,13 +836,13 @@ window.shanhe = {
                 player.maxHp += info.maxHp;
                 player.hujia = info.hujia;
                 if (info.card > 0) {
-                    await player.gain(get.cards(info.card), 'gain2').set('_triggered', null);
+                    player.directgain(get.cards(info.card));
                 }
                 let equipnum = info.equip;
                 while (equipnum-- > 0) {
                     const equip = get.cardPile((c) => get.type(c) == 'equip', 'cardPile');
                     if (equip) {
-                        await player.equip(equip).set('_triggered', null);
+                        player.qequip(game.createCard(equip));
                     }
                 }
             }
