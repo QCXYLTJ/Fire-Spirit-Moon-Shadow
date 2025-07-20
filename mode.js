@@ -1185,6 +1185,15 @@ window.shanhe = {
             game.removePlayer(i);
         }
         delete _status.roundStart; // 轮数重置
+        _status.globalHistory = [
+            {
+                cardMove: [],
+                custom: [],
+                useCard: [],
+                changeHp: [],
+                everything: [],
+            },
+        ]; // 清空全局历史事件
         game.roundNumber = 0;
         ui.arenalog.innerHTML = ''; /*清除历史记录*/
         ui.historybar.innerHTML = ''; /*清除出牌记录*/
