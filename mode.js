@@ -801,6 +801,9 @@ window.shanhe = {
         game.prepareArena(bosslist.length + 1);
         game.zhu = game.me;
         lib.init.onfree();
+        const cardpile = Array.from(ui.cardPile.childNodes).concat(Array.from(ui.discardPile.childNodes));
+        const equippile = cardpile.filter((c) => get.type(c) == 'equip');
+        const basicpile = cardpile.filter((c) => get.type(c) == 'basic');
         for (const [index, player] of game.players.entries()) {
             player.getId();
             if (player == game.me) {
@@ -836,14 +839,14 @@ window.shanhe = {
                 player.maxHp += info.maxHp;
                 player.hujia = info.hujia;
                 if (info.card > 0) {
-                    player.directgain(get.cards(info.card));
+                    const cards = basicpile.randomGets(info.card);
+                    basicpile.removeArray(cards);
+                    player.directgain(cards);
                 }
-                let equipnum = info.equip;
-                while (equipnum-- > 0) {
-                    const equip = get.cardPile((c) => get.type(c) == 'equip', 'cardPile');
-                    if (equip) {
-                        player.qequip(game.createCard(equip));
-                    }
+                if (info.equip > 0) {
+                    const equips = equippile.randomGets(info.equip);
+                    equippile.removeArray(equips);
+                    player.qequip(equips);
                 }
             }
             player.hp = player.maxHp;

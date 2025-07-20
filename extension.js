@@ -2768,7 +2768,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             player.qequip(i);
                         }
                     }
-                    if (card) {
+                    else if (card) {
                         const vcard = new lib.element.VCard(card);
                         const cardSymbol = Symbol('card');
                         card.cardSymbol = cardSymbol;
