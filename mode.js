@@ -1331,13 +1331,13 @@ window.shanhe = {
                 case 'maxHp':
                     {
                         lib.config.shanhe.cur_maxHp++;
-                        gongxi.innerHTML = `体力上限增加了`;
+                        gongxi.innerHTML = `体力上限增加了1`;
                     }
                     break;
                 case 'maxhandcard':
                     {
-                        lib.config.shanhe.cur_maxhandcard++;
-                        gongxi.innerHTML = `手牌上限增加了`;
+                        lib.config.shanhe.cur_maxhandcard += 2;
+                        gongxi.innerHTML = `手牌上限增加了2`;
                     }
                     break;
                 case 'zhanfa':
