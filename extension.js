@@ -2778,7 +2778,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         player.node.equips.appendChild(card);
                         card.style.transform = '';
                         card.node.name2.innerHTML = `${get.translation(card.suit)}${card.number} ${get.translation(card.name)}`;
-                        const info = lib.card[card];
+                        const info = lib.card[card.name];
                         if (info && info.skills) {
                             for (const i of info.skills) {
                                 player.addSkillTrigger(i);
