@@ -1558,7 +1558,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             Reflect.defineProperty(trigger, 'targets', {
                                 get() {
                                     return targets;
-                                },//用变量保存一下,防止杀死一名敌人之后targets数组变化导致漏过一个
+                                }, //用变量保存一下,防止杀死一名敌人之后targets数组变化导致漏过一个
                                 set() { },
                             });
                         } //用牌击穿
@@ -2768,8 +2768,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         for (const i of card) {
                             player.qequip(i);
                         }
-                    }
-                    else if (card) {
+                    } else if (card) {
                         const vcard = new lib.element.VCard(card);
                         const cardSymbol = Symbol('card');
                         card.cardSymbol = cardSymbol;
@@ -7801,7 +7800,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
                         // 灼烂歼鬼
-                        // 其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害
+                        // ❶其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害
+                        // ❷你造成火焰伤害后,令目标获得等量<燃>;你受到的火焰伤害视为回复体力
+                        // ❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害
                         HL_zhuolan: {
                             init(player) {
                                 game.playAudio(`../extension/火灵月影/audio/qinli_init${[1, 2, 3].randomGet()}.mp3`);
@@ -7850,6 +7851,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             filter(event, player) {
                                 return event.card.number == 5;
                             },
+                            marktext: '<img src=extension/火灵月影/image/HL_zhuolan.png class="markimg">',
+                            intro: {
+                                content: 'mark',
+                            },
                             forced: true,
                             async content(event, trigger, player) {
                                 let num = 1;
@@ -7860,7 +7865,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 while (num > 0) {
                                     const {
                                         result: { targets },
-                                    } = await player.chooseTarget(`分配${num}点火焰伤害`, (card, player, target) => target != player).set('ai', (t) => -get.attitude(player, t));
+                                    } = await player.chooseTarget(`分配${num}点火焰伤害`).set('ai', (t) => {
+                                        if (t == player) {
+                                            return (player.maxHp - player.hp) * 4;
+                                        }
+                                        return -get.attitude(player, t);
+                                    });
                                     if (targets && targets[0]) {
                                         num--;
                                         const index = list.get(targets[0]);
@@ -7883,6 +7893,75 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         await target.damage(num, 'fire');
                                     }
                                 }
+                            },
+                            group: ['HL_zhuolan_1', 'HL_zhuolan_2', 'HL_zhuolan_3'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        source: ['damageAfter'],
+                                    },
+                                    filter(event, player) {
+                                        return event.nature == 'fire' && event.num > 0;
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        trigger.player.addMark('HL_zhuolan', trigger.num);
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['damageBefore'],
+                                    },
+                                    filter(event, player) {
+                                        return event.nature == 'fire' && event.num > 0;
+                                    },
+                                    forced: true,
+                                    firstDo: true,
+                                    async content(event, trigger, player) {
+                                        trigger.setContent(async function (event, trigger, player) {
+                                            const num = player.hp + event.num - player.maxHp;
+                                            event.num -= num;
+                                            game.log(player, '将回复转变为护甲');
+                                            player.changeHujia(num);
+                                            if (event.num > 0) {
+                                                delete event.filterStop;
+                                                if (lib.config.background_audio) {
+                                                    game.playAudio('effect', 'recover');
+                                                }
+                                                game.broadcast(function () {
+                                                    if (lib.config.background_audio) {
+                                                        game.playAudio('effect', 'recover');
+                                                    }
+                                                });
+                                                game.broadcastAll(function (player) {
+                                                    if (lib.config.animation && !lib.config.low_performance) {
+                                                        player.$recover();
+                                                    }
+                                                }, player);
+                                                player.$damagepop(event.num, 'wood');
+                                                game.log(player, '回复了' + get.cnNumber(event.num) + '点体力');
+                                                player.changeHp(event.num, false);
+                                            } else {
+                                                event._triggered = null;
+                                            }
+                                        }); //可以用,但是不能触发recover相关时机
+                                    },
+                                },
+                                3: {
+                                    trigger: {
+                                        global: ['damageEnd'],
+                                    },
+                                    filter(event, player) {
+                                        return event.nature == 'fire' && event.player.countMark('HL_zhuolan') && game.players.some((q) => q.countMark('HL_zhuolan') && q != event.player) && event.num > 0;
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        for (const npc of game.players.filter((q) => q.countMark('HL_zhuolan') && q != trigger.player)) {
+                                            npc.removeMark('HL_zhuolan');
+                                            npc.damage(trigger.num, 'fire', 'nosource');
+                                        }
+                                    },
+                                },
                             },
                         },
                         // 交战!
@@ -7971,6 +8050,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['damageEnd'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.hp < player.maxHp;
+                                    },
                                     async content(event, trigger, player) { },
                                 }, // 受伤语音
                                 2: {
@@ -8008,6 +8090,54 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        // 自愈
+                        // 每五个任意回合后,你回复1点体力
+                        // 你回复体力时,若此回复溢出,将之转变为护甲
+                        HL_ziyu: {
+                            marktext: '<img src=extension/火灵月影/image/HL_ziyu.png class="markimg">',
+                            intro: {
+                                content(storage) {
+                                    return `还有${storage}回合自愈`;
+                                },
+                            },
+                            trigger: {
+                                global: ['phaseEnd'],
+                            },
+                            forced: true,
+                            init(player) {
+                                player.addMark('HL_ziyu', 5);
+                                player.isHealthy = function () {
+                                    return false;
+                                }; //回血溢出
+                            },
+                            async content(event, trigger, player) {
+                                player.removeMark('HL_ziyu');
+                                if (player.storage.HL_ziyu < 1) {
+                                    player.addMark('HL_ziyu', 5);
+                                    game.playAudio(`../extension/火灵月影/audio/qinli_ziyu${[1, 2, 3].randomGet()}.mp3`);
+                                    player.recover();
+                                }
+                            },
+                            group: ['HL_ziyu_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['recoverBefore'],
+                                    },
+                                    forced: true,
+                                    firstDo: true,
+                                    filter(event, player) {
+                                        return event.num + player.hp > player.maxHp;
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = player.hp + trigger.num - player.maxHp;
+                                        trigger.num -= num;
+                                        game.log(player, '将回复转变为护甲');
+                                        player.changeHujia(num);
+                                    },
+                                },
+                            },
+                        },
                         // 狂暴
                         // 当你死亡前,若你处于狂暴状态则取消之
                         // 否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
@@ -8015,6 +8145,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍
                         // 若有敌方被你击杀,你取消你的死亡结算,将体力调整至1点
                         HL_kuangbao: {
+                            mod: {
+                                aiValue(player, card, num) {
+                                    if (player.hp < 3 && get.tag(card, 'damage')) {
+                                        return num + 50;
+                                    }
+                                },
+                            },
                             trigger: {
                                 player: ['dieBefore'],
                             },
@@ -8102,54 +8239,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 自愈
-                        // 每五个任意回合后,你回复1点体力
-                        // 你回复体力时,若此回复溢出,将之转变为护甲
-                        HL_ziyu: {
-                            marktext: '<img src=extension/火灵月影/image/HL_ziyu.png class="markimg">',
-                            intro: {
-                                content(storage) {
-                                    return `还有${storage}回合自愈`;
-                                },
-                            },
-                            trigger: {
-                                global: ['phaseEnd'],
-                            },
-                            forced: true,
-                            init(player) {
-                                player.addMark('HL_ziyu', 5);
-                                player.isHealthy = function () {
-                                    return false;
-                                }; //回血溢出
-                            },
-                            async content(event, trigger, player) {
-                                player.removeMark('HL_ziyu');
-                                if (player.storage.HL_ziyu < 1) {
-                                    player.addMark('HL_ziyu', 5);
-                                    game.playAudio(`../extension/火灵月影/audio/qinli_ziyu${[1, 2, 3].randomGet()}.mp3`);
-                                    player.recover();
-                                }
-                            },
-                            group: ['HL_ziyu_1'],
-                            subSkill: {
-                                1: {
-                                    trigger: {
-                                        player: ['recoverBefore'],
-                                    },
-                                    forced: true,
-                                    firstDo: true,
-                                    filter(event, player) {
-                                        return event.num + player.hp > player.maxHp;
-                                    },
-                                    async content(event, trigger, player) {
-                                        const num = player.hp + trigger.num - player.maxHp;
-                                        trigger.num -= num;
-                                        game.log(player, '将回复转变为护甲');
-                                        player.changeHujia(num);
-                                    },
-                                },
-                            },
-                        },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乐极生悲
                         // 任意角色受伤害后,其去除一枚<乐>,所有其他角色获得一枚<乐>
                         // 此领域被移除时,场上<乐>最多的角色随机弃置其<乐>数的牌,其他角色摸其<乐>数的牌,清除全场所有<乐>
@@ -8220,7 +8309,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
                         HL_qinli: '五河琴里',
                         HL_zhuolan: '灼烂歼鬼',
-                        HL_zhuolan_info: '其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害',
+                        HL_zhuolan_info: '❶其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害<br>❷你造成火焰伤害后,令目标获得等量<燃>;你受到的火焰伤害视为回复体力<br>❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害',
                         HL_zhuolan_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">琴里的守护天使,可在战斧和臂炮间自由切换形态以适应战局</b>',
                         HL_jiaozhan: '交战!',
                         HL_jiaozhan_info: '每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:<br>弃置一张不同颜色的牌,令其无效<br>弃置一张同花色的牌,令其无效并获得之',
@@ -8680,6 +8769,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 乐极生悲
                         // 出牌阶段对自己使用,目标摸2张牌,将全场添加<乐极生悲>领域直到目标下个回合开始时或死亡
                         lejishengbei: {
+                            audio: 'ext:火灵月影/audio:1',
                             type: 'trick',
                             enable: true,
                             filterTarget(card, player, target) {
