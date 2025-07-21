@@ -1630,7 +1630,6 @@ game.addMode(
                                     isRoundEnd = true;
                                 }
                                 if (isRoundEnd && _status.globalHistory.some((i) => i.isRound)) {
-                                    game.log();
                                     await event.trigger('roundEnd');
                                 }
                             }

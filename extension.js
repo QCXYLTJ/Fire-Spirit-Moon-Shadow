@@ -8575,7 +8575,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     if (!info.trashBin) {
                         info.trashBin = [`ext:火灵月影/image/${i}.jpg`];
                     }
-                    info.dieAudios = [`ext:火灵月影/die/${i}.mp3`];
+                    info.dieAudios = [`ext:火灵月影/audio/${i}.mp3`];
                 }
                 for (const i in QQQ.skill) {
                     const info = QQQ.skill[i];
