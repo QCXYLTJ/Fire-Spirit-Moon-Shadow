@@ -811,10 +811,10 @@ window.shanhe = {
                 player.side = true;
                 player.init(lib.config.shanhe.cur_xuanjiang);
                 if (lib.config.shanhe.cur_skill.length) {
-                    player.addSkillLog(lib.config.shanhe.cur_skill);
+                    player.addSkillLog(lib.config.shanhe.cur_skill.filter((s) => lib.skill[s]));
                 }
                 if (lib.config.shanhe.cur_zhanfa.length) {
-                    player.addAdditionalSkill('zhanfa', lib.config.shanhe.cur_zhanfa);
+                    player.addAdditionalSkill('zhanfa', lib.config.shanhe.cur_zhanfa.filter((s) => lib.skill[s]));
                     game.log(player, '获得战法', lib.config.shanhe.cur_zhanfa);
                 }
                 if (lib.config.shanhe.cur_maxHp > 0) {
@@ -840,8 +840,13 @@ window.shanhe = {
                 const info = cur_guanka[bosslist[index - 1]];
                 player.identity = 'fan';
                 player.side = false;
-                player.init(info.name);
-                player.addSkill(info.skills);
+                if (lib.character[info.name]) {
+                    player.init(info.name);
+                }
+                else {
+                    player.init('sunce');
+                }
+                player.addSkill(info.skills.filter((s) => lib.skill[s]));
                 player.maxHp += info.maxHp;
                 player.hujia += info.hujia;
                 if (info.card > 0) {
