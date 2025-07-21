@@ -2723,7 +2723,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     game.log(player, str);
                     const stat = player.stat;
                     const statx = stat[stat.length - 1];
-                    if (!statx.damage) {
+                    if (!statx.damaged) {
                         statx.damaged = num;
                     } else {
                         statx.damaged += num;
@@ -7054,6 +7054,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             mark: true,
                             intro: {
+                                markcount(storage, player) {
+                                    return player.storage.HL_liankui_skill.length;
+                                },
                                 content(storage, player) {
                                     return `当前已记录技能${get.translation(player.storage.HL_liankui_skill)}`;
                                 },
@@ -7944,6 +7947,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             } else {
                                                 event._triggered = null;
                                             }
+                                            event.step = 6;
                                         }); //可以用,但是不能触发recover相关时机
                                     },
                                 },
