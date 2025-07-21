@@ -2725,16 +2725,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     str += '伤害';
                     game.log(player, str);
-                    if (player.stat[player.stat.length - 1].damaged == undefined) {
-                        player.stat[player.stat.length - 1].damaged = num;
+                    const stat = player.stat;
+                    const statx = stat[stat.length - 1];
+                    if (!statx.damage) {
+                        statx.damaged = num;
                     } else {
-                        player.stat[player.stat.length - 1].damaged += num;
+                        statx.damaged += num;
                     }
                     if (source) {
-                        if (source.stat[source.stat.length - 1].damage == undefined) {
-                            source.stat[source.stat.length - 1].damage = num;
+                        const stat = source.stat;
+                        const statx = stat[stat.length - 1];
+                        if (!statx.damage) {
+                            statx.damage = num;
                         } else {
-                            source.stat[source.stat.length - 1].damage += num;
+                            statx.damage += num;
                         }
                     }
                     player.hp -= num;
@@ -4045,10 +4049,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     lib.element.player.dieAfter2.call(event.target);
                                 }
                                 lib.element.player.$die.call(event.target);
-                                if (player.stat[player.stat.length - 1].kill == undefined) {
-                                    player.stat[player.stat.length - 1].kill = 1;
+                                const stat = player.stat;
+                                const statx = stat[stat.length - 1];
+                                if (!statx.kill) {
+                                    statx.kill = 1;
                                 } else {
-                                    player.stat[player.stat.length - 1].kill++;
+                                    statx.kill++;
                                 }
                                 game.log(event.target, '被', player, '杀害');
                             },
