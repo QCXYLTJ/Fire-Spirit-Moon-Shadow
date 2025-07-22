@@ -8077,12 +8077,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     audio: 'ext:火灵月影/audio:3',
                                     trigger: {
-                                        player: ['damageEnd'],
+                                        player: ['changeHpEnd'],
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        return player.hp < player.maxHp;
-                                    },
+                                        return event.num < 0;
+                                    },//掉真血才触发
                                     async content(event, trigger, player) { },
                                 }, // 受伤语音
                                 2: {
