@@ -3319,6 +3319,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             maxHp: 5,
                             skills: ['HL_zhuolan', 'HL_jiaozhan', 'HL_wufan', 'HL_ziyu', 'HL_kuangbao'],
                             trashBin: [`ext:火灵月影/image/HL_qinli.png`],
+                            dieAudios: ['ext:火灵月影/audio:3'],
                         },
                     },
                     characterIntro: {
@@ -7804,8 +7805,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
                         // 灼烂歼鬼
                         // ❶其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害
-                        // ❷你造成火焰伤害后,令目标获得等量<燃>;你受到的火焰伤害视为回复体力
-                        // ❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害
+                        // ❷你造成火焰伤害后,令目标获得等量<燃>;你受到的火焰伤害视为回复体力(此效果狂暴下失效)
+                        // ❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害(此效果狂暴下失效)
                         HL_zhuolan: {
                             init(player) {
                                 game.playAudio(`../extension/火灵月影/audio/qinli_init${[1, 2, 3].randomGet()}.mp3`);
@@ -7904,7 +7905,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         source: ['damageAfter'],
                                     },
                                     filter(event, player) {
-                                        return event.nature == 'fire' && event.num > 0;
+                                        return event.nature == 'fire' && event.num > 0 && !player.HL_kuangbao;
                                     },
                                     forced: true,
                                     async content(event, trigger, player) {
@@ -7916,7 +7917,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['damageBefore'],
                                     },
                                     filter(event, player) {
-                                        return event.nature == 'fire' && event.num > 0;
+                                        return event.nature == 'fire' && event.num > 0 && !player.HL_kuangbao;
                                     },
                                     forced: true,
                                     firstDo: true,
@@ -7956,7 +7957,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         global: ['damageEnd'],
                                     },
                                     filter(event, player) {
-                                        return event.nature == 'fire' && event.player.countMark('HL_zhuolan') && game.players.some((q) => q.countMark('HL_zhuolan') && q != event.player) && event.num > 0;
+                                        return event.nature == 'fire' && event.player.countMark('HL_zhuolan') && game.players.some((q) => q.countMark('HL_zhuolan') && q != event.player) && event.num > 0 && !player.HL_kuangbao;
                                     },
                                     forced: true,
                                     async content(event, trigger, player) {
@@ -8313,7 +8314,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
                         HL_qinli: '五河琴里',
                         HL_zhuolan: '灼烂歼鬼',
-                        HL_zhuolan_info: '❶其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害<br>❷你造成火焰伤害后,令目标获得等量<燃>;你受到的火焰伤害视为回复体力<br>❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害',
+                        HL_zhuolan_info: '❶其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害<br>❷你造成火焰伤害后,令目标获得等量<燃>;你受到的火焰伤害视为回复体力(此效果狂暴下失效)<br>❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害(此效果狂暴下失效)',
                         HL_zhuolan_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">琴里的守护天使,可在战斧和臂炮间自由切换形态以适应战局</b>',
                         HL_jiaozhan: '交战!',
                         HL_jiaozhan_info: '每回合限x次(x=你体力上限-体力值+1),当你成为其他人使用牌的目标时,可以:<br>弃置一张不同颜色的牌,令其无效<br>弃置一张同花色的牌,令其无效并获得之',
@@ -8670,7 +8671,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     if (!info.trashBin) {
                         info.trashBin = [`ext:火灵月影/image/${i}.jpg`];
                     }
-                    info.dieAudios = [`ext:火灵月影/audio/${i}.mp3`];
+                    if (!info.dieAudios) {
+                        info.dieAudios = [`ext:火灵月影/audio/${i}.mp3`];
+                    }
                 }
                 for (const i in QQQ.skill) {
                     const info = QQQ.skill[i];
