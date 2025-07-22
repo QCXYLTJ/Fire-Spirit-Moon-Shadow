@@ -1684,7 +1684,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (evt) {
                             evt.finish();
                         }
-                        boss.phase().set('skill', 'nodelay');
+                        boss.phase('nodelay');
                     },
                 };
                 lib.boss.HL_libai_boss = {
@@ -3065,7 +3065,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         player.gainPlayerCard(targets[0], 'hej', 'visible').set('ai', (b) => get.value(b.link));
                     }
                 }
-            };
+            };//async内部不await,会卡掉前面的事件//async外部不await,会让后续事件卡到后面执行
             lib.element.player.canku = async function () {
                 const player = this;
                 player.storage.HL_wufan_2 = 0;
@@ -4908,7 +4908,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 for (const npc of game.players.filter((q) => q.shibing)) {
-                                    await npc.phase().set('skill', 'nodelay');
+                                    await npc.phase('nodelay');
                                 }
                             },
                             group: ['HL_tongxin_1'],
@@ -5997,7 +5997,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (evt) {
                                     evt.finish();
                                 }
-                                player.phase().set('skill', 'nodelay');
+                                player.phase('nodelay');
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————绝灭者
@@ -6846,7 +6846,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (evt) {
                                         evt.finish();
                                     }
-                                    player.phase().set('skill', 'nodelay');
+                                    player.phase('nodelay');
                                 }
                             },
                         },
@@ -6884,7 +6884,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (evt) {
                                         evt.finish();
                                     }
-                                    player.phase().set('skill', 'nodelay');
+                                    player.phase('nodelay');
                                     delete HL.fangbaozhan;
                                 }
                             },
@@ -7870,7 +7870,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     const {
                                         result: { targets },
                                     } = await player.chooseTarget(`分配${num}点火焰伤害`).set('ai', (t) => {
-                                        if (t == player) {
+                                        if (t == player && !player.HL_kuangbao) {
                                             return (player.maxHp - player.hp) * 4;
                                         }
                                         return -get.attitude(player, t);
@@ -7926,7 +7926,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             const num = player.hp + event.num - player.maxHp;
                                             event.num -= num;
                                             game.log(player, '将回复转变为护甲');
-                                            player.changeHujia(num);
+                                            await player.changeHujia(num);
                                             if (event.num > 0) {
                                                 delete event.filterStop;
                                                 if (lib.config.background_audio) {
@@ -7944,12 +7944,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 }, player);
                                                 player.$damagepop(event.num, 'wood');
                                                 game.log(player, '回复了' + get.cnNumber(event.num) + '点体力');
-                                                player.changeHp(event.num, false);
+                                                await player.changeHp(event.num, false);
                                             } else {
                                                 event._triggered = null;
                                             }
                                             event.step = 6;
-                                        }); //可以用,但是不能触发recover相关时机
+                                        }); //可以用,但是不能触发recover相关时机//async内部不await,会卡掉前面的事件
                                     },
                                 },
                                 3: {
@@ -7963,7 +7963,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         for (const npc of game.players.filter((q) => q.countMark('HL_zhuolan') && q != trigger.player)) {
                                             npc.removeMark('HL_zhuolan');
-                                            npc.damage(trigger.num, 'fire', 'nosource');
+                                            await npc.damage(trigger.num, 'fire', 'nosource');
                                         }
                                     },
                                 },
