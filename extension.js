@@ -7937,10 +7937,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     firstDo: true,
                                     async content(event, trigger, player) {
                                         trigger.setContent(async function (event, trigger, player) {
-                                            const num = player.hp + event.num - player.maxHp;
-                                            event.num -= num;
-                                            game.log(player, '将回复转变为护甲');
-                                            await player.changeHujia(num);
+                                            await event.trigger('damageBegin1');
+                                            await event.trigger('damageBegin2');
+                                            await event.trigger('damageBegin3');
+                                            await event.trigger('damageBegin4');
+                                            await event.trigger('recoverBefore');
+                                            await event.trigger('recoverBegin');
                                             if (event.num > 0) {
                                                 delete event.filterStop;
                                                 if (lib.config.background_audio) {
@@ -7962,8 +7964,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             } else {
                                                 event._triggered = null;
                                             }
+                                            await event.trigger('recoverEnd');
+                                            await event.trigger('recoverAfter');//补齐recover时机
                                             event.step = 6;
-                                        }); //可以用,但是不能触发recover相关时机//async内部不await,会卡掉前面的事件
+                                        }); //async内部不await,会卡掉前面的事件
                                         //一个async中有俩异步事件的话,其中一个必须await一下
                                     },
                                 },
