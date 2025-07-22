@@ -3049,7 +3049,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 player.storage.HL_wufan_1 = 0;
                 const {
                     result: { links },
-                } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')]).set('ai', (button) => 6 - get.value(button.link));
+                } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')]).set('ai', (b) => {
+                    if (player.isPhaseUsing()) {
+                        if (player.hasValueTarget(b.link, null, true)) return -1;
+                        return 20 - get.value(b.link);
+                    }
+                    return 20 - get.useful(b.link);
+                });
                 if (links && links[0]) {
                     await player.discard(links);
                 }
@@ -7849,6 +7855,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }); //技能失效抗性//不能直接用空对象初始化,会清空之前技能的init里面的storage
                                 // 也不能直接用player.sotrage初始化,导致多次代理包裹
                             },
+                            mod: {
+                                aiValue(player, card, num) {
+                                    if (card.number == 5) {
+                                        return num + 50;
+                                    }
+                                },
+                            },
                             trigger: {
                                 global: ['useCard', 'respond'],
                             },
@@ -8030,7 +8043,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const num = player.countCards('h') - 5;
                                 if (num > 0) {
-                                    await player.chooseToDiscard(true, num, 'h').set('ai', (c) => 6 - get.value(c));
+                                    await player.chooseToDiscard(true, num, 'h').set('ai', (c) => {
+                                        if (player.isPhaseUsing()) {
+                                            if (player.hasValueTarget(c, null, true)) return -1;
+                                            return 20 - get.value(c);
+                                        }
+                                        return 20 - get.useful(c);
+                                    });
                                     player.addMark('HL_wufan_2', num);
                                     if (player.storage.HL_wufan_2 > 9) {
                                         await player.canku();
@@ -8151,7 +8170,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 若有敌方被你击杀,你取消你的死亡结算,将体力调整至1点
                         HL_kuangbao: {
                             mod: {
-                                aiValue(player, card, num) {
+                                aiUseful(player, card, num) {
                                     if (player.hp < 3 && get.tag(card, 'damage')) {
                                         return num + 50;
                                     }
