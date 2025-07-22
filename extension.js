@@ -8161,7 +8161,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         const num = player.hp + trigger.num - player.maxHp;
-                                        trigger.num -= num;
                                         game.log(player, '将回复转变为护甲');
                                         player.changeHujia(num);
                                     },
