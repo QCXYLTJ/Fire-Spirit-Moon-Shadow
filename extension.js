@@ -3050,6 +3050,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 const {
                     result: { links },
                 } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')]).set('ai', (b) => {
+                    if (get.position(b.link) == 'e') return -1;
                     if (player.isPhaseUsing()) {
                         if (player.hasValueTarget(b.link, null, true)) return -1;
                         return 20 - get.value(b.link);
