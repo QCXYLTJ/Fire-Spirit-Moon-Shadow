@@ -8138,7 +8138,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.isHealthy = function () {
                                     return false;
                                 }; //回血溢出
-                                player.node.avatar.classList.add('qinli');
+                                player.when({ global: 'gameStart' }).then(() => player.classList.add('qinli'));//游戏开始前加不上
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');

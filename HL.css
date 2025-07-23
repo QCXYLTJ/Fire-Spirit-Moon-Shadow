@@ -1,4 +1,11 @@
-body>#window>#arena>.player.fullskin.dead>.avatar.qinli {
+body>#window>#arena>.player.fullskin.dead.qinli {
+    opacity: 1;
+    transform: none !important;
+    filter: none;
+    -webkit-filter: none;
+}
+
+body>#window>#arena>.player.fullskin.dead.qinli>.avatar {
     opacity: 1;
     filter: none;
     -webkit-filter: none;
@@ -6,11 +13,11 @@ body>#window>#arena>.player.fullskin.dead>.avatar.qinli {
     /*import才能覆盖内联样式原背景图*/
 }
 
-body>#window>#arena>.player.fullskin:not(.dead)>.avatar.qinli {
+body>#window>#arena>.player.fullskin.qinli:not(.dead)>.avatar {
     background-image: url(./image/HL_qinli.png);
 }
 
-body>#window>#arena>.player.fullskin.linked>.avatar.qinli {
+body>#window>#arena>.player.fullskin.qinli.linked>.avatar {
     background-image: url(./image/qinli_link.jpg) !important;
 }
 
