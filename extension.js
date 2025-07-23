@@ -7868,7 +7868,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             filter(event, player) {
                                 return event.card.number == 5;
                             },
-                            marktext: '<img src=extension/火灵月影/image/HL_zhuolan.png class="markimg">',
+                            markimage: 'extension/火灵月影/image/HL_zhuolan.png',
                             intro: {
                                 content: 'mark',
                             },
@@ -8003,7 +8003,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             mark: true,
-                            marktext: '<img src=extension/火灵月影/image/HL_jiaozhan.png class="markimg">',
+                            markimage: 'extension/火灵月影/image/HL_jiaozhan.png',
                             intro: {
                                 markcount(storage, player) {
                                     return player.maxHp - player.hp + 1 - number0(player.storage.counttrigger?.HL_jiaozhan);
@@ -8070,7 +8070,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_wufan_1', 'HL_wufan_2', 'HL_wufan_3'],
                             subSkill: {
                                 1: {
-                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_1.png class="markimg">',
+                                    markimage: 'extension/火灵月影/image/HL_wufan_1.png',
                                     intro: {
                                         content: 'mark',
                                     },
@@ -8085,7 +8085,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) { },
                                 }, // 受伤语音
                                 2: {
-                                    marktext: '<img src=extension/火灵月影/image/HL_wufan_2.png class="markimg">',
+                                    markimage: 'extension/火灵月影/image/HL_wufan_2.png',
                                     intro: {
                                         content: 'mark',
                                     },
@@ -8123,7 +8123,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每五个任意回合后,你回复1点体力
                         // 你回复体力时,若此回复溢出,将之转变为护甲
                         HL_ziyu: {
-                            marktext: '<img src=extension/火灵月影/image/HL_ziyu.png class="markimg">',
+                            markimage: 'extension/火灵月影/image/HL_ziyu.png',
                             intro: {
                                 content(storage) {
                                     return `还有${storage}回合自愈`;
@@ -8244,7 +8244,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['useCard'],
                                     },
                                     forced: true,
-                                    marktext: '<img src=extension/火灵月影/image/HL_kuangbao_2.png class="markimg">',
+                                    markimage: 'extension/火灵月影/image/HL_kuangbao_2.png',
                                     intro: {
                                         content(storage) {
                                             return `下一次造成的伤害翻${Math.pow(2, storage)}倍`;
@@ -8279,7 +8279,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageEnd'],
                             },
                             forced: true,
-                            marktext: '<img src=extension/火灵月影/image/lejishengbei.jpg class="markimg">',
+                            markimage: 'extension/火灵月影/image/lejishengbei.jpg',
                             intro: {
                                 content: 'mark',
                             },
