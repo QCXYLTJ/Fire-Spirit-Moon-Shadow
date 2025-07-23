@@ -242,23 +242,20 @@ const kangxing1 = function () {
             },
             configurable: false,
         });
-        let qdisabledSkills = {};
+        let qdis = {};
         Reflect.defineProperty(player, 'disabledSkills', {
             get() {
                 if (obj.players.includes(player)) {
-                    return new Proxy(
-                        {},
-                        {
-                            get(u, i) {
-                                return [];
-                            },
-                        }
-                    );
+                    const kdis = {};
+                    for (const i in qdis) {
+                        kdis[i] = [];
+                    }
+                    return kdis;
                 }
-                return qdisabledSkills;
+                return qdis;
             },
             set(v) {
-                qdisabledSkills = v;
+                qdis = v;
             },
             configurable: false,
         });
@@ -267,20 +264,18 @@ const kangxing1 = function () {
             get() {
                 if (obj.players.includes(player)) {
                     if (player.name == 'HL_许劭') {
-                        //用hasskill会爆栈
                         return new Proxy(qstorage, {
                             get(u, i) {
-                                if (i == 'nohp' || i == 'norecover' || i.startsWith('temp_ban_')) return false;
-                                if ((!(i in u) && !i.startsWith('_') && i != 'North_ld_chenxun' && i != '东皇钟' && i != 'jiu' && i != 'sksn_jinian') || i == 'skill_blocker')
-                                    return [
-                                        [[], []],
-                                        [[], []],
-                                        [[], []],
-                                    ];
+                                if (i == 'skill_blocker') return [];
+                                if (i.startsWith('temp_ban_')) return false;
+                                if (['nohp', 'norecover'].includes(i)) return false;
+                                if (!(i in u) && !i.startsWith('_') && !['东皇钟', 'jiu'].includes(i)) {
+                                    return [[[], []], [[], []]];
+                                }
                                 return u[i];
                             },
                         });
-                    }
+                    }//用hasskill会爆栈
                     return new Proxy(qstorage, {
                         get(u, i) {
                             if (i == 'skill_blocker') return [];
@@ -572,11 +567,15 @@ const kangxing1 = function () {
                             }
                         }
                     }
+                    let qtemp = player.tempSkills || {};
                     Reflect.defineProperty(player, 'tempSkills', {
                         get() {
-                            return Object.assign({}, tempskill);
+                            Object.assign(qtemp, tempskill);
+                            return qtemp;
                         },
-                        set() { },
+                        set(v) {
+                            qtemp = v;
+                        },
                         configurable: false,
                     }); //只加了技能和hook,但是没init
                 }
