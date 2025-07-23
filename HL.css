@@ -1,3 +1,4 @@
+/* 琴里死亡消除黑白消除透明消除翻转 */
 body>#window>#arena>.player.fullskin.dead.qinli {
     opacity: 1;
     transform: none !important;
@@ -5,6 +6,7 @@ body>#window>#arena>.player.fullskin.dead.qinli {
     -webkit-filter: none;
 }
 
+/* 琴里死亡换肤与消除黑白消除透明 */
 body>#window>#arena>.player.fullskin.dead.qinli>.avatar {
     opacity: 1;
     filter: none;
@@ -13,10 +15,12 @@ body>#window>#arena>.player.fullskin.dead.qinli>.avatar {
     /*import才能覆盖内联样式原背景图*/
 }
 
+/* 琴里正常状态 */
 body>#window>#arena>.player.fullskin.qinli:not(.dead)>.avatar {
     background-image: url(./image/HL_qinli.png);
 }
 
+/* 琴里狂暴横置 */
 body>#window>#arena>.player.fullskin.qinli.linked>.avatar {
     background-image: url(./image/qinli_link.jpg) !important;
 }
@@ -59,6 +63,7 @@ body>.HL_dialog {
     /* 垂直居中 */
 }
 
+/* 返回大厅按钮 */
 body>.fanhuidating {
     height: 10%;
     width: 20%;
@@ -105,6 +110,7 @@ body>#shanhetu2>.guanka {
     background-position: center;
 }
 
+/* 关卡展示框 */
 body>#shanhetu2>.guankazhanshi {
     z-index: 9;
     top: 10%;
@@ -137,6 +143,7 @@ body>#shanhetu2>.guankazhanshi>.guankastart {
     background-position: center;
 }
 
+/* boss展示框 */
 body>#shanhetu2>.guankazhanshi>.bosszhanshi {
     border: 3px solid #ede80f;
     border-radius: 30px;
@@ -145,6 +152,7 @@ body>#shanhetu2>.guankazhanshi>.bosszhanshi {
     width: 20%;
 }
 
+/* boss名字 */
 body>#shanhetu2>.guankazhanshi>.bosszhanshi>.bosstitle {
     z-index: 9;
     top: 0;
@@ -159,7 +167,7 @@ body>#shanhetu2>.guankazhanshi>.bosszhanshi>.bosstitle {
     line-height: 130%;
 }
 
-/* 关卡boss展示 */
+/* 关卡boss头像 */
 body>#shanhetu2>.guankazhanshi>.bosszhanshi>.bossbox {
     left: 0;
     top: 10%;
@@ -170,6 +178,7 @@ body>#shanhetu2>.guankazhanshi>.bosszhanshi>.bossbox {
     background-position: center;
 }
 
+/* boss文字介绍 */
 body>#shanhetu2>.guankazhanshi>.bosszhanshi>.bossinfo {
     z-index: 9;
     left: 0;
@@ -182,6 +191,7 @@ body>#shanhetu2>.guankazhanshi>.bosszhanshi>.bossinfo {
     height: 40%;
 }
 
+/* 关卡界面头像显示与调整 */
 body>#shanhetu2>.touxiangkuang {
     background-size: cover;
     background-repeat: no-repeat;
@@ -195,6 +205,7 @@ body>#shanhetu2>.touxiangkuang {
     border-radius: 8px;
 }
 
+/* 单个装备 */
 body>#shanhetu2>.touxiangkuang>.equippoint {
     height: 10%;
     margin: 1%;
@@ -208,6 +219,7 @@ body>#shanhetu2>.touxiangkuang>.equippoint {
     font-weight: bold;
 }
 
+/* 当前金币数量显示 */
 body>#shanhetu2>.jinbikuang {
     position: fixed;
     height: 5%;
@@ -222,6 +234,7 @@ body>#shanhetu2>.jinbikuang {
     font-weight: bold;
 }
 
+/* 出售按钮 */
 body>#shanhetu2>.sellBtn {
     position: fixed;
     height: 80px;
@@ -236,6 +249,7 @@ body>#shanhetu2>.sellBtn {
     font-weight: bold;
 }
 
+/* 调整栏 */
 body>#shanhetu2>.tiaozhengkuang {
     height: 10%;
     width: 90%;
@@ -250,6 +264,7 @@ body>#shanhetu2>.tiaozhengkuang> :is(.cardkuang, .zhanfakuang, .skillkuang, .fri
     border-radius: 8px;
 }
 
+/* 单个战法装备 */
 body>#shanhetu2>.tiaozhengkuang> :is(.cardkuang, .zhanfakuang, .skillkuang, .friendkuang)>.zhanfapoint {
     position: relative;
     height: 50px;
@@ -259,12 +274,14 @@ body>#shanhetu2>.tiaozhengkuang> :is(.cardkuang, .zhanfakuang, .skillkuang, .fri
     background-color: rgba(240, 149, 13, 0.8);
 }
 
+/* 初始卡牌调整框 */
 body>#shanhetu2>.tiaozhengkuang>.cardkuang {
     background-color: rgba(47, 14, 233, 0.8);
     left: 0;
     width: 40%;
 }
 
+/* 单个初始卡牌 */
 body>#shanhetu2>.tiaozhengkuang>.cardkuang>.cardpoint {
     position: relative;
     width: 10%;
@@ -277,18 +294,21 @@ body>#shanhetu2>.tiaozhengkuang>.cardkuang>.cardpoint {
     background-position: center;
 }
 
+/* 战法调整框 */
 body>#shanhetu2>.tiaozhengkuang>.zhanfakuang {
     background-color: rgba(110, 216, 17, 0.8);
     left: 40%;
     width: 20%;
 }
 
+/* 技能调整框 */
 body>#shanhetu2>.tiaozhengkuang>.skillkuang {
     background-color: rgba(207, 188, 17, 0.8);
     left: 60%;
     width: 20%;
 }
 
+/* 盟友调整框 */
 body>#shanhetu2>.tiaozhengkuang>.friendkuang {
     background-color: rgba(122, 17, 207, 0.8);
     left: 80%;
@@ -301,6 +321,7 @@ body>#shanhetu2>.tiaozhengkuang>div:hover {
     transform: scale(1.05);
 }
 
+/* 集市按钮 */
 body>#shanhetu2>.jishi {
     width: 100px;
     height: 100px;
@@ -313,6 +334,7 @@ body>#shanhetu2>.jishi {
     z-index: 99;
 }
 
+/* 购买弹出框 */
 body>.okkuang {
     top: 20%;
     left: 20%;
@@ -327,6 +349,7 @@ body>.okkuang {
     font-weight: bold;
 }
 
+/* 确认购买 */
 body>.okkuang>.ok-button {
     left: 10%;
     top: 40%;
@@ -341,6 +364,7 @@ body>.okkuang>.ok-button {
     background-color: #28a745;
 }
 
+/* 取消购买 */
 body>.okkuang>.cancel-button {
     right: 10%;
     top: 40%;
@@ -359,6 +383,7 @@ body>.okkuang>.cancel-button:hover {
     background: #e53935;
 }
 
+/* 获得奖励弹窗 */
 body>.gongxi {
     position: fixed;
     top: 50%;
@@ -376,6 +401,7 @@ body>.gongxi {
     z-index: 99;
 }
 
+/* 右键装备战法详情 */
 body>.jiangli-info {
     position: fixed;
     top: 50%;
@@ -395,6 +421,7 @@ body>.jiangli-info {
     line-height: 1.5;
 }
 
+/* 集市框 */
 body>#shanhetu2>.jishikuang {
     width: 80%;
     height: 80%;
@@ -408,6 +435,7 @@ body>#shanhetu2>.jishikuang {
     padding: 20px;
 }
 
+/* 集市左栏 */
 body>#shanhetu2>.jishikuang>.jishilist {
     top: 0;
     left: 0;
@@ -418,6 +446,7 @@ body>#shanhetu2>.jishikuang>.jishilist {
     box-sizing: border-box;
 }
 
+/* 集市左栏按钮 */
 body>#shanhetu2>.jishikuang>.jishilist>.leixingpoint {
     position: relative;
     width: 100%;
@@ -434,6 +463,7 @@ body>#shanhetu2>.jishikuang>.jishilist>.leixingpoint:hover {
     background: rgba(255, 255, 255, 0.4);
 }
 
+/* 集市右栏 */
 body>#shanhetu2>.jishikuang>.jishibox {
     top: 0;
     left: 20%;
@@ -444,6 +474,7 @@ body>#shanhetu2>.jishikuang>.jishibox {
     box-sizing: border-box;
 }
 
+/* 奖励框 */
 body>.jianglikuang {
     position: fixed;
     top: 10%;
@@ -460,6 +491,7 @@ body>.jianglikuang {
     font-family: 'Microsoft Yahei', sans-serif;
 }
 
+/* 确认奖励 */
 body>.jianglikuang>.ok-button {
     left: 45%;
     bottom: 10%;
@@ -477,6 +509,7 @@ body>.jianglikuang>.ok-button:hover {
     background-color: #218838;
 }
 
+/* 单个商品 */
 body>#shanhetu2>.jishikuang>.jishibox>.jianglipoint,
 body>.jianglikuang>.jianglipoint {
     position: relative;
@@ -494,6 +527,7 @@ body>.jianglikuang>.jianglipoint:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* 商品标题 */
 body>#shanhetu2>.jishikuang>.jishibox>.jianglipoint>.jianglititle,
 body>.jianglikuang>.jianglipoint>.jianglititle {
     top: 0;
@@ -506,8 +540,8 @@ body>.jianglikuang>.jianglipoint>.jianglititle {
     font-weight: bold;
 }
 
-body>#shanhetu2>.jishikuang>.jishibox>.jianglipoint>.jianglibox,
 /* 结算奖励/商店商品 */
+body>#shanhetu2>.jishikuang>.jishibox>.jianglipoint>.jianglibox,
 body>.jianglikuang>.jianglipoint>.jianglibox {
     top: 20%;
     left: 0;
@@ -525,6 +559,7 @@ body>.jianglikuang>.jianglipoint>.jianglibox {
     text-shadow: 1px 1px 2px #000;
 }
 
+/*选将框*/
 body>#shanhetu1>.xuanjiangkuang {
     width: 92%;
     height: 82%;
@@ -538,6 +573,7 @@ body>#shanhetu1>.xuanjiangkuang {
     background-position: center;
 }
 
+/*选将确认按钮*/
 body>#shanhetu1>.xuanjiangkuang>.xuanjiangok {
     width: 14%;
     height: 12%;
@@ -557,6 +593,7 @@ body>#shanhetu1>.xuanjiangkuang>.xuanjiangok {
     background-image: url(./image/icon_Button3.png);
 }
 
+/*选将内容框*/
 body>#shanhetu1>.xuanjiangkuang>.wujiangkuang {
     width: 98%;
     height: 70%;
@@ -572,6 +609,7 @@ body>#shanhetu1>.xuanjiangkuang>.wujiangkuang {
     background-image: url(./image/bg-touming-6.png);
 }
 
+/*选将武将大框*/
 body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang {
     position: relative;
     width: 12%;
@@ -587,6 +625,7 @@ body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang {
     margin: 0% 1.12% 0.75% 1.12%;
 }
 
+/*选将武将框*/
 body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang>.touxiang1 {
     width: 80%;
     height: 0;
@@ -598,7 +637,7 @@ body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang>.touxiang1 {
     overflow: hidden;
 }
 
-/* 选将头像 */
+/* 选将头像框 */
 body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang>.touxiang1>.touxiang2 {
     width: 100%;
     height: 100%;
@@ -610,6 +649,7 @@ body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang>.touxiang1>.touxiang2 {
     background-position: center;
 }
 
+/*选将文本框*/
 body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang>.touxiang1>.touxiangtext {
     width: 100%;
     height: 22%;
@@ -629,6 +669,7 @@ body>#shanhetu1>.xuanjiangkuang>.wujiangkuang>.touxiang>.touxiang1>.touxiangtext
     z-index: 10;
 }
 
+/*武将包栏*/
 body>#shanhetu1>.xuanjiangkuang>.packlist {
     white-space: nowrap;
     overflow-x: scroll;
@@ -642,6 +683,7 @@ body>#shanhetu1>.xuanjiangkuang>.packlist {
     z-index: 10;
 }
 
+/*武将包按钮*/
 body>#shanhetu1>.xuanjiangkuang>.packlist>.packpoint {
     position: relative;
     width: 10%;
