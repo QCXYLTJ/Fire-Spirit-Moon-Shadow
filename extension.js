@@ -8138,6 +8138,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.isHealthy = function () {
                                     return false;
                                 }; //回血溢出
+                                player.node.avatar.classList.add('qinli');
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');
@@ -8194,6 +8195,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     await player.yanli();
                                     game.log(player, '进入狂暴');
                                     player.HL_kuangbao = true;
+                                    player.classList.add('linked');
                                     let bool = true;
                                     while (player.HL_kuangbao) {
                                         const { result } = await player
@@ -8208,6 +8210,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (!result.bool) {
                                             game.log(player, '退出狂暴');
                                             player.HL_kuangbao = false;
+                                            player.classList.remove('linked');
                                             bool = false;
                                         }
                                     }
@@ -8233,6 +8236,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         game.log(player, '退出狂暴');
                                         player.HL_kuangbao = false;
+                                        player.classList.remove('linked');
                                     },
                                 },
                                 2: {
@@ -8335,7 +8339,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         g_lejishengbei: '乐极生悲',
                         g_lejishengbei_info: '任意角色受伤害后,其去除一枚<乐>,所有其他角色获得一枚<乐><br>此领域被移除时,场上<乐>最多的角色随机弃置其<乐>数的牌,其他角色摸其<乐>数的牌,清除全场所有<乐>',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————五河琴里 5/5
-                        HL_qinli: '五河琴里',
+                        HL_qinli: '<b style="color: #FF0000">五河琴里</b>',
                         HL_zhuolan: '灼烂歼鬼',
                         HL_zhuolan_info: '❶其他角色/你使用或打出点数为5的牌时,你分配1/5点火焰伤害<br>❷你造成火焰伤害后,令目标获得等量<燃>(此效果狂暴下失效);你受到的火焰伤害视为回复体力<br>❸有<燃>的角色受到火焰伤害后,令场上其他有<燃>的角色移除一枚<燃>并受到等量无来源火属性伤害(此效果狂暴下失效)',
                         HL_zhuolan_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">琴里的守护天使,可在战斧和臂炮间自由切换形态以适应战局</b>',
