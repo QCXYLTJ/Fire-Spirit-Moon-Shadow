@@ -3054,7 +3054,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (player.hasValueTarget(b.link, null, true)) return -1;
                         return 20 - get.value(b.link);
                     }
-                    return 20 - get.useful(b.link);
+                    return 6 - get.useful(b.link);
                 });
                 if (links && links[0]) {
                     await player.discard(links);
@@ -8053,7 +8053,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             if (player.hasValueTarget(c, null, true)) return -1;
                                             return 20 - get.value(c);
                                         }
-                                        return 20 - get.useful(c);
+                                        return 6 - get.useful(c);
                                     });
                                     player.addMark('HL_wufan_2', num);
                                     if (player.storage.HL_wufan_2 > 9) {
@@ -8066,6 +8066,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         await player.yanli();
                                     }
                                 }
+                            },
+                            ai: {
+                                effect: {
+                                    player(card, player, target) {
+                                        if (lib.card[card.name]) {
+                                            if (player.getEquips('zhuge') && get.subtype(card) == 'equip1' && card.name != 'zhuge') {
+                                                return -1;
+                                            }
+                                            return [1, 1.6]; //无脑用牌
+                                        }
+                                    },
+                                },
                             },
                             group: ['HL_wufan_1', 'HL_wufan_2', 'HL_wufan_3'],
                             subSkill: {

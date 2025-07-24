@@ -1,9 +1,9 @@
 /* 琴里死亡消除黑白消除透明消除翻转 */
 body>#window>#arena>.player.fullskin.dead.qinli {
     opacity: 1;
-    transform: none !important;
     filter: none;
     -webkit-filter: none;
+    transform: none !important;
 }
 
 /* 琴里死亡换肤与消除黑白消除透明 */
@@ -11,6 +11,7 @@ body>#window>#arena>.player.fullskin.dead.qinli>.avatar {
     opacity: 1;
     filter: none;
     -webkit-filter: none;
+    transform: none !important;
     background-image: url(./image/qinli_dead.png) !important;
     /*import才能覆盖内联样式原背景图*/
 }
