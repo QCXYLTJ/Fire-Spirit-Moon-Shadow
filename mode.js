@@ -814,7 +814,10 @@ window.shanhe = {
                     player.addSkillLog(lib.config.shanhe.cur_skill.filter((s) => lib.skill[s]));
                 }
                 if (lib.config.shanhe.cur_zhanfa.length) {
-                    player.addAdditionalSkill('zhanfa', lib.config.shanhe.cur_zhanfa.filter((s) => lib.skill[s]));
+                    player.addAdditionalSkill(
+                        'zhanfa',
+                        lib.config.shanhe.cur_zhanfa.filter((s) => lib.skill[s])
+                    );
                     game.log(player, '获得战法', lib.config.shanhe.cur_zhanfa);
                 }
                 if (lib.config.shanhe.cur_maxHp > 0) {
@@ -842,8 +845,7 @@ window.shanhe = {
                 player.side = false;
                 if (lib.character[info.name]) {
                     player.init(info.name);
-                }
-                else {
+                } else {
                     player.init('sunce');
                 }
                 player.addSkill(info.skills.filter((s) => lib.skill[s]));
@@ -865,7 +867,7 @@ window.shanhe = {
             player.identityShown = true;
             player.ai.shown = 1;
             player.setIdentity();
-        };
+        }
         if (lib.config.shanhe.cur_friend.length) {
             for (const friend of lib.config.shanhe.cur_friend) {
                 if (lib.character[friend]) {
@@ -1138,9 +1140,9 @@ window.shanhe = {
                         okkuang.appendChild(ok);
                         ok.onclick = function () {
                             okkuang.remove();
-                            lib.config.shanhe[`cur_${type}`] = lib.config.shanhe[`cur_${type}`].filter(c => c !== name);
+                            lib.config.shanhe[`cur_${type}`] = lib.config.shanhe[`cur_${type}`].filter((c) => c !== name);
                             lib.config.shanhe.cur_jinbi += 100;
-                            target.remove(); // 从 DOM 中移除 
+                            target.remove(); // 从 DOM 中移除
                             game.saveConfig('shanhe', lib.config.shanhe);
                             const gongxi = document.createElement('div');
                             gongxi.className = 'gongxi';
@@ -1163,7 +1165,7 @@ window.shanhe = {
             if (!sellBtn.Sell) {
                 // 启用出售模式
                 sellBtn.Sell = true;
-                document.body.style.cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'30\' height=\'30\'><text x=\'0\' y=\'16\' font-size=\'20\'>$</text></svg>"), auto';
+                document.body.style.cursor = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='30'><text x='0' y='16' font-size='20'>$</text></svg>\"), auto";
                 // 监听一次点击
                 document.addEventListener('click', callback);
             } else {
@@ -1510,6 +1512,7 @@ game.addMode(
     'shanhetu',
     {
         start() {
+            _status.videoInited = true; //保存录像
             //document.removeEventListener('contextmenu', ui.click.right); //移除右键事件
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
@@ -1576,11 +1579,16 @@ game.addMode(
             shanhe.shanhetustart();
         },
         game: {
+            getVideoName() {
+                const str = get.translation(lib.config.shanhe.cur_xuanjiang);
+                const name = [str, '山河图 - 挑战首领' + get.translation(lib.config.shanhe.chengchi[lib.config.shanhe.cur_chengchi][lib.config.shanhe.cur_guanka].boss1.name)];
+                return name;
+            }, //保存录像
             checkResult() {
                 if (game.players.map((q) => q.side).unique().length > 1) {
                     return;
                 }
-                const bool = (game.players[0]?.side == game.me.side) ? true : false;
+                const bool = game.players[0]?.side == game.me.side ? true : false;
                 game.over(bool);
                 const fanhuidating = document.createElement('div');
                 fanhuidating.className = 'fanhuidating';
@@ -1617,7 +1625,7 @@ game.addMode(
                         current.seatNum = num;
                         current = current.next;
                         num++;
-                    }// 不手动设置seatnum会导致phaseloop自动设置,导致_status.seatNumSettled是真值,导致用phase抢回合会增加轮数
+                    } // 不手动设置seatnum会导致phaseloop自动设置,导致_status.seatNumSettled是真值,导致用phase抢回合会增加轮数
                     // 只有身份模式下,由于手动设置了seatnum,抢回合不会更新轮数
                     // 解决方法:删除所有setseatnum,修改setseatnum,手动设置seatnum,修改phaseloop,锁定_status.seatNumSettled
                     // 但是insertphase抢回合就不会刷新轮数,因为lib.onround检测此回合有event.skill
@@ -1681,7 +1689,7 @@ game.addMode(
                     },
                 },
             },
-            // 山河册战法库            
+            // 山河册战法库
             // 【资源流】[总数7/35][普通2/11][稀有2/14][史诗2/6][传说1/4]:商店可无限刷新
             // 资源流	普通	赌徒Ⅰ	通过战斗获得的铜币将在50%-200%内随机
             // 普通200铜币	回收	在战斗外,当你的装备被顶替时,你可以获得200铜币

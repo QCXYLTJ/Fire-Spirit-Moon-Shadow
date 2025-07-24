@@ -2768,11 +2768,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             player.qequip(i);
                         }
                     } else if (card) {
-                        const vcard = new lib.element.VCard(card);
-                        const cardSymbol = Symbol('card');
-                        card.cardSymbol = cardSymbol;
-                        card[cardSymbol] = vcard;
-                        player.vcardsMap?.equips.push(vcard);
+                        if (card[card.cardSymbol]) {
+                            const owner = get.owner(card);
+                            const vcard = card[card.cardSymbol];
+                            if (owner) {
+                                owner.vcardsMap?.equips.remove(vcard);
+                            }
+                            player.vcardsMap?.equips.add(vcard);
+                        } else {
+                            const vcard = new lib.element.VCard(card);
+                            const cardSymbol = Symbol('card');
+                            card.cardSymbol = cardSymbol;
+                            card[cardSymbol] = vcard;
+                            player.vcardsMap?.equips.push(vcard);
+                        }
                         player.node.equips.appendChild(card);
                         card.style.transform = '';
                         card.node.name2.innerHTML = `${get.translation(card.suit)}${card.number} ${get.translation(card.name)}`;
