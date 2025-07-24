@@ -1512,7 +1512,6 @@ game.addMode(
     'shanhetu',
     {
         start() {
-            _status.videoInited = true; //保存录像
             //document.removeEventListener('contextmenu', ui.click.right); //移除右键事件
             lib.config.mode = 'shanhetu';
             _status.mode = 'shanhetu';
@@ -1576,6 +1575,7 @@ game.addMode(
             if (!lib.config.shanhe.chengchi) {
                 shanhe.chongzhijilu();
             }
+            _status.videoInited = true; //保存录像
             shanhe.shanhetustart();
         },
         game: {
