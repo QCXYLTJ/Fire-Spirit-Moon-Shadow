@@ -8184,7 +8184,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
                         // 清除所有【严厉】/【残酷】标记,并发动一次对应效果
                         // 狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍
-                        // 若有敌方被你击杀,你取消你的死亡结算,将体力调整至1点
+                        // 若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1
                         HL_kuangbao: {
                             mod: {
                                 aiUseful(player, card, num) {
@@ -8230,7 +8230,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (bool) {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                         trigger.cancel();
-                                        player.hp = 1;
+                                        player.hp = Math.max(1, player.hp);
                                         player.update();
                                     }
                                 }
@@ -8369,7 +8369,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_ziyu_info: '每五个任意回合后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         HL_ziyu_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">治愈之炎,无论多么严重的伤势都能快速愈合</b>',
                         HL_kuangbao: '狂暴',
-                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力调整至1点',
+                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1',
                         HL_kuangbao_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">来吧!我们还能继续厮杀!这是你所期盼的战斗!这是你所渴望的战争!</b>',
                         //————————————————————————————————————————————扑克
                         pukepai_duizi: '对子',
