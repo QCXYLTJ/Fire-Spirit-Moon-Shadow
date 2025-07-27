@@ -65,7 +65,7 @@ game.addMode(
                 if (game.players.map((q) => q.side).unique().length > 1) {
                     return;
                 }
-                game.over(game.me.isAlive());
+                game.over(game.players[0]?.side == game.me.side);
             },
         },
         element: {
