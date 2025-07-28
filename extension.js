@@ -250,7 +250,8 @@ const kangxing1 = function () {
                     for (const i in qdis) {
                         kdis[i] = [];
                     }
-                    return kdis;
+                    qdis = kdis;
+                    return qdis;
                 }
                 return qdis;
             },
@@ -270,12 +271,15 @@ const kangxing1 = function () {
                                 if (i.startsWith('temp_ban_')) return false;
                                 if (['nohp', 'norecover'].includes(i)) return false;
                                 if (!(i in u) && !i.startsWith('_') && !['东皇钟', 'jiu'].includes(i)) {
-                                    return [[[], []], [[], []]];
+                                    return [
+                                        [[], []],
+                                        [[], []],
+                                    ];
                                 }
                                 return u[i];
                             },
                         });
-                    }//用hasskill会爆栈
+                    } //用hasskill会爆栈
                     return new Proxy(qstorage, {
                         get(u, i) {
                             if (i == 'skill_blocker') return [];
@@ -291,7 +295,7 @@ const kangxing1 = function () {
             },
             configurable: false,
         });
-        const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
+        const list = ['button' /*武将包展示*/, 'selectable' /*可选择目标*/, 'selected' /*已选择目标*/, 'targeted' /*目标*/, 'selecting' /*正在选择目标*/, 'player' /*在场角色*/, 'fullskin' /*立绘*/, 'bossplayer' /*boss列表*/, 'highlight' /*高光*/, 'glow_phase' /*当前回合*/, 'd-skin' /*动皮下的静皮透明度*/];
         let classlist = player.classList;
         Reflect.defineProperty(player, 'classList', {
             get() {
@@ -3080,7 +3084,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         player.gainPlayerCard(targets[0], 'hej', 'visible').set('ai', (b) => get.value(b.link));
                     }
                 }
-            };//async内部不await,会卡掉前面的事件//async外部不await,会让后续事件卡到后面执行
+            }; //async内部不await,会卡掉前面的事件//async外部不await,会让后续事件卡到后面执行
             lib.element.player.canku = async function () {
                 const player = this;
                 player.storage.HL_wufan_2 = 0;
@@ -7973,7 +7977,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 event._triggered = null;
                                             }
                                             await event.trigger('recoverEnd');
-                                            await event.trigger('recoverAfter');//补齐recover时机
+                                            await event.trigger('recoverAfter'); //补齐recover时机
                                             event.step = 6;
                                         }); //async内部不await,会卡掉前面的事件
                                         //一个async中有俩异步事件的话,其中一个必须await一下
@@ -8102,7 +8106,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     filter(event, player) {
                                         return event.num < 0;
-                                    },//掉真血才触发
+                                    }, //掉真血才触发
                                     async content(event, trigger, player) { },
                                 }, // 受伤语音
                                 2: {
@@ -8159,7 +8163,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.isHealthy = function () {
                                     return false;
                                 }; //回血溢出
-                                player.when({ global: 'gameStart' }).then(() => player.classList.add('qinli'));//游戏开始前加不上
+                                player.when({ global: 'gameStart' }).then(() => player.classList.add('qinli')); //游戏开始前加不上
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');
