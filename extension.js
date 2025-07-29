@@ -5793,8 +5793,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 await game.HL_mp4(event.name);
                                 player.qreinit('HL_zhinukuanglei');
                                 const remove = ['HL_A_ji', 'HL_A_heng', 'HL_A_nu', 'HL_A_zhuan'];
-                                player.removeSkill(remove);
                                 game.skangxing(player, ['HL_A_ming', 'HL_A_ting', 'HL_A_fen', 'HL_A_ce'], remove);
+                                player.removeSkill(remove);
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————至怒狂雷
@@ -6010,8 +6010,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 await game.HL_mp4(event.name);
                                 player.qreinit('HL_juemiezhe');
                                 const remove = ['HL_A_ming', 'HL_A_ting', 'HL_A_fen', 'HL_A_ce'];
-                                player.removeSkill(remove);
                                 game.skangxing(player, ['HL_zhianchaoxi', 'HL_zhangbujimoyan', 'HL_jinhuisiji'], remove);
+                                player.removeSkill(remove);
                                 const evt = _status.event.getParent('phase', true);
                                 if (evt) {
                                     evt.finish();
@@ -6859,8 +6859,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.storage.HL_yirihuan = 0;
                                     player.qreinit('HL_libai3');
                                     const remove = ['HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'];
-                                    player.removeSkill(remove);
                                     game.skangxing(player, ['HL_xinglunan', 'HL_duoqilu', 'HL_changfengpolang'], remove);
+                                    player.removeSkill(remove);
                                     const evt = _status.event.getParent('phase', true);
                                     if (evt) {
                                         evt.finish();
@@ -6897,8 +6897,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.qreinit('HL_李白');
                                     player.bosskangxing = false;
                                     const remove = ['HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'];
-                                    player.removeSkill(remove);
                                     game.skangxing(player, ['醉诗'], remove);
+                                    player.removeSkill(remove);
                                     const evt = _status.event.getParent('phase', true);
                                     if (evt) {
                                         evt.finish();
