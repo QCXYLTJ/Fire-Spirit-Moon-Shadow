@@ -2412,6 +2412,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     return clone;
                 }; //深拷贝对象
+                window.factorial = function (num) {
+                    num = Math.round(num);
+                    if (num < 0) {
+                        return 0;
+                    }
+                    if (num < 2) {
+                        return 1;
+                    }
+                    let result = 1;
+                    for (let i = 2; i <= num; i++) {
+                        result *= i;
+                    }
+                    return result;
+                };//阶乘
             };
             numfunc();
             //—————————————————————————————————————————————————————————————————————————————播放视频与背景图片相关函数
@@ -3173,6 +3187,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             hp: 7,
                             maxHp: 7,
                             skills: ['HL_tianqi', 'HL_wanshen', 'HL_jieming', 'HL_wanlv'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
+                        HL_huo: {
+                            sex: 'male',
+                            hp: 99,
+                            maxHp: 100,
+                            skills: ['HL_wangdaox', 'HL_buyun', 'HL_qifeng', 'HL_pojie'],
                             isBoss: true,
                             isBossAllowed: true,
                         },
@@ -5561,6 +5583,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             const stat = trigger.player.stat;
                                             const statskill = stat[stat.length - 1].skill;
                                             statskill[name] = numberq0(statskill[name]) + 1;
+                                            if (info.sourceSkill) {
+                                                statskill[info.sourceSkill] = numberq0(statskill[info.sourceSkill]) + 1;
+                                            }
                                             trigger.cancel();
                                         } //被终止的主动技不会计入次数,要手动加一下
                                         game.log(player, `终止${get.translation(name)}的发动`);
@@ -5578,8 +5603,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             init(player) {
                                 if (player.playerid) {
                                     const oover = game.over;
-                                    game.over = function (result, bool) {
-                                        if (player.hp > 0 && player.getEnemies().length) {
+                                    game.over = async function (result, bool) {
+                                        if (player.hp > 0 && player.getEnemies().length && !HL.fangbaozhan1) {
                                             const playerx = _status.event.player;
                                             let players = player.getEnemies();
                                             if (playerx && playerx != player) {
@@ -5588,6 +5613,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             if (!_status.auto) {
                                                 ui.click.auto();
                                             } //托管
+                                            HL.fangbaozhan1 = true;
                                             for (const npc of players) {
                                                 player.line(npc);
                                                 game.log(player, '惩罚直接结束游戏的角色', npc);
@@ -5595,11 +5621,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 next.source = player;
                                                 next.player = npc;
                                                 next._triggered = null;
-                                                next.setContent(lib.element.content.die);
+                                                await next.setContent(lib.element.content.die);
                                             } //即死
-                                            if (player.hp > 0 && player.getEnemies().length) {
-                                                return;
-                                            }
+                                            HL.fangbaozhan1 = false;
+                                        }
+                                        if (player.hp > 0 && player.getEnemies().length) {
+                                            return;
                                         }
                                         return oover(result, bool);
                                     };
@@ -7866,7 +7893,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return u[i];
                                     },
                                 }); //技能失效抗性//不能直接用空对象初始化,会清空之前技能的init里面的storage
-                                // 也不能直接用player.sotrage初始化,导致多次代理包裹
+                                // 也不能直接用player.storage初始化,导致多次代理包裹
                             },
                             mod: {
                                 aiValue(player, card, num) {
@@ -8348,6 +8375,338 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————火  100体力
+                        // 王道火
+                        // 游戏开始时,所有敌人受到压制,你武将牌技能外的一切技能均无法发动
+                        // 任意展示/判定事件中,由你指定其花色点数牌名
+                        HL_wangdaox: {
+                            trigger: {
+                                global: ['showCardsAfter', 'judgeAfter'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                const list1 = lib.suits;
+                                const list2 = lib.number.slice();
+                                const list3 = Object.keys(lib.card).filter((i) => {
+                                    const info = lib.card[i];
+                                    if (info.mode && !info.mode.includes(lib.config.mode)) {
+                                        return false;
+                                    }
+                                    return info.content && !['delay', 'equip'].includes(info.type);
+                                });
+                                const {
+                                    result: { links },
+                                } = await player
+                                    .chooseButton(['指定其花色点数牌名',
+                                        [list1.map((i) => [i, get.translation(i)]), 'tdnodes'],
+                                        [list2, 'tdnodes'],
+                                        [list3, 'vcard']], 3)
+                                    .set('filterButton', (button) => {
+                                        for (const arr of [list1, list2]) {
+                                            if (arr.includes(button.link) && ui.selected.buttons.some((b) => arr.includes(b.link))) {
+                                                return false;
+                                            }
+                                        }
+                                        if (list3.includes(button.link[2]) && ui.selected.buttons.some((b) => list3.includes(b.link[2]))) {
+                                            return false;
+                                        }
+                                        return true;
+                                    })
+                                    .set('ai', (button) => {
+                                        if (trigger.name == 'showCards') {
+                                            return Math.random();
+                                        }
+                                        const card = {};
+                                        if (list1.includes(button.link)) {
+                                            card.suit = button.link;
+                                        }
+                                        if (list2.includes(button.link)) {
+                                            card.number = button.link;
+                                        }
+                                        if (list3.includes(button.link[2])) {
+                                            card.name = button.link[2];
+                                        }
+                                        return get.attitude(player, trigger.player) * (trigger.judge(card) - trigger.judge(trigger.player.judging[0]));
+                                    });
+                                if (links?.length) {
+                                    const card = {};
+                                    for (const link of links) {
+                                        if (list1.includes(link)) {
+                                            card.suit = link;
+                                        }
+                                        if (list2.includes(link)) {
+                                            card.number = link;
+                                        }
+                                        if (list3.includes(link[2])) {
+                                            card.name = link[2];
+                                        }
+                                    }
+                                    if (trigger.name == 'showCards') {
+                                        for (const cardx of trigger.cards) {
+                                            cardx.init(card);
+                                        }
+                                    }
+                                    else {
+                                        trigger.result = {
+                                            card: card,
+                                            judge: trigger.judge(card),
+                                            number: card.number,
+                                            suit: card.suit,
+                                            color: get.color(card),
+                                        };
+                                    }
+                                }
+                            },
+                            group: ['HL_wangdaox_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['logSkillBegin', 'useSkillBegin'],
+                                    },
+                                    filter(event, player, name) {
+                                        const infox = lib.character[player.name];
+                                        if (infox?.skills?.includes(event.skill)) {
+                                            return false;
+                                        }
+                                        return lib.skill[event.skill] && !lib.skill.global.includes(event.skill);
+                                    },
+                                    forced: true,
+                                    popup: false,
+                                    async content(event, trigger, player) {
+                                        const name = trigger.skill;
+                                        const info = lib.skill[name];
+                                        if (!(info.HL_wangdaox > 0)) {
+                                            if (trigger.name == 'logSkillBegin') {
+                                                const arr = trigger.parent.next;
+                                                for (let i = arr.length - 1; i >= 0; i--) {
+                                                    if (arr[i].name === name) {
+                                                        arr.splice(i, 1);
+                                                    }
+                                                }
+                                            } //被终止的触发技也会计入次数
+                                            else {
+                                                const stat = trigger.player.stat;
+                                                const statskill = stat[stat.length - 1].skill;
+                                                statskill[name] = numberq0(statskill[name]) + 1;
+                                                if (info.sourceSkill) {
+                                                    statskill[info.sourceSkill] = numberq0(statskill[info.sourceSkill]) + 1;
+                                                }
+                                                trigger.cancel();
+                                            } //被终止的主动技不会计入次数,要手动加一下
+                                            game.log(player, `终止${get.translation(name)}的发动`);
+                                            if (info.limited || info.juexingji) {
+                                                trigger.player.awakenSkill(name);
+                                            }
+                                        }
+                                        else {
+                                            info.HL_wangdaox--;
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 不灭炎
+                        // 你受到伤害时,改为扣除等量体力上限并摸等量牌
+                        // 你回复生命时,改为增加等量体力上限并分配等量火焰伤害
+                        // 你的体力值始终等于体力上限-1,你拥有9限伤
+                        HL_buyun: {
+                            init(player) {
+                                const info = lib.character[player.name];
+                                let maxhp = Math.max(info.maxHp, player.maxHp);
+                                Reflect.defineProperty(player, 'maxHp', {
+                                    get() {
+                                        return maxhp;
+                                    },
+                                    set(value) {
+                                        if (value > maxhp) {
+                                            maxhp = value;
+                                        } else if (player.success) {
+                                            maxhp = value;
+                                        }
+                                    },
+                                }); //扣减体力上限抗性
+                                Reflect.defineProperty(player, 'hp', {
+                                    get() {
+                                        return player.maxHp - 1;
+                                    },
+                                    set() { },
+                                });
+                                Reflect.defineProperty(player, 'skipList', {
+                                    get() {
+                                        return [];
+                                    },
+                                    set() { },
+                                });
+                            },
+                            trigger: {
+                                player: ['damageBefore', 'recoverBefore'],
+                            },
+                            kangxing: true,
+                            charlotte: true,
+                            fixed: true,
+                            forced: true,
+                            async content(event, trigger, player) {
+                                if (trigger.name == 'damage') {
+                                    trigger.cancel();
+                                    await player.draw(trigger.num);
+                                    player.success = true;
+                                    await player.loseMaxHp(Math.min(trigger.num, 9));
+                                    player.success = false;
+                                }
+                                else {
+                                    trigger.cancel();
+                                    await player.gainMaxHp(trigger.num);
+                                    let num = Math.min(numberq1(trigger.num), 9);
+                                    const list = new Map();
+                                    while (num > 0) {
+                                        const {
+                                            result: { targets },
+                                        } = await player.chooseTarget(`分配${num}点火焰伤害`).set('ai', (t) => {
+                                            return -get.attitude(player, t);
+                                        });
+                                        if (targets && targets[0]) {
+                                            num--;
+                                            const index = list.get(targets[0]);
+                                            if (!index) {
+                                                list.set(targets[0], 1);
+                                            } else {
+                                                list.set(targets[0], index + 1);
+                                            }
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                    if (list.size > 0) {
+                                        for (const [target, num] of list) {
+                                            await target.damage(num, 'fire');
+                                        }
+                                    }
+                                }
+                            },
+                            group: ['bossfinish'],
+                        },
+                        // 起锋焱
+                        // 你体力上限变化一点时,随机获得一个技能,你随机『2』个非武将牌上技能可使用次数+1,所有敌方角色随机技能可使用次数+1
+                        HL_qifeng: {
+                            trigger: {
+                                player: ['loseMaxHpEnd', 'gainMaxHpEnd'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                let num = Math.min(numberq1(trigger.num), 9);
+                                while (num-- > 0) {
+                                    const skill = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]).randomGet();
+                                    player.addAdditionalSkill('HL_qifeng', skill, true);
+                                    game.skangxing(player, [skill]);
+                                    const numx = (player.storage.HL_pojie + 2) || 2;
+                                    const skills = player.GS().filter((i) => {
+                                        const info = lib.character[player.name];
+                                        if (info && info.skills) {
+                                            return !info.skills.includes(i);
+                                        }
+                                        return true;
+                                    }).randomGets(numx);
+                                    for (const skillx of skills) {
+                                        const info = lib.skill[skillx];
+                                        try {
+                                            info.HL_wangdaox ??= 0
+                                            info.HL_wangdaox++;
+                                            game.log(player, skillx, '可使用次数置为', info.HL_wangdaox);
+                                        }
+                                        catch (e) {
+                                            console.warn(skillx, '可使用次数无法修改');
+                                        }
+                                    }
+                                    for (const npc of player.getEnemies()) {
+                                        const skillx = npc.GS().randomGet();
+                                        if (skillx) {
+                                            const info = lib.skill[skillx];
+                                            try {
+                                                info.HL_wangdaox ??= 0
+                                                info.HL_wangdaox++;
+                                                game.log(npc, skillx, '可使用次数置为', info.HL_wangdaox);
+                                            }
+                                            catch (e) {
+                                                console.warn(skillx, '可使用次数无法修改');
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                        // 破劫燚
+                        // 你体力上限首次降至『90-10x』以下时,将体力上限调整为『90-10x』
+                        // 随机获得x个技能,令自身造成的伤害/摸牌数/使用杀的次数+x,且<起锋>括号内数字+1(x此技能已发动次数)
+                        HL_pojie: {
+                            init(player) {
+                                player.storage.HL_pojie = 0;
+                            },
+                            trigger: {
+                                player: ['loseMaxHpEnd'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `造成的伤害/摸牌数/使用杀的次数+${factorial(storage)}`;
+                                },
+                            },
+                            filter(event, player) {
+                                return player.maxHp < (90 - 10 * player.storage.HL_pojie);
+                            },
+                            async content(event, trigger, player) {
+                                await player.gainMaxHp(90 - 10 * player.storage.HL_pojie - player.maxHp);
+                                player.storage.HL_pojie++;
+                                const skills = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]).randomGets(player.storage.HL_pojie);
+                                player.addAdditionalSkill('HL_qifeng', skills, true);
+                                game.skangxing(player, skills);
+                            },
+                            group: ['HL_pojie_1', 'HL_pojie_2'],
+                            subSkill: {
+                                1: {
+                                    mod: {
+                                        cardUsable(card, player, num) {
+                                            if (card.name == 'sha' && player.storage.HL_pojie > 0) {
+                                                return num + factorial(player.storage.HL_pojie);
+                                            }
+                                        },
+                                    },
+                                    trigger: {
+                                        source: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return player.storage.HL_pojie > 0;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num += factorial(player.storage.HL_pojie);
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['drawBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return player.storage.HL_pojie > 0;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num += factorial(player.storage.HL_pojie);
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    dynamicTranslate: {
+                        HL_qifeng(player) {
+                            const numx = player.storage.HL_pojie || 0;
+                            return `你体力上限变化一点时,随机获得一个技能,你随机『${numx + 2}』个非武将牌上技能可使用次数+1,所有敌方角色随机技能可使用次数+1`;
+                        },
+                        HL_pojie(player) {
+                            const numx = player.storage.HL_pojie || 0;
+                            const num = 90 - 10 * numx;
+                            return `你体力上限首次降至『${num}』以下时,将体力上限调整为『${num}』<br>随机获得${numx}个技能,令自身造成的伤害/摸牌数/使用杀的次数+${numx},且<起锋>括号内数字+1`;
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -8360,6 +8719,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————火  100体力
+                        HL_huo: '<span class="flame">火</span>',
+                        HL_wangdaox: '王道<span class="flame">火</span>',
+                        HL_wangdaox_info: '游戏开始时,所有敌人受到压制,你武将牌技能外的一切技能均无法发动<br>任意展示/判定事件中,由你指定其花色点数牌名',
+                        HL_buyun: '不灭<span class="flame">炎</span>',
+                        HL_buyun_info: '你受到伤害时,改为扣除等量体力上限并摸等量牌<br>你回复生命时,改为增加等量体力上限并分配等量火焰伤害<br>你的体力值始终等于体力上限-1,你拥有9限伤',
+                        HL_qifeng: '起锋<span class="flame">焱</span>',
+                        HL_qifeng_info: '你体力上限变化一点时,随机获得一个技能,你随机『2』个非武将牌上技能可使用次数+1,所有敌方角色随机技能可使用次数+1',
+                        HL_pojie: '破劫<span class="flame">燚</span>',
+                        HL_pojie_info: '你体力上限首次降至『90-10x』以下时,将体力上限调整为『90-10x』<br>随机获得x个技能,令自身造成的伤害/摸牌数/使用杀的次数+x,且<起锋>括号内数字+1(x此技能已发动次数)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乐极生悲
                         g_lejishengbei: '乐极生悲',
                         g_lejishengbei_info: '任意角色受伤害后,其去除一枚<乐>,所有其他角色获得一枚<乐><br>此领域被移除时,场上<乐>最多的角色随机弃置其<乐>数的牌,其他角色摸其<乐>数的牌,清除全场所有<乐>',
