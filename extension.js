@@ -2425,7 +2425,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         result *= i;
                     }
                     return result;
-                };//阶乘
+                }; //阶乘
+                window.isPrime = function (num) {
+                    if (num === 2 || num === 3) return true;
+                    if (num < 2 || num % 2 === 0 || num % 3 === 0) return false;
+                    for (let i = 5; i * i <= num; i += 6) {
+                        if (num % i === 0 || num % (i + 2) === 0) return false;
+                    }
+                    return true;
+                }; // 质数
             };
             numfunc();
             //—————————————————————————————————————————————————————————————————————————————播放视频与背景图片相关函数
@@ -8397,10 +8405,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const {
                                     result: { links },
                                 } = await player
-                                    .chooseButton(['指定其花色点数牌名',
-                                        [list1.map((i) => [i, get.translation(i)]), 'tdnodes'],
-                                        [list2, 'tdnodes'],
-                                        [list3, 'vcard']], 3)
+                                    .chooseButton(['指定其花色点数牌名', [list1.map((i) => [i, get.translation(i)]), 'tdnodes'], [list2, 'tdnodes'], [list3, 'vcard']], 3)
                                     .set('filterButton', (button) => {
                                         for (const arr of [list1, list2]) {
                                             if (arr.includes(button.link) && ui.selected.buttons.some((b) => arr.includes(b.link))) {
@@ -8426,7 +8431,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (list3.includes(button.link[2])) {
                                             card.name = button.link[2];
                                         }
-                                        return get.attitude(player, trigger.player) * (trigger.judge(card) - trigger.judge(trigger.player.judging[0]));
+                                        return get.attitude(player, trigger.player) * trigger.judge(card);
                                     });
                                 if (links?.length) {
                                     const card = {};
@@ -8445,8 +8450,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         for (const cardx of trigger.cards) {
                                             cardx.init(card);
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         trigger.result = {
                                             card: card,
                                             judge: trigger.judge(card),
@@ -8497,8 +8501,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             if (info.limited || info.juexingji) {
                                                 trigger.player.awakenSkill(name);
                                             }
-                                        }
-                                        else {
+                                        } else {
                                             info.HL_wangdaox--;
                                         }
                                     },
@@ -8552,8 +8555,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.success = true;
                                     await player.loseMaxHp(Math.min(trigger.num, 9));
                                     player.success = false;
-                                }
-                                else {
+                                } else {
                                     trigger.cancel();
                                     await player.gainMaxHp(trigger.num);
                                     let num = Math.min(numberq1(trigger.num), 9);
@@ -8595,25 +8597,29 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 let num = Math.min(numberq1(trigger.num), 9);
                                 while (num-- > 0) {
-                                    const skill = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]).randomGet();
+                                    const skill = Object.keys(lib.skill)
+                                        .filter((i) => lib.translate[`${i}_info`])
+                                        .randomGet();
                                     player.addAdditionalSkill('HL_qifeng', skill, true);
                                     game.skangxing(player, [skill]);
-                                    const numx = (player.storage.HL_pojie + 2) || 2;
-                                    const skills = player.GS().filter((i) => {
-                                        const info = lib.character[player.name];
-                                        if (info && info.skills) {
-                                            return !info.skills.includes(i);
-                                        }
-                                        return true;
-                                    }).randomGets(numx);
+                                    const numx = player.storage.HL_pojie + 2 || 2;
+                                    const skills = player
+                                        .GS()
+                                        .filter((i) => {
+                                            const info = lib.character[player.name];
+                                            if (info && info.skills) {
+                                                return !info.skills.includes(i);
+                                            }
+                                            return true;
+                                        })
+                                        .randomGets(numx);
                                     for (const skillx of skills) {
                                         const info = lib.skill[skillx];
                                         try {
-                                            info.HL_wangdaox ??= 0
+                                            info.HL_wangdaox ??= 0;
                                             info.HL_wangdaox++;
                                             game.log(player, skillx, '可使用次数置为', info.HL_wangdaox);
-                                        }
-                                        catch (e) {
+                                        } catch (e) {
                                             console.warn(skillx, '可使用次数无法修改');
                                         }
                                     }
@@ -8622,11 +8628,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (skillx) {
                                             const info = lib.skill[skillx];
                                             try {
-                                                info.HL_wangdaox ??= 0
+                                                info.HL_wangdaox ??= 0;
                                                 info.HL_wangdaox++;
                                                 game.log(npc, skillx, '可使用次数置为', info.HL_wangdaox);
-                                            }
-                                            catch (e) {
+                                            } catch (e) {
                                                 console.warn(skillx, '可使用次数无法修改');
                                             }
                                         }
@@ -8652,12 +8657,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                             filter(event, player) {
-                                return player.maxHp < (90 - 10 * player.storage.HL_pojie);
+                                return player.maxHp < 90 - 10 * player.storage.HL_pojie;
                             },
                             async content(event, trigger, player) {
                                 await player.gainMaxHp(90 - 10 * player.storage.HL_pojie - player.maxHp);
                                 player.storage.HL_pojie++;
-                                const skills = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]).randomGets(player.storage.HL_pojie);
+                                const skills = Object.keys(lib.skill)
+                                    .filter((i) => lib.translate[`${i}_info`])
+                                    .randomGets(player.storage.HL_pojie);
                                 player.addAdditionalSkill('HL_qifeng', skills, true);
                                 game.skangxing(player, skills);
                             },
