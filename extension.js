@@ -6602,7 +6602,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             fixed: true,
                             forced: true,
                             filter(event, player) {
-                                if (event.cards?.length && event.cards[0].name == event.card.name) {
+                                if (event.cards?.length && event.card && event.cards[0].name == event.card.name) {
                                     return false;
                                 }
                                 return true;
@@ -8601,7 +8601,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         .filter((i) => lib.translate[`${i}_info`])
                                         .randomGet();
                                     player.addAdditionalSkill('HL_qifeng', skill, true);
-                                    game.skangxing(player, [skill]);
                                     const numx = player.storage.HL_pojie + 2 || 2;
                                     const skills = player
                                         .GS()
@@ -8665,8 +8664,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const skills = Object.keys(lib.skill)
                                     .filter((i) => lib.translate[`${i}_info`])
                                     .randomGets(player.storage.HL_pojie);
-                                player.addAdditionalSkill('HL_qifeng', skills, true);
-                                game.skangxing(player, skills);
+                                player.addAdditionalSkill('HL_qifeng', skills, true);//这些获得的技能不能加抗性,不然随机到觉醒技会无限放
                             },
                             group: ['HL_pojie_1', 'HL_pojie_2'],
                             subSkill: {
@@ -8712,7 +8710,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_pojie(player) {
                             const numx = player.storage.HL_pojie || 0;
                             const num = 90 - 10 * numx;
-                            return `你体力上限首次降至『${num}』以下时,将体力上限调整为『${num}』<br>随机获得${numx}个技能,令自身造成的伤害/摸牌数/使用杀的次数+${numx},且<起锋>括号内数字+1`;
+                            return `你体力上限首次降至『${num}』以下时,将体力上限调整为『${num}』<br>随机获得『${numx}』个技能,令自身造成的伤害/摸牌数/使用杀的次数+『${numx}』,且<起锋>括号内数字+1`;
                         },
                     },
                     translate: {
@@ -8735,7 +8733,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_qifeng: '起锋<span class="flame">焱</span>',
                         HL_qifeng_info: '你体力上限变化一点时,随机获得一个技能,你随机『2』个非武将牌上技能可使用次数+1,所有敌方角色随机技能可使用次数+1',
                         HL_pojie: '破劫<span class="flame">燚</span>',
-                        HL_pojie_info: '你体力上限首次降至『90-10x』以下时,将体力上限调整为『90-10x』<br>随机获得x个技能,令自身造成的伤害/摸牌数/使用杀的次数+x,且<起锋>括号内数字+1(x此技能已发动次数)',
+                        HL_pojie_info: '你体力上限首次降至『90-10x』以下时,将体力上限调整为『90-10x』<br>随机获得『x』个技能,令自身造成的伤害/摸牌数/使用杀的次数+『x』,且<起锋>括号内数字+1(x此技能已发动次数)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乐极生悲
                         g_lejishengbei: '乐极生悲',
                         g_lejishengbei_info: '任意角色受伤害后,其去除一枚<乐>,所有其他角色获得一枚<乐><br>此领域被移除时,场上<乐>最多的角色随机弃置其<乐>数的牌,其他角色摸其<乐>数的牌,清除全场所有<乐>',
