@@ -3405,7 +3405,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         HL_qiankun: {
                             sex: 'male',
-                            skills: ['HL_zhuzai', 'HL_tiandao', 'HL_qiaoduo', 'HL_zhihuan', 'HL_liuhe'],
+                            skills: ['HL_zhuzai', 'HL_tiandao', 'HL_qiaoduo', 'HL_zhihuan'],
                         },
                     },
                     characterIntro: {
@@ -9217,6 +9217,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.update();
                                     targets[0].maxHp = maxHp;
                                     targets[0].update();
+                                    if (!(targets[0].maxHp > 0)) {
+                                        await targets[0].die();
+                                    }
                                     player.drawTo(Math.min(player.maxHp, 20));
                                     player.addSkill('HL_liuhe');
                                 }
