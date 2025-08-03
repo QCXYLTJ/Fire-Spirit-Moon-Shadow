@@ -3403,6 +3403,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_fenshen'],
                             trashBin: [`ext:火灵月影/image/HL_kuangsanfenshen.png`],
                         },
+                        HL_qiankun: {
+                            sex: 'male',
+                            skills: ['HL_zhuzai', 'HL_tiandao', 'HL_qiaoduo', 'HL_zhihuan', 'HL_liuhe'],
+                        },
                     },
                     characterIntro: {
                         HL_amiya: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>存在于每个故事尽头,带走每位角色,封闭每种可能,停止每段讲述.它是对终结的想象,亦是所有想象的终结,它是一切,唯独不是你熟悉的人',
@@ -9044,6 +9048,219 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 game.removePlayer(player);
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————乾坤 4勾玉 神 男
+                        // 主宰
+                        // 任意角色受到伤害时,你可以扣除一点体力上限令此次伤害<翻倍/免疫>
+                        // 你造成伤害后,增加等量体力上限,摸等量张牌
+                        HL_zhuzai: {
+                            audio: 'ext:火灵月影/audio:true',
+                            trigger: {
+                                global: ['damageBegin4'],
+                            },
+                            lastDo: true,
+                            check(event, player) {
+                                return player.maxHp - player.hp;
+                            },
+                            async content(event, trigger, player) {
+                                await player.loseMaxHp();
+                                const controllist = ['选项一', '选项二'];
+                                const choiceList = ['翻倍', '免疫'];
+                                const {
+                                    result: { index },
+                                } = await player
+                                    .chooseControl(controllist)
+                                    .set('prompt', `令${get.translation(trigger.player)}受到的此次伤害执行一项`)
+                                    .set('choiceList', choiceList)
+                                    .set('ai', function (event, player) {
+                                        if (trigger.player.isFriendsOf(player)) {
+                                            return '选项二';
+                                        }
+                                        return '选项一';
+                                    });
+                                if (index == 0) {
+                                    trigger.num = numberq1(trigger.num) * 2;
+                                }
+                                else {
+                                    trigger.cancel();
+                                }
+                            },
+                            group: ['HL_zhuzai_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        source: ['damageEnd'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        await player.gainMaxHp(trigger.num);
+                                        player.draw(trigger.num);
+                                    },
+                                },
+                            },
+                        },
+                        // 天道
+                        // 你始终跳过弃牌/判定阶段.其他角色的弃牌阶段结束后,你进行一个额外回合
+                        HL_tiandao: {
+                            audio: 'ext:火灵月影/audio:true',
+                            trigger: {
+                                global: ['phaseDiscardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player != player;
+                            },
+                            async content(event, trigger, player) {
+                                player.phase('nodelay');
+                            },
+                            group: ['HL_tiandao_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['phaseJudgeBefore', 'phaseDiscardBefore'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                    },
+                                },
+                            },
+                        },
+                        // 巧夺
+                        // 你使用一张牌后,随机获得一张不同花色的牌,并将该花色标记
+                        // 当花色标记达到四个后,你可以将其全部弃置,弃置任意名角色所有手牌,对其造成四次一点随机属性伤害并将其翻面,翻面失败则直接斩杀该角色
+                        HL_qiaoduo: {
+                            audio: 'ext:火灵月影/audio:true',
+                            init(player) {
+                                player.storage.HL_qiaoduo = [];
+                            },
+                            trigger: {
+                                player: ['useCardEnd'],
+                            },
+                            forced: true,
+                            mark: true,
+                            intro: {
+                                content: 'mark',
+                            },
+                            async content(event, trigger, player) {
+                                const suit = lib.suits.filter((s) => s != trigger.card.suit).randomGet();
+                                const card = get.cardPile((c) => c.suit == suit, 'field');
+                                if (card) {
+                                    await player.gain(card, 'gain2');
+                                    player.storage.HL_qiaoduo.add(suit);
+                                }
+                                if (player.storage.HL_qiaoduo.length > 3) {
+                                    const {
+                                        result: { targets },
+                                    } = await player
+                                        .chooseTarget('将花色标记全部弃置,弃置任意名角色所有手牌,对其造成四次一点随机属性伤害并将其翻面')
+                                        .set('filterTarget', (c, p, t) => p != t)
+                                        .set('ai', (t) => -get.attitude(player, t));
+                                    if (targets?.length) {
+                                        await game.HL_mp4('HL_qiaoduo');
+                                        player.storage.HL_qiaoduo = [];
+                                        for (const npc of targets) {
+                                            player.line(npc);
+                                            await npc.discard(npc.getCards('h'));
+                                            let num = 4;
+                                            while (num-- > 0) {
+                                                const nature = Array.from(lib.nature.keys()).randomGet();
+                                                await npc.damage(nature);
+                                            }
+                                            await npc.turnOver(true);
+                                            if (!npc.isTurnedOver()) {
+                                                await game.HL_mp4('HL_tiandao');
+                                                const next = game.createEvent('diex', false);
+                                                next.source = player;
+                                                next.player = npc;
+                                                next._triggered = null;
+                                                await next.setContent(lib.element.content.die);
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                        // 置换
+                        // 觉醒技,当你死亡前,你丢弃所有牌,选择一个目标废除其装备栏,与其交换体力上限并回满体力,将手牌摸至体力上限,获得『六合』
+                        HL_zhihuan: {
+                            audio: 'ext:火灵月影/audio:true',
+                            juexingji: true,
+                            trigger: {
+                                player: ['dieBefore'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                player.awakenSkill('HL_zhihuan');
+                                player.node.avatar.HL_BG('HL_qiankun');
+                                trigger.cancel();
+                                await player.discard(player.getCards('hej'));
+                                const {
+                                    result: { targets },
+                                } = await player
+                                    .chooseTarget('选择一个目标废除其装备栏,与其交换体力上限并回满体力')
+                                    .set('filterTarget', (c, p, t) => p != t)
+                                    .set('ai', (t) => {
+                                        if (t.isFriendsOf(player)) {
+                                            return t.maxHp / 10;
+                                        }
+                                        return t.maxHp;
+                                    });
+                                if (targets?.length) {
+                                    await game.HL_mp4('HL_zhihuan');
+                                    let num = 6;
+                                    while (num-- > 1) {
+                                        await targets[0].disableEquip(`equip${num}`);
+                                    }
+                                    const maxHp = player.maxHp;
+                                    player.maxHp = targets[0].maxHp;
+                                    player.hp = player.maxHp;
+                                    player.update();
+                                    targets[0].maxHp = maxHp;
+                                    targets[0].update();
+                                    player.drawTo(Math.min(player.maxHp, 20));
+                                    player.addSkill('HL_liuhe');
+                                }
+                            },
+                        },
+                        // 六合
+                        // 你使用的伤害牌额外结算一次,并获得以下一个随机效果
+                        // 1.增加2点体力上限并回复1点体力
+                        // 2.获得随机的一个技能
+                        // 3.永久增加伤害牌结算次数
+                        // 4.对所有敌方角色造成一点伤害
+                        HL_liuhe: {
+                            audio: 'ext:火灵月影/audio:true',
+                            init(player) {
+                                player.storage.HL_liuhe = 1;
+                            },
+                            trigger: {
+                                player: ['useCardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return get.tag(event.card, 'damage');
+                            },
+                            async content(event, trigger, player) {
+                                trigger.effectCount += player.storage.HL_liuhe;
+                                const num = [1, 2, 3, 4].randomGet();
+                                if (num == 1) {
+                                    await player.gainMaxHp(2);
+                                    player.recover();
+                                }
+                                if (num == 2) {
+                                    const skill = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]).randomGet();
+                                    player.addSkillLog(skill);
+                                }
+                                if (num == 3) {
+                                    player.storage.HL_liuhe++;
+                                }
+                                if (num == 4) {
+                                    for (const npc of player.getEnemies()) {
+                                        await npc.damage();
+                                    }
+                                }
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -9056,6 +9273,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————乾坤 4勾玉 神 男
+                        HL_qiankun: '乾坤',
+                        HL_zhuzai: '主宰',
+                        HL_zhuzai_info: '任意角色受到伤害时,你可以扣除一点体力上限令此次伤害<翻倍/免疫><br>你造成伤害后,增加等量体力上限,摸等量张牌',
+                        HL_tiandao: '天道',
+                        HL_tiandao_info: '你始终跳过弃牌/判定阶段.其他角色的弃牌阶段结束后,你进行一个额外回合',
+                        HL_qiaoduo: '巧夺',
+                        HL_qiaoduo_info: '你使用一张牌后,随机获得一张不同花色的牌,并将该花色标记<br>当花色标记达到四个后,你可以将其全部弃置,弃置任意名角色所有手牌,对其造成四次一点随机属性伤害并将其翻面,翻面失败则直接斩杀该角色',
+                        HL_zhihuan: '置换',
+                        HL_zhihuan_info: '觉醒技,当你死亡前,你丢弃所有牌,选择一个目标废除其装备栏,与其交换体力上限并回满体力,将手牌摸至体力上限,获得『六合』',
+                        HL_liuhe: '六合',
+                        HL_liuhe_info: '你使用的伤害牌额外结算一次,并获得以下一个随机效果<br>1.增加2点体力上限并回复1点体力<br>2.获得随机的一个技能<br>3.永久增加伤害牌结算次数<br>4.对所有敌方角色造成一点伤害',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————时崎狂三 体力值3/3
                         HL_kuangsan: '时崎狂三',
                         HL_kekedi: '刻刻帝',
