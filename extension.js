@@ -3448,6 +3448,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 直到某一方打出失败,此人受到1点伤害
                         pukepai_duizi: {
                             enable: 'phaseUse',
+                            check(card) {
+                                return 2;
+                            },
                             filterCard(c, p) {
                                 if (ui.selected.cards.length) {
                                     return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
@@ -3505,6 +3508,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 将四张同点数扑克对一名其他角色使用,对目标造成2点伤害
                         pukepai_zhadan: {
                             enable: 'phaseUse',
+                            check(card) {
+                                return 4;
+                            },
                             filterCard(c, p) {
                                 if (ui.selected.cards.length) {
                                     return c.name == 'pukepai' && c.number == ui.selected.cards[0].number;
@@ -3549,6 +3555,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害
                         pukepai_wangzha: {
                             enable: 'phaseUse',
+                            check(card) {
+                                return 6;
+                            },
                             filterCard(c) {
                                 return c.name == 'pukepai' && [14, 15].includes(c.number);
                             },
@@ -8741,10 +8750,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_kekedi: {
                             enable: 'phaseUse',
                             usable: 4,
-                            selectCard: [0, 1],
+                            check(card) {
+                                return 200 - get.value(card);
+                            },
                             filterCard(c) {
                                 return c.number == 3;
                             },
+                            selectCard: [0, 1],
+                            position: 'he',
                             filter(event, player) {
                                 return game.players.filter((q) => q.qhasSkill('HL_fenshen')).length < 4;
                             },
@@ -8759,7 +8772,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 order: 10,
                                 result: {
                                     player(player, target, card) {
-                                        return player.hp - 1;
+                                        return player.hp + player.countCards('he', (c) => c.number == 3) - 1;
                                     },
                                 },
                             },
@@ -8801,16 +8814,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 ignoredHandcard(card, player) {
                                     if (card.number == 3) {
                                         return true;
-                                    }
-                                },
-                                cardDiscardable(card, player, name) {
-                                    if (card.number == 3) {
-                                        return false;
-                                    }
-                                },
-                                canBeDiscarded(card) {
-                                    if (card.number == 3) {
-                                        return false;
                                     }
                                 },
                             },
