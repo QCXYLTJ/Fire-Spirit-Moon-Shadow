@@ -1505,7 +1505,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             lib.skill.bossfinish = {
                 trigger: {
                     source: ['damageBefore'],
-                    player: ['useCardBefore', 'phaseBefore', 'phaseDrawBefore', 'phaseUseBefore'],
+                    player: ['useCardBefore', 'phaseBefore', 'phaseUseBefore'],
                 },
                 popup: false,
                 firstDo: true,
@@ -2395,22 +2395,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     return Math.max(Number(num), 1);
                 }; //始终返回正数且至少为1
                 window.deepClone = function (obj) {
-                    const clone = {};
-                    for (const key in obj) {
-                        if (obj.hasOwnProperty(key)) {
-                            const info = obj[key];
-                            if (typeof info == 'object') {
-                                if (Array.isArray(info)) {
-                                    clone[key] = info.slice();
-                                } else {
-                                    clone[key] = window.deepClone(info);
-                                }
-                            } else {
-                                clone[key] = info;
+                    if (obj === null || typeof obj !== 'object') {
+                        return obj;
+                    }
+                    if (Array.isArray(obj)) {
+                        return obj.map(item => deepClone(item));
+                    } else {
+                        const clonedObj = {};
+                        for (let key in obj) {
+                            if (obj.hasOwnProperty(key)) {
+                                clonedObj[key] = deepClone(obj[key]);
                             }
                         }
+                        return clonedObj;
                     }
-                    return clone;
                 }; //深拷贝对象
                 window.factorial = function (num) {
                     num = Math.round(num);
@@ -2715,11 +2713,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     if (player.parentNode != ui.arena) {
                         ui.arena.appendChild(player);
                     } //防止被移除节点
-                    player.classList.remove('removing');
-                    player.classList.remove('hidden');
-                    player.classList.remove('dead');
+                    player.classList.remove('removing', 'hidden', 'dead');
                     game.log(player, '复活');
-                    if (player.maxHp < 1) player.maxHp = 1;
+                    player.maxHp = Math.max(lib.character[player.name]?.maxHp || 0, player.maxHp || 0);
                     player.hp = player.maxHp;
                     game.addVideo('revive', player);
                     player.removeAttribute('style');
@@ -2918,6 +2914,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             shiwei();
             //—————————————————————————————————————————————————————————————————————————————技能相关自创函数
             const jineng = function () {
+                lib.element.player.qhasSkill = function (s) {
+                    const player = this;
+                    return player.GS().includes(s);
+                }; //武将是否拥有某技能
                 lib.element.player.GS = function () {
                     const player = this;
                     const skills = player.skills.slice();
@@ -3128,6 +3128,25 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     targets[0].storage.HL_wufan.addArray(targets[0].GS());
                     targets[0].CS();
                     game.playAudio(`../extension/火灵月影/audio/qinli_canku${[1, 2, 3].randomGet()}.mp3`);
+                }
+            };
+            lib.element.player.isjingling = function () {
+                const player = this;
+                return ['HL_qinli', 'HL_sixinai', 'HL_kuangsan', 'HL_kuangsanfenshen', 'HL_shixiang'].includes(player.name);
+            }; //判断是否为精灵
+            lib.element.player.kekedi = function () {
+                const player = this;
+                if (game.players.filter((q) => q.qhasSkill('HL_fenshen')).length > 3) {
+                    return;
+                }
+                const suicong = game.dead.find((q) => q.qhasSkill('HL_fenshen'));
+                if (suicong) {
+                    suicong.qrevive();
+                    if (suicong.boss != player) {
+                        player.guhuo(suicong);
+                    }
+                } else {
+                    player.addFellow('HL_kuangsanfenshen');
                 }
             };
             lib.init.css('extension/火灵月影/HL.css'); //火灵月影专属CSS
@@ -3369,6 +3388,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_zhuolan', 'HL_jiaozhan', 'HL_wufan', 'HL_ziyu', 'HL_kuangbao'],
                             trashBin: [`ext:火灵月影/image/HL_qinli.png`],
                             dieAudios: ['ext:火灵月影/audio:3'],
+                        },
+                        HL_kuangsan: {
+                            sex: 'female',
+                            hp: 3,
+                            maxHp: 3,
+                            skills: ['HL_kekedi', 'HL_sanfan', 'HL_lijie', 'HL_jujue', 'HL_ezhimengyan', 'HL_canshizhicheng'],
+                            trashBin: [`ext:火灵月影/image/HL_kuangsan.png`],
+                        },
+                        HL_kuangsanfenshen: {
+                            sex: 'female',
+                            hp: 1,
+                            maxHp: 1,
+                            skills: ['HL_fenshen'],
+                            trashBin: [`ext:火灵月影/image/HL_kuangsanfenshen.png`],
                         },
                     },
                     characterIntro: {
@@ -8638,7 +8671,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
-                        // 破劫燚
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————破劫燚
                         // 你体力上限首次降至『90-10x』以下时,将体力上限调整为『90-10x』
                         // 随机获得x个技能,令自身造成的伤害/摸牌数/使用杀的次数+x,且<起锋>括号内数字+1(x此技能已发动次数)
                         HL_pojie: {
@@ -8664,7 +8697,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const skills = Object.keys(lib.skill)
                                     .filter((i) => lib.translate[`${i}_info`])
                                     .randomGets(player.storage.HL_pojie);
-                                player.addAdditionalSkill('HL_qifeng', skills, true);//这些获得的技能不能加抗性,不然随机到觉醒技会无限放
+                                player.addAdditionalSkill('HL_qifeng', skills, true); //这些获得的技能不能加抗性,不然随机到觉醒技会无限放
                             },
                             group: ['HL_pojie_1', 'HL_pojie_2'],
                             subSkill: {
@@ -8701,16 +8734,312 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                    },
-                    dynamicTranslate: {
-                        HL_qifeng(player) {
-                            const numx = player.storage.HL_pojie || 0;
-                            return `你体力上限变化一点时,随机获得一个技能,你随机『${numx + 2}』个非武将牌上技能可使用次数+1,所有敌方角色随机技能可使用次数+1`;
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————时崎狂三 体力值3/3
+                        // 刻刻帝
+                        // 出牌阶段,你可以[弃置一张点数为3的牌/失去一点体力],然后召唤/复活一个【狂三分身】(最多4个)
+                        // 非精灵角色回合开始时,你可使用一张点数为3的牌,若此牌对其造成伤害,跳过其回合
+                        HL_kekedi: {
+                            enable: 'phaseUse',
+                            usable: 4,
+                            selectCard: [0, 1],
+                            filterCard(c) {
+                                return c.number == 3;
+                            },
+                            filter(event, player) {
+                                return game.players.filter((q) => q.qhasSkill('HL_fenshen')).length < 4;
+                            },
+                            async content(event, trigger, player) {
+                                if (event.cards?.length) {
+                                } else {
+                                    await player.loseHp();
+                                }
+                                player.kekedi();
+                            },
+                            ai: {
+                                order: 10,
+                                result: {
+                                    player(player, target, card) {
+                                        return player.hp - 1;
+                                    },
+                                },
+                            },
+                            group: ['HL_kekedi_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['phaseBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return !event.player.isjingling() && player.hasCard((c) => c.number == 3, 'h');
+                                    },
+                                    async content(event, trigger, player) {
+                                        const { result } = await player
+                                            .chooseToUse(`使用一张点数为3的牌,若此牌对${get.translation(trigger.player)}造成伤害,跳过其回合`)
+                                            .set('filterCard', (c) => player.filterCardx(c) && c.number == 3)
+                                            .set('ai1', (card, arg) => {
+                                                if (lib.card[card.name]) {
+                                                    return number0(player.getUseValue(card, null, true)) + 10;
+                                                }
+                                            });
+                                        if (result?.cards?.length) {
+                                            const his = trigger.player.actionHistory;
+                                            const evt = his[his.length - 1];
+                                            if (evt.damage.some((e) => e.cards && e.cards[0] == result.cards[0])) {
+                                                trigger.cancel();
+                                            }
+                                        }
+                                    },
+                                },
+                            },
                         },
-                        HL_pojie(player) {
-                            const numx = player.storage.HL_pojie || 0;
-                            const num = 90 - 10 * numx;
-                            return `你体力上限首次降至『${num}』以下时,将体力上限调整为『${num}』<br>随机获得『${numx}』个技能,令自身造成的伤害/摸牌数/使用杀的次数+『${numx}』,且<起锋>括号内数字+1`;
+                        // 神威灵装·三番
+                        // 其他角色获得点数为3的牌时,你获得一张复制
+                        // 点数为3的牌不计入你的手牌上限,你免疫翻面,你的摸牌/出牌阶段不会被跳过
+                        HL_sanfan: {
+                            mod: {
+                                ignoredHandcard(card, player) {
+                                    if (card.number == 3) {
+                                        return true;
+                                    }
+                                },
+                                cardDiscardable(card, player, name) {
+                                    if (card.number == 3) {
+                                        return false;
+                                    }
+                                },
+                                canBeDiscarded(card) {
+                                    if (card.number == 3) {
+                                        return false;
+                                    }
+                                },
+                            },
+                            trigger: {
+                                global: ['gainEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player != player && event.cards?.some((c) => c.number == 3);
+                            },
+                            async content(event, trigger, player) {
+                                const cards = trigger.cards.filter((c) => c.number == 3);
+                                const list = cards.map((c) => game.createCard(c));
+                                player.gain(list, 'gain2');
+                            },
+                            group: ['HL_sanfan_1', 'HL_sanfan_2'],
+                            subSkill: {
+                                1: {
+                                    init(player) {
+                                        Reflect.defineProperty(player, 'skipList', {
+                                            get() {
+                                                return [];
+                                            },
+                                            set() { },
+                                        });
+                                    },
+                                    trigger: {
+                                        player: ['phaseDrawBefore', 'phaseUseBefore'],
+                                    },
+                                    popup: false,
+                                    firstDo: true,
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        const num = trigger.name == 'phaseUse' ? 5 : 2;
+                                        Reflect.defineProperty(trigger, 'finished', {
+                                            get() {
+                                                return trigger.step > num;
+                                            },
+                                            set() { },
+                                        });
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['turnOverBegin'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return !player.isTurnedOver();
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                    },
+                                },
+                            },
+                        },
+                        // 理解
+                        // 其他精灵角色使用牌指定目标时,你可以弃置一张点数为3的牌/流失一点体力,为其增加任意个目标
+                        HL_lijie: {
+                            trigger: {
+                                global: ['useCard'],
+                            },
+                            filter(event, player) {
+                                return event.player != player && event.player.isjingling() && event.targets;
+                            },
+                            check(event, player) {
+                                if (player.hp < 2) return 0;
+                                let value = 0;
+                                for (const npc of game.players.filter((q) => !event.targets.includes(q))) {
+                                    const effect = get.effect(npc, event.card, event.player, player);
+                                    if (effect > 0) {
+                                        value += effect;
+                                    }
+                                }
+                                return value + player.hp - 20;
+                            },
+                            async content(event, trigger, player) {
+                                const {
+                                    result: { cards },
+                                } = await player
+                                    .chooseToDiscard(`弃置一张点数为3的牌/流失一点体力,为${get.translation(trigger.card)}增加任意个目标`, 'he')
+                                    .set('filterCard', (c) => c.number == 3)
+                                    .set('ai', (c) => {
+                                        let value = 0;
+                                        for (const npc of game.players.filter((q) => !trigger.targets.includes(q))) {
+                                            const effect = get.effect(npc, trigger.card, trigger.player, player);
+                                            if (effect > 0) {
+                                                value += effect;
+                                            }
+                                        }
+                                        return value - get.value(c);
+                                    });
+                                if (cards?.length) {
+                                } else {
+                                    await player.loseHp();
+                                }
+                                const {
+                                    result: { targets },
+                                } = await player
+                                    .chooseTarget(`为${get.translation(trigger.card)}增加任意个目标`)
+                                    .set('filterTarget', (c, p, t) => !trigger.targets.includes(t))
+                                    .set('ai', (t) => get.effect(t, trigger.card, trigger.player, player));
+                                if (targets?.length) {
+                                    trigger.targets.addArray(targets);
+                                }
+                            },
+                        },
+                        // 拒绝
+                        // 其他非精灵角色使用牌指定目标时,你可以弃置一张点数为3的牌/流失一点体力,为其减少任意个目标
+                        HL_jujue: {
+                            trigger: {
+                                global: ['useCard'],
+                            },
+                            filter(event, player) {
+                                return event.player != player && !event.player.isjingling() && event.targets?.length;
+                            },
+                            check(event, player) {
+                                if (player.hp < 2) return 0;
+                                let value = 0;
+                                for (const npc of event.targets) {
+                                    const effect = get.effect(npc, event.card, event.player, player);
+                                    if (effect < 0) {
+                                        value -= effect;
+                                    }
+                                }
+                                return value * player.hp * 0.05 - 20;
+                            },
+                            async content(event, trigger, player) {
+                                const {
+                                    result: { cards },
+                                } = await player
+                                    .chooseToDiscard(`弃置一张点数为3的牌/流失一点体力,为${get.translation(trigger.card)}减少任意个目标`, 'he')
+                                    .set('filterCard', (c) => c.number == 3)
+                                    .set('ai', (c) => {
+                                        return 20 - get.value(c);
+                                    });
+                                if (cards?.length) {
+                                } else {
+                                    await player.loseHp();
+                                }
+                                const {
+                                    result: { targets },
+                                } = await player
+                                    .chooseTarget(`为${get.translation(trigger.card)}减少任意个目标`)
+                                    .set('filterTarget', (c, p, t) => trigger.targets.includes(t))
+                                    .set('ai', (t) => -get.effect(t, trigger.card, trigger.player, player));
+                                if (targets?.length) {
+                                    trigger.targets.removeArray(targets);
+                                }
+                            },
+                        },
+                        // 恶之梦魇
+                        // 你与所有角色的距离视为0.若场上有【狂三分身】,你受到的伤害由其代为承受.你受到伤害后,本回合进入<潜行>状态(不是其他人使用牌的合法目标)
+                        HL_ezhimengyan: {
+                            mod: {
+                                globalFrom(from, to) {
+                                    return -Infinity;
+                                },
+                            },
+                            trigger: {
+                                player: ['damageBegin4'],
+                            },
+                            forced: true,
+                            lastDo: true,
+                            filter(event, player) {
+                                return game.players.some((q) => q.qhasSkill('HL_fenshen'));
+                            },
+                            async content(event, trigger, player) {
+                                const suicong = game.players.find((q) => q.qhasSkill('HL_fenshen'));
+                                trigger.player = suicong;
+                            },
+                            group: ['HL_ezhimengyan_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['damageEnd'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.addTempSkill('qianxing');
+                                    },
+                                },
+                            },
+                        },
+                        // 喰时之城
+                        // 每3个公共回合后,一名随机非精灵角色流失一点体力,你回复一点体力并摸2张牌,然后召唤/复活一个【狂三分身】
+                        HL_canshizhicheng: {
+                            trigger: {
+                                global: ['phaseBegin'],
+                            },
+                            forced: true,
+                            markimage: 'extension/火灵月影/image/HL_canshizhicheng.png',
+                            intro: {
+                                content: 'mark',
+                            },
+                            async content(event, trigger, player) {
+                                player.addMark('HL_canshizhicheng');
+                                if (player.storage.HL_canshizhicheng > 2) {
+                                    player.clearMark('HL_canshizhicheng');
+                                    const target = game.players.find((q) => !q.isjingling());
+                                    if (target) {
+                                        await target.loseHp();
+                                    }
+                                    await player.recover();
+                                    await player.draw(2);
+                                    player.kekedi();
+                                }
+                            },
+                        },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————狂三分身 体力值1/1
+                        // 分身
+                        // 你的手牌上限为3,【时崎狂三】死亡时,你死亡并移出游戏
+                        HL_fenshen: {
+                            mod: {
+                                maxHandcard(player, num) {
+                                    return 3;
+                                },
+                            },
+                            trigger: {
+                                global: ['dieEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.qhasSkill('HL_kekedi');
+                            },
+                            async content(event, trigger, player) {
+                                await player.die();
+                                game.removePlayer(player);
+                            },
                         },
                     },
                     translate: {
@@ -8724,6 +9053,24 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————时崎狂三 体力值3/3
+                        HL_kuangsan: '时崎狂三',
+                        HL_kekedi: '刻刻帝',
+                        HL_kekedi_info: '出牌阶段,你可以[弃置一张点数为3的牌/失去一点体力],然后召唤/复活一个【狂三分身】(最多4个)<br>非精灵角色回合开始时,你可使用一张点数为3的牌,若此牌对其造成伤害,跳过其回合',
+                        HL_sanfan: '神威灵装·三番',
+                        HL_sanfan_info: '其他角色获得点数为3的牌时,你获得一张复制<br>点数为3的牌不计入你的手牌上限,你免疫翻面,你的摸牌/出牌阶段不会被跳过',
+                        HL_lijie: '理解',
+                        HL_lijie_info: '其他精灵角色使用牌指定目标时,你可以弃置一张点数为3的牌/流失一点体力,为其增加任意个目标',
+                        HL_jujue: '拒绝',
+                        HL_jujue_info: '其他非精灵角色使用牌指定目标时,你可以弃置一张点数为3的牌/流失一点体力,为其减少任意个目标',
+                        HL_ezhimengyan: '恶之梦魇',
+                        HL_ezhimengyan_info: '你与所有角色的距离视为0.若场上有【狂三分身】,你受到的伤害由其代为承受.你受到伤害后,本回合进入<潜行>状态',
+                        HL_canshizhicheng: '喰时之城',
+                        HL_canshizhicheng_info: '每3个公共回合后,一名随机非精灵角色流失一点体力,你回复一点体力并摸2张牌,然后召唤/复活一个【狂三分身】',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————狂三分身 体力值1/1
+                        HL_kuangsanfenshen: '狂三分身',
+                        HL_fenshen: '分身',
+                        HL_fenshen_info: '你的手牌上限为3,【时崎狂三】死亡时,你死亡并移出游戏',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————火  100体力
                         HL_huo: '<span class="flame">火</span>',
                         HL_wangdaox: '王道<span class="flame">火</span>',
@@ -9079,6 +9426,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_chengxiong_info: '四阶段解锁,敌方角色使用于其摸牌阶段外获得的牌时,失去一点体力',
                         HL_duji: '毒计',
                         HL_duji_info: '炼狱模式解锁,任意角色使用普通锦囊牌时,你进行一次判定,若为黑色,其失去一点体力,若为红色,你令一名角色回复一点体力',
+                    },
+                    dynamicTranslate: {
+                        HL_qifeng(player) {
+                            const numx = player.storage.HL_pojie || 0;
+                            return `你体力上限变化一点时,随机获得一个技能,你随机『${numx + 2}』个非武将牌上技能可使用次数+1,所有敌方角色随机技能可使用次数+1`;
+                        },
+                        HL_pojie(player) {
+                            const numx = player.storage.HL_pojie || 0;
+                            const num = 90 - 10 * numx;
+                            return `你体力上限首次降至『${num}』以下时,将体力上限调整为『${num}』<br>随机获得『${numx}』个技能,令自身造成的伤害/摸牌数/使用杀的次数+『${numx}』,且<起锋>括号内数字+1`;
+                        },
                     },
                 };
                 for (const i in QQQ.character) {
