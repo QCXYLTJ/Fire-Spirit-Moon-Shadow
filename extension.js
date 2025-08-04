@@ -2816,6 +2816,29 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     return player;
                 };
+                lib.element.player.qdie = async function (source) {
+                    const player = this;
+                    await player.qdie1();
+                    await player.qdie2();
+                    return player;
+                };//可以触发死亡相关时机,但是死亡无法避免
+                lib.element.player.qdie1 = async function (source) {
+                    const player = this;
+                    const next = game.createEvent('die');
+                    next.source = source;
+                    next.player = player;
+                    await next.setContent(function () { });
+                    return player;
+                };//触发死亡相关时机
+                lib.element.player.qdie2 = async function (source) {
+                    const player = this;
+                    const next = game.createEvent('diex', false);
+                    next.source = source;
+                    next.player = player;
+                    next._triggered = null;
+                    await next.setContent(lib.element.content.die);
+                    return player;
+                };//斩杀
             }; //解构魔改本体函数
             mogai();
             //—————————————————————————————————————————————————————————————————————————————视为转化虚拟牌相关自创函数
@@ -3800,11 +3823,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (npc) {
                                     npc.CS();
                                     player.line(npc);
-                                    const next = game.createEvent('diex', false);
-                                    next.source = player;
-                                    next.player = npc;
-                                    next._triggered = null;
-                                    await next.setContent(lib.element.content.die);
+                                    npc.qdie(player);
                                 }
                             },
                             group: ['HL_cunxuxianzhao_1'],
@@ -3897,11 +3916,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     game.checkResult = game.kongfunc;
                                     for (const npc of game.players.filter((q) => q != player)) {
                                         player.line(npc);
-                                        const next = game.createEvent('diex', false);
-                                        next.source = player;
-                                        next.player = npc;
-                                        next._triggered = null;
-                                        await next.setContent(lib.element.content.die);
+                                        await npc.qdie(player);
                                     }
                                     game.over('阿米娅被击败了');
                                 } else {
@@ -4128,7 +4143,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     set() { },
                                 });
-                                //await lib.element.player.die.call(event.target);
                                 if (game.players.includes(event.target)) {
                                     const index = game.players.indexOf(event.target);
                                     game.players.splice(index, 1);
@@ -5677,11 +5691,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             for (const npc of players) {
                                                 player.line(npc);
                                                 game.log(player, '惩罚直接结束游戏的角色', npc);
-                                                const next = game.createEvent('diex', false);
-                                                next.source = player;
-                                                next.player = npc;
-                                                next._triggered = null;
-                                                await next.setContent(lib.element.content.die);
+                                                await npc.qdie(player);
                                             } //即死
                                             HL.fangbaozhan1 = false;
                                         }
@@ -6159,13 +6169,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return event.player.maxHp < 2 && event.player.hp < 2 && event.player.isEnemiesOf(player);
                                     },
                                     async content(event, trigger, player) {
-                                        trigger.player.CS();
                                         player.line(trigger.player);
-                                        const next = game.createEvent('diex', false);
-                                        next.source = player;
-                                        next.player = trigger.player;
-                                        next._triggered = null;
-                                        await next.setContent(lib.element.content.die);
+                                        trigger.player.qdie(player);
                                     },
                                 },
                             },
@@ -9180,11 +9185,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             await npc.turnOver(true);
                                             if (!npc.isTurnedOver()) {
                                                 await game.HL_mp4('HL_tiandao');
-                                                const next = game.createEvent('diex', false);
-                                                next.source = player;
-                                                next.player = npc;
-                                                next._triggered = null;
-                                                await next.setContent(lib.element.content.die);
+                                                await npc.qdie(player);
                                             }
                                         }
                                     }
