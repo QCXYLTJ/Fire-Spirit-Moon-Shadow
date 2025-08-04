@@ -2399,7 +2399,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         return obj;
                     }
                     if (Array.isArray(obj)) {
-                        return obj.map(item => deepClone(item));
+                        return obj.map((item) => deepClone(item));
                     } else {
                         const clonedObj = {};
                         for (let key in obj) {
@@ -9079,8 +9079,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     });
                                 if (index == 0) {
                                     trigger.num = numberq1(trigger.num) * 2;
-                                }
-                                else {
+                                } else {
                                     trigger.cancel();
                                 }
                             },
@@ -9139,7 +9138,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             mark: true,
                             intro: {
-                                content: 'mark',
+                                content(storage) {
+                                    return `当前花色标记${get.translation(storage)}`;
+                                },
                             },
                             async content(event, trigger, player) {
                                 const suit = lib.suits.filter((s) => s != trigger.card.suit).randomGet();
@@ -9251,7 +9252,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.recover();
                                 }
                                 if (num == 2) {
-                                    const skill = Object.keys(lib.skill).filter((i) => lib.translate[`${i}_info`]).randomGet();
+                                    const skill = Object.keys(lib.skill)
+                                        .filter((i) => lib.translate[`${i}_info`])
+                                        .randomGet();
                                     player.addSkillLog(skill);
                                 }
                                 if (num == 3) {
