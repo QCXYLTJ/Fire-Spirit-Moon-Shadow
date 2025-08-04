@@ -8276,6 +8276,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.when({ global: 'gameStart' }).then(() => player.classList.add('qinli')); //游戏开始前加不上
                                 player.addFellow('HL_kuangsan');
                                 player.addFellow('HL_bingyachuan');
+                                player.addFellow('HL_shixiang');
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');
@@ -8913,7 +8914,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['useCard'],
                             },
                             filter(event, player) {
-                                return event.player != player && event.player.isjingling() && event.targets;
+                                return event.player != player && event.player.isjingling() && event.targets && !['equip', 'delay'].includes(get.type(event.card));
                             },
                             check(event, player) {
                                 if (player.hp < 2) return 0;
