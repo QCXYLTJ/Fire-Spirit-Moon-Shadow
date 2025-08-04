@@ -3430,6 +3430,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             sex: 'male',
                             skills: ['HL_zhuzai', 'HL_tiandao', 'HL_qiaoduo', 'HL_zhihuan'],
                         },
+                        HL_bingyachuan: {
+                            sex: 'female',
+                            skills: ['HL_bingjie', 'HL_sifan', 'HL_cibei', 'HL_wugandong', 'HL_bingzhiyinzhe'],
+                            trashBin: [`ext:火灵月影/image/HL_bingyachuan.png`],
+                        },
                     },
                     characterIntro: {
                         HL_amiya: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>存在于每个故事尽头,带走每位角色,封闭每种可能,停止每段讲述.它是对终结的想象,亦是所有想象的终结,它是一切,唯独不是你熟悉的人',
@@ -4258,7 +4263,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
-                        // 鸩帝:四阶段解锁,其他角色准备阶段,你将一张【毒】从游戏外加入于其手牌中,有【毒】进入弃牌堆时,你下一次造成的伤害+1
+                        // 鸩帝
+                        // 四阶段解锁,其他角色准备阶段,你将一张【毒】从游戏外加入于其手牌中,有【毒】进入弃牌堆时,你下一次造成的伤害+1
                         HL_zhendi: {
                             trigger: {
                                 global: ['phaseZhunbeiBegin'],
@@ -4559,7 +4565,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (trigger.source.countCards('he')) {
                                             const his = trigger.source.actionHistory;
                                             for (const evt of his[his.length - 1].damage) {
-                                                if (evt.getParent((e) => e == event)) {
+                                                if (evt.getParent((e) => e == event, true)) {
                                                     player.discardPlayerCard(trigger.source, 'he', true);
                                                 }
                                             }
@@ -9020,18 +9026,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 喰时之城
                         // 每3个公共回合后,一名随机非精灵角色流失一点体力,你回复一点体力并摸2张牌,然后召唤/复活一个【狂三分身】
                         HL_canshizhicheng: {
+                            init(player) {
+                                player.addMark('HL_canshizhicheng', 3);
+                            },
                             trigger: {
                                 global: ['phaseBegin'],
                             },
                             forced: true,
                             markimage: 'extension/火灵月影/image/HL_canshizhicheng.png',
                             intro: {
-                                content: 'mark',
+                                content(storage) {
+                                    return `还有${storage}回合发动`;
+                                },
                             },
                             async content(event, trigger, player) {
-                                player.addMark('HL_canshizhicheng');
-                                if (player.storage.HL_canshizhicheng > 2) {
-                                    player.clearMark('HL_canshizhicheng');
+                                player.removeMark('HL_canshizhicheng');
+                                if (player.storage.HL_canshizhicheng < 1) {
+                                    player.addMark('HL_canshizhicheng', 3);
                                     const target = game.players.find((q) => !q.isjingling());
                                     if (target) {
                                         await target.loseHp();
@@ -9278,6 +9289,261 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————冰芽川四糸乃 体力值4/4
+                        // 冰结傀儡
+                        // [游戏开始时/失去冰结傀儡4回合后],你获得冰结傀儡
+                        // 当你拥有冰结傀儡时:
+                        // 你的攻击/防御距离+4.每个公共回合结束后,若你的护甲少于4,调整至4
+                        // 每4个公共回合后,你须弃置一张点数为4的牌/流失一点体力,否则失去冰结傀儡
+                        // 若你的体力值≤1,立即失去冰结傀儡
+                        HL_bingjie: {
+                            init(player) {
+                                player.storage.HL_bingjie = true;
+                                player.storage.HL_bingjie_true = 0;
+                                player.storage.HL_bingjie_false = 0;
+                                player.when({ global: 'gameStart' }).then(() => {
+                                    player.classList.add('bingjie');
+                                    player.classList.add('bingyachuan');
+                                }); //游戏开始前加不上
+                            },
+                            mod: {
+                                globalFrom(from, to, distance) {
+                                    if (from.storage.HL_bingjie) {
+                                        return distance - 4;
+                                    }
+                                },
+                                globalTo(from, to, distance) {
+                                    if (to.storage.HL_bingjie) {
+                                        return distance + 4;
+                                    }
+                                },
+                            },
+                            markimage: 'extension/火灵月影/image/HL_bingjie.png',
+                            mark: true,
+                            intro: {
+                                content(storage, player) {
+                                    if (player.storage.HL_bingjie) {
+                                        return `还有${4 - player.storage.HL_bingjie_true}回合失去冰结傀儡`;
+                                    }
+                                    return `还有${4 - player.storage.HL_bingjie_false}回合获得冰结傀儡`;
+                                },
+                            },
+                            trigger: {
+                                global: ['phaseEnd'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                if (player.storage.HL_bingjie) {
+                                    if (player.hujia < 4) {
+                                        player.hujia = 4;
+                                        player.update();
+                                    }
+                                    player.storage.HL_bingjie_true++;
+                                    if (player.storage.HL_bingjie_true > 3) {
+                                        player.storage.HL_bingjie_true = 0;
+                                        const controllist = ['选项一', '选项二'];
+                                        const choiceList = ['失去冰结傀儡', '流失一点体力'];
+                                        if (player.hasCard((c) => c.number == 4, 'he')) {
+                                            controllist.add('选项三');
+                                            choiceList.add('弃置一张点数为4的牌');
+                                        }
+                                        const {
+                                            result: { index },
+                                        } = await player
+                                            .chooseControl(controllist)
+                                            .set('prompt', '选择一项')
+                                            .set('choiceList', choiceList)
+                                            .set('ai', function (event, player) {
+                                                return controllist.randomGet();
+                                            });
+                                        switch (index) {
+                                            case 0:
+                                                player.storage.HL_bingjie = false;
+                                                player.classList.remove('bingjie');
+                                                break;
+                                            case 1:
+                                                player.loseHp();
+                                                break;
+                                            case 2:
+                                                await player
+                                                    .chooseToDiscard('弃置一张点数为4的牌', 'he', true)
+                                                    .set('filterCard', (c) => c.number == 4)
+                                                    .set('ai', (c) => 20 - get.value(c));
+                                                break;
+                                        }
+                                    }
+                                }
+                                else {
+                                    player.storage.HL_bingjie_false++;
+                                    if (player.storage.HL_bingjie_false > 3) {
+                                        player.storage.HL_bingjie_false = 0;
+                                        player.storage.HL_bingjie = true;
+                                        player.classList.add('bingjie');
+                                    }
+                                }
+                            },
+                            group: ['HL_bingjie_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['changeHp'],
+                                    },
+                                    filter(event, player) {
+                                        return player.hp < 2;
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        player.storage.HL_bingjie = false;
+                                        player.classList.remove('bingjie');
+                                    },
+                                },
+                            },
+                        },
+                        // 神威灵装·四番
+                        // 点数为4的牌进入弃牌堆时,你获得一点护甲
+                        // 任何角色因冰属性伤害或【无感动】的效果而弃牌时,你获得之
+                        HL_sifan: {
+                            trigger: {
+                                global: ['loseEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.cards?.some((q) => get.position(q) == 'd' && q.number == 4);
+                            },
+                            async content(event, trigger, player) {
+                                const num = trigger.cards.filter((q) => get.position(q) == 'd' && q.number == 4).length;
+                                player.hujia += num;
+                            },
+                            group: ['HL_sifan_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['discardEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.getParent((e) => ['HL_wugandong', 'icesha_skill', 'hanbing_skill'].includes(e.name), true) && event.cards?.length;
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.gain(trigger.cards, 'gain2')
+                                    },
+                                },
+                            },
+                        },
+                        // 慈悲
+                        // 你造成致命伤害时,取消之
+                        // 出牌阶段限一次,你可以将所有护甲分配给其他精灵,然后回复等同于分配护甲数的体力
+                        HL_cibei: {
+                            trigger: {
+                                source: ['damageBefore'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.num >= event.player.hp;
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['HL_cibei_1'],
+                            subSkill: {
+                                1: {
+                                    enable: 'phaseUse',
+                                    usable: 1,
+                                    filter(event, player) {
+                                        return player.hujia > 0 && game.players.some((q) => q != player && q.isjingling());
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = player.hujia;
+                                        while (player.hujia > 0) {
+                                            const {
+                                                result: { targets },
+                                            } = await player
+                                                .chooseTarget('将所有护甲分配给其他精灵', true)
+                                                .set('filterTarget', (c, p, t) => p != t && t.isjingling())
+                                                .set('ai', (t) => get.attitude(player, t));
+                                            if (targets?.length) {
+                                                targets[0].hujia++;
+                                                player.hujia--;
+                                            }
+                                        }
+                                        player.recover(num);
+                                    },
+                                    ai: {
+                                        order: 10,
+                                        result: {
+                                            player(player, target, card) {
+                                                if (player.hp < player.maxHp && player.getFriends().some((q) => q.isjingling())) {
+                                                    return 2;
+                                                }
+                                                return 0;
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        // 无感动
+                        // 每轮开始时,所有非精灵角色受到1点无来源冰属性伤害(各角色可选随机弃置2张牌防止之)
+                        HL_wugandong: {
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return game.players.some((q) => !q.isjingling());
+                            },
+                            async content(event, trigger, player) {
+                                for (const npc of game.players.filter((q) => !q.isjingling())) {
+                                    if (npc.countCards('he') > 1) {
+                                        const {
+                                            result: { bool },
+                                        } = await npc.chooseBool('随机弃置2张牌或点击取消受到1点无来源冰属性伤害').set('ai', () => true);
+                                        if (bool) {
+                                            npc.randomDiscard('he', 2);
+                                        }
+                                        else {
+                                            npc.damage('ice', 'nosource');
+                                        }
+                                    }
+                                    else {
+                                        npc.damage('ice', 'nosource');
+                                    }
+                                }
+                            },
+                        },
+                        // 冰之隐者
+                        // 你受到的冰属性伤害视为获得相应数值的护甲,你造成的伤害视为冰属性伤害
+                        HL_bingzhiyinzhe: {
+                            trigger: {
+                                player: ['damageBefore'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.nature == 'ice';
+                            },
+                            async content(event, trigger, player) {
+                                trigger.setContent(async function (event, trigger, player) {
+                                    await event.trigger('damageBegin1');
+                                    await event.trigger('damageBegin2');
+                                    await event.trigger('damageBegin3');
+                                    await event.trigger('damageBegin4');
+                                    player.hujia += event.num;
+                                    event.step = 6;
+                                });
+                            },
+                            group: ['HL_bingzhiyinzhe_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        source: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        trigger.nature = 'ice';
+                                    },
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -9290,6 +9556,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————冰芽川四糸乃 体力值4/4
+                        HL_bingyachuan: '冰芽川四糸乃',
+                        HL_bingjie: '冰结傀儡',
+                        HL_bingjie_info: '[游戏开始时/失去冰结傀儡4回合后],你获得冰结傀儡<br>当你拥有冰结傀儡时:<br>你的攻击/防御距离+4.每个公共回合结束后,若你的护甲少于4,调整至4<br>每4个公共回合后,你须弃置一张点数为4的牌/流失一点体力,否则失去冰结傀儡<br>若你的体力值≤1,立即失去冰结傀儡',
+                        HL_sifan: '神威灵装·四番',
+                        HL_sifan_info: '点数为4的牌进入弃牌堆时,你获得一点护甲<br>任何角色因冰属性伤害或【无感动】的效果而弃牌时,你获得之',
+                        HL_cibei: '慈悲',
+                        HL_cibei_info: '你造成致命伤害时,取消之<br>出牌阶段限一次,你可以将所有护甲分配给其他精灵,然后回复等同于分配护甲数的体力',
+                        HL_wugandong: '无感动',
+                        HL_wugandong_info: '每轮开始时,所有非精灵角色受到1点无来源冰属性伤害(各角色可选随机弃置2张牌防止之)',
+                        HL_bingzhiyinzhe: '冰之隐者',
+                        HL_bingzhiyinzhe_info: '你受到的冰属性伤害视为获得相应数值的护甲,你造成的伤害视为冰属性伤害',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乾坤 4勾玉 神 男
                         HL_qiankun: '乾坤',
                         HL_zhuzai: '主宰',

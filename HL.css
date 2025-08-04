@@ -1,3 +1,55 @@
+/* 狂三死亡消除黑白消除透明消除翻转 */
+body>#window>#arena>.player.fullskin.dead.kuangsan {
+    opacity: 1;
+    filter: none;
+    -webkit-filter: none;
+    transform: none !important;
+}
+
+/* 狂三死亡换肤与消除黑白消除透明 */
+body>#window>#arena>.player.fullskin.dead.kuangsan>.avatar {
+    opacity: 1;
+    filter: none;
+    -webkit-filter: none;
+    transform: none !important;
+    background-image: url(./image/kuangsan_dead.png) !important;
+    /*import才能覆盖内联样式原背景图*/
+}
+
+/* 狂三正常状态 */
+body>#window>#arena>.player.fullskin.kuangsan:not(.dead)>.avatar {
+    background-image: url(./image/HL_kuangsan.png);
+}
+
+/* 冰芽川死亡消除黑白消除透明消除翻转 */
+body>#window>#arena>.player.fullskin.dead.bingyachuan {
+    opacity: 1;
+    filter: none;
+    -webkit-filter: none;
+    transform: none !important;
+}
+
+/* 冰芽川死亡换肤与消除黑白消除透明 */
+body>#window>#arena>.player.fullskin.dead.bingyachuan>.avatar {
+    opacity: 1;
+    filter: none;
+    -webkit-filter: none;
+    transform: none !important;
+    background-image: url(./image/bingyachuan_dead.jpg) !important;
+    /*import才能覆盖内联样式原背景图*/
+}
+
+/* 冰芽川正常状态 */
+body>#window>#arena>.player.fullskin.bingyachuan:not(.bingjie):not(.dead)>.avatar {
+    background-image: url(./image/HL_bingyachuan.png);
+}
+
+/* 冰芽川冰结傀儡状态 */
+body>#window>#arena>.player.fullskin.bingyachuan.bingjie:not(.dead)>.avatar {
+    background-image: url(./image/HL_bingyachuan.jpg) !important;
+}
+
+
 /* 琴里死亡消除黑白消除透明消除翻转 */
 body>#window>#arena>.player.fullskin.dead.qinli {
     opacity: 1;

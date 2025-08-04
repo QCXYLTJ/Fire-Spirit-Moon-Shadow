@@ -20,7 +20,7 @@ game.addMode(
                 npc.ai.shown = 1;
                 npc.setIdentity();
                 if (npc == game.me) {
-                    if (lib.config.mode_config.chelunzhan.随机选将) {
+                    if (lib.config.mode_config.chelunzhan?.随机选将) {
                         npc.characternum = 9;
                         const list = Object.keys(lib.character).randomGets(5);
                         const {
@@ -45,7 +45,7 @@ game.addMode(
                         }
                     }
                 } else {
-                    if (lib.config.mode_config.chelunzhan.随机选将) {
+                    if (lib.config.mode_config.chelunzhan?.随机选将) {
                         npc.characternum = 9;
                     } else {
                         npc.characterlist = Object.keys(lib.character).randomGets(9);
@@ -73,7 +73,7 @@ game.addMode(
                 async dieAfter() {
                     const player = this;
                     let name;
-                    if (lib.config.mode_config.chelunzhan.随机选将) {
+                    if (lib.config.mode_config.chelunzhan?.随机选将) {
                         if (player.characternum > 0) {
                             const list = Object.keys(lib.character).randomGets(5);
                             const {
@@ -159,7 +159,7 @@ game.addMode(
         async start(event) {
             lib.config.mode = 'lingqifusu';
             _status.mode = 'lingqifusu';
-            const num = Number(lib.config.mode_config.lingqifusu.单阵营人数) || 3;
+            const num = Number(lib.config.mode_config.lingqifusu?.单阵营人数) || 3;
             game.prepareArena(num * 3);
             const player1 = game.players.slice(0, num);
             const player2 = game.players.slice(num, num * 2);
@@ -185,7 +185,7 @@ game.addMode(
                 npc.ai.shown = 1;
                 npc.setIdentity();
                 if (npc == game.me) {
-                    if (lib.config.mode_config.lingqifusu.随机选将) {
+                    if (lib.config.mode_config.lingqifusu?.随机选将) {
                         const list = Object.keys(lib.character).randomGets(5);
                         const {
                             result: { links },
@@ -461,7 +461,7 @@ game.addMode(
                 npc.ai.shown = 1;
                 npc.setIdentity();
                 if (npc == game.me) {
-                    if (lib.config.mode_config.jiguchuanhua.随机选将) {
+                    if (lib.config.mode_config.jiguchuanhua?.随机选将) {
                         const list = Object.keys(lib.character).randomGets(5);
                         const {
                             result: { links },
