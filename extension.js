@@ -8266,6 +8266,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     return false;
                                 }; //回血溢出
                                 player.when({ global: 'gameStart' }).then(() => player.classList.add('qinli')); //游戏开始前加不上
+                                player.addFellow('HL_kuangsan');
+                                player.addFellow('HL_bingyachuan');
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');
