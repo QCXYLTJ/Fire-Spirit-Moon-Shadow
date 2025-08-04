@@ -6724,11 +6724,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     const npc = player.getEnemies().randomGet();
                                     if (npc) {
                                         player.line(npc);
-                                        const next = game.createEvent('diex', false);
-                                        next.source = player;
-                                        next.player = npc;
-                                        next._triggered = null;
-                                        await next.setContent(lib.element.content.die);
+                                        npc.die();
                                     }
                                 }
                             },
