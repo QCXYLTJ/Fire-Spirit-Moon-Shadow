@@ -3441,7 +3441,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_许劭: `<b style='color: #00FFFF; font-size: 25px;'>萬古英雄曾拔劍  鐵笛高吹龍夜吟</b>`,
                         HL_zhigaolieyang: `<b style='color:rgb(235, 20, 56); font-size: 25px;'>天空的化身</b>`,
                         HL_zhinukuanglei: `<b style='color: #00FFFF; font-size: 25px;'>天空的化身</b>`,
-                        HL_juemiezhe: `<b style='color:rgb(47, 27, 224); font-size: 25px;'>阳雷的业果 晨昏之眼</b>`,
+                        HL_juemiezhe: `<b style='color:rgb(47, 27, 224); font-size: 25px;'>绝灭者 阳雷的业果</b>`,
                         HL_jielv: `<b style='color:rgba(197, 209, 209, 1); font-size: 25px;'>太初弈无终</b>`,
                         HL_qinli: `<b style='color:rgba(230, 87, 21, 1); font-size: 25px;'>Efreet</b>`,
                     },
@@ -3755,6 +3755,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 尽头重现:
                         // 准备阶段,当<仅剩的创意>达到30枚或以上时,每消耗30枚<仅剩的创意>随机召唤一位随从加入战斗,每名随从限一次
                         HL_jintouchongxian: {
+                            audio: 'ext:火灵月影/audio:true',
                             _priority: 9,
                             trigger: {
                                 player: ['phaseZhunbeiBegin'],
@@ -3784,6 +3785,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 存续先兆:
                         // 蓄力技(0/10),结束阶段,若蓄力值已满消耗所有蓄力值随机令一名非随从其他角色所有技能失效并死亡.每名随从死亡时增加五点蓄力值
                         HL_cunxuxianzhao: {
+                            audio: 'ext:火灵月影/audio:true',
                             chargeSkill: 10,
                             trigger: {
                                 player: ['phaseJieshuBegin'],
@@ -3824,6 +3826,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 无终
                         // 觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】,重置技能【不应存在之人】
                         HL_wuzhong: {
+                            audio: 'ext:火灵月影/audio:true',
                             forced: true,
                             juexingji: true,
                             trigger: {
@@ -3855,6 +3858,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 无言的期盼:
                         // 结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等
                         HL_qipan: {
+                            audio: 'ext:火灵月影/audio:true',
                             _priority: 9,
                             trigger: {
                                 player: ['phaseJieshuBegin'],
@@ -3876,6 +3880,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 若你为BOSS,令所有其他角色死亡,视盟军胜利
                         // 否则令所有其他角色失去所有体力值,你回复等量体力并摸等量的牌
                         HL_yongheng: {
+                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 player: ['dieBegin'],
                             },
@@ -5586,6 +5591,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 止————长昼月之息
                         // 你始终拥有1限伤,每当你触发限伤后获得一个<止>,你可以弃置一枚<止>终止一个敌方角色技能的发动
                         HL_A_zhi: {
+                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 player: ['damageBegin4'],
                             },
@@ -5817,6 +5823,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 烜————若垂天之云
                         // 每轮开始时/准备阶段,你视为对所有敌方角色使用一张【火烧连营】
                         HL_A_heng: {
+                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 global: ['roundStart'],
                                 player: ['phaseZhunbeiBegin'],
@@ -5833,6 +5840,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 蓄力技(0/9),①每受到/造成1点火焰伤害后获得1点蓄力值.
                         // ②当蓄力值达到上限时,消耗所有蓄力值,令所有敌方角色受到1～2点火焰伤害并弃置等量手牌
                         HL_A_nu: {
+                            audio: 'ext:火灵月影/audio:true',
                             chargeSkill: 9,
                             trigger: {
                                 player: ['damageEnd'],
@@ -6035,6 +6043,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 霆————如海摇山倾
                         // 每轮开始时/准备阶段,你视为对所有敌方角色使用一张【水淹七军】
                         HL_A_ting: {
+                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 global: ['roundStart'],
                                 player: ['phaseZhunbeiBegin'],
@@ -6051,6 +6060,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 蓄力技(0/9),①每受到/造成1点雷电伤害后获得1点蓄力值.
                         // ②当蓄力值达到上限时,消耗所有蓄力值,令所有敌方角色受到1～2点雷电伤害并弃置等量手牌
                         HL_A_fen: {
+                            audio: 'ext:火灵月影/audio:true',
                             chargeSkill: 9,
                             trigger: {
                                 player: ['damageEnd'],
@@ -6076,7 +6086,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 策————九万里之电
-                        // 觉醒技,当你体力值不大于0时,将武将牌更换为【绝灭者】,并进行一个额外回合
+                        // 觉醒技,当你体力值不大于0时,将武将牌更换为【晨昏之眼】,并进行一个额外回合
                         HL_A_ce: {
                             trigger: {
                                 player: ['changeHp', 'damageBefore'],
@@ -6100,8 +6110,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.phase('nodelay');
                             },
                         },
-                        //——————————————————————————————————————————————————————————————————————————————————————————————————绝灭者
-                        // 阳雷的业果————晨昏之眼
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————晨昏之眼
                         // 至暗潮汐
                         // ①游戏开始时,全场角色获得技能<虹彩>
                         // ②每轮开始时或准备阶段,你令所有敌方角色选择一项:1,失去2点体力值;2,减少1点体力上限
@@ -6227,6 +6236,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 蓄力技(0/9),每受到/造成1点火焰或雷电伤害后获得1点蓄力值.
                         // 当蓄力值达到上限时,消耗所有蓄力值对所有敌方角色造成1点火焰伤害,1点雷电伤害,受伤角色各失去1点体力值,减少1点体力上限并弃置已损失体力值数牌
                         HL_jinhuisiji: {
+                            audio: 'ext:火灵月影/audio:true',
                             chargeSkill: 18,
                             trigger: {
                                 player: ['damageEnd'],
@@ -7233,6 +7243,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ②敌方角色亵渎对应律法时,其所有技能失效,并获得持续2轮的对应律法的亵渎印记
                         // ③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮
                         HL_tianqi: {
+                            audio: 'ext:火灵月影/audio:true',
                             init(player) {
                                 HL.zhenlicaijue = 0;
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
@@ -7814,6 +7825,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 万神镇诸天
                         // 你无视超出一点的伤害,终止你的判定
                         HL_wanshen: {
+                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 player: ['damageBefore'],
                             },
@@ -7844,6 +7856,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 劫命归一子
                         // 当你对敌方角色造成伤害/成为敌方角色牌的目标后,你令其获得随机一个亵渎印记持续2轮【优先获得已持有律法所对应的亵渎印记】
                         HL_jieming: {
+                            audio: 'ext:火灵月影/audio:true',
                             init(player) {
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
@@ -7866,6 +7879,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每回合结束时,对该回合内获得过亵渎印记的敌方角色造成2点伤害.若其亵渎印记种类数大于1,则改为失去你持有律法数的体力值
                         // 若其失去的体力值小于你持有律法数,则重复此流程,直到其脱离濒死状态
                         HL_wanlv: {
+                            audio: 'ext:火灵月影/audio:true',
                             init(player) {
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
@@ -9495,9 +9509,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_fen: '愤✬破昼夜长空',
                         HL_A_fen_info: '蓄力技(0/9),每受到/造成1点雷电伤害后获得1点蓄力值<br>当蓄力值达到上限时,消耗所有蓄力值,令所有敌方角色受到1～2点雷电伤害并弃置等量手牌',
                         HL_A_ce: '策✬九万里之电',
-                        HL_A_ce_info: '觉醒技,当你体力值不大于0时,将武将牌更换为【绝灭者】,并进行一个额外回合',
-                        //——————————————————————————————————————————————————————————————————————————————————————————————————绝灭者
-                        HL_juemiezhe: '绝灭者',
+                        HL_A_ce_info: '觉醒技,当你体力值不大于0时,将武将牌更换为【晨昏之眼】,并进行一个额外回合',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————晨昏之眼
+                        HL_juemiezhe: '晨昏之眼',
                         HL_zhianchaoxi: '自✬灰烬彼岸',
                         HL_zhianchaoxi_info: '游戏开始时,全场角色获得技能<虹彩><br>每轮开始时或准备阶段,你令所有敌方角色选择一项:1,失去2点体力值;2,减少1点体力上限<br>任意敌方角色体力上限与体力值均为1时斩杀该角色',
                         HL_hongcai: '虹彩',
