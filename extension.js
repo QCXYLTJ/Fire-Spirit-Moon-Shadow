@@ -3162,6 +3162,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 if (game.players.filter((q) => q.qhasSkill('HL_fenshen')).length > 3) {
                     return;
                 }
+                game.playAudio(`../extension/火灵月影/audio/kuangsanfenshen${[1, 2].randomGet()}.mp3`);
                 const suicong = game.dead.find((q) => q.qhasSkill('HL_fenshen'));
                 if (suicong) {
                     suicong.qrevive();
@@ -3419,6 +3420,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_kekedi', 'HL_sanfan', 'HL_lijie', 'HL_jujue', 'HL_ezhimengyan', 'HL_canshizhicheng'],
                             trashBin: [`ext:火灵月影/image/HL_kuangsan.png`],
                         },
+                        HL_qiankun: {
+                            sex: 'male',
+                            skills: ['HL_zhuzai', 'HL_tiandao', 'HL_qiaoduo', 'HL_zhihuan'],
+                        },
                         HL_kuangsanfenshen: {
                             sex: 'female',
                             hp: 1,
@@ -3426,14 +3431,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             skills: ['HL_fenshen'],
                             trashBin: [`ext:火灵月影/image/HL_kuangsanfenshen.png`],
                         },
-                        HL_qiankun: {
-                            sex: 'male',
-                            skills: ['HL_zhuzai', 'HL_tiandao', 'HL_qiaoduo', 'HL_zhihuan'],
-                        },
                         HL_bingyachuan: {
                             sex: 'female',
                             skills: ['HL_bingjie', 'HL_sifan', 'HL_cibei', 'HL_wugandong', 'HL_bingzhiyinzhe'],
                             trashBin: [`ext:火灵月影/image/HL_bingyachuan.png`],
+                        },
+                        HL_shixiang: {
+                            sex: 'female',
+                            hp: 10,
+                            maxHp: 10,
+                            skills: ['HL_aosha', 'HL_shifan', 'HL_wangguo', 'HL_wuzhi', 'HL_aizhigongzhu'],
+                            trashBin: [`ext:火灵月影/image/HL_shixiang.png`],
                         },
                     },
                     characterIntro: {
@@ -8345,7 +8353,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                     player.clearMark('HL_kuangbao_2');
                                     if (bool) {
-                                        game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
+                                        game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3, 4].randomGet()}.mp3`);
                                         trigger.cancel();
                                         player.hp = Math.max(1, player.hp);
                                         player.update();
@@ -8826,6 +8834,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             const his = trigger.player.actionHistory;
                                             const evt = his[his.length - 1];
                                             if (evt.damage.some((e) => e.cards && e.cards[0] == result.cards[0])) {
+                                                game.playAudio(`../extension/火灵月影/audio/kekedi${[1, 2, 3].randomGet()}.mp3`);
                                                 trigger.cancel();
                                             }
                                         }
@@ -9015,6 +9024,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_ezhimengyan_1'],
                             subSkill: {
                                 1: {
+                                    audio: 'ext:火灵月影/audio:true',
                                     trigger: {
                                         player: ['damageEnd'],
                                     },
@@ -9029,6 +9039,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每3个公共回合后,一名随机非精灵角色流失一点体力,你回复一点体力并摸2张牌,然后召唤/复活一个【狂三分身】
                         HL_canshizhicheng: {
                             init(player) {
+                                game.playAudio(`../extension/火灵月影/audio/kuangsaninit${[1, 2].randomGet()}.mp3`);
                                 player.addMark('HL_canshizhicheng', 3);
                             },
                             trigger: {
@@ -9251,7 +9262,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 六合
-                        // 你使用的伤害牌额外结算一次,并获得以下一个随机效果
+                        // 回合限六次,你使用的伤害牌额外结算一次,并获得以下一个随机效果
                         // 1.增加2点体力上限并回复1点体力
                         // 2.获得随机的一个技能
                         // 3.永久增加伤害牌结算次数
@@ -9265,6 +9276,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['useCardEnd'],
                             },
                             forced: true,
+                            usable: 6,
                             filter(event, player) {
                                 return get.tag(event.card, 'damage');
                             },
@@ -9546,6 +9558,196 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————夜刀神十香 体力值10/10
+                        // 鏖杀公
+                        // ①你可将♠️️️️/♣️️️️牌当做【决斗】/【杀】使用或打出
+                        // ②你受到【决斗】的伤害时,取消之并获得一张随机伤害牌;你使用【杀】无距离次数限制
+                        HL_aosha: {
+                            init(player) {
+                                player.when({ global: 'gameStart' }).then(() => player.classList.add('shixiang')); //游戏开始前加不上
+                            },
+                            enable: ['chooseToUse', 'chooseToRespond'],
+                            check(card) {
+                                return 8 - get.value(card);
+                            },
+                            hiddenCard(player, name) {
+                                if (name == 'juedou') return player.countCards('hes', { suit: 'spade' });
+                                if (name == 'sha') return player.countCards('hes', { suit: 'club' });
+                            },
+                            filterCard(card, player, event) {
+                                if (card.suit == 'spade' && player.filterCard('juedou')) return true;
+                                if (card.suit == 'club' && player.filterCard('sha')) return true;
+                                return false;
+                            },
+                            selectCard: 1,
+                            position: 'hes',
+                            filter(event, player) {
+                                if (player.filterCard('sha') && player.countCards('hes', { suit: 'club' })) return true;
+                                if (player.filterCard('juedou') && player.countCards('hes', { suit: 'spade' })) return true;
+                                return false;
+                            },
+                            prompt: '将♠️️️️/♣️️️️牌当做【决斗】/【杀】使用或打出',
+                            viewAs(cards, player) {
+                                var name;
+                                switch (cards[0]?.suit) {
+                                    case 'spade':
+                                        name = 'juedou';
+                                        break;
+                                    case 'club':
+                                        name = 'sha';
+                                        break;
+                                }
+                                if (name) {
+                                    return { name: name };
+                                }
+                                return null;
+                            },
+                            ai: {
+                                order: 10,
+                            },
+                            group: ['HL_aosha_1'],
+                            subSkill: {
+                                1: {
+                                    mod: {
+                                        cardUsable(card, player, num) {
+                                            if (card.name == 'sha') {
+                                                return Infinity;
+                                            }
+                                        },
+                                        targetInRange(card) {
+                                            if (card.name == 'sha') {
+                                                return true;
+                                            }
+                                        },
+                                    },
+                                    trigger: {
+                                        player: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.card?.name == 'juedou';
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                        const card = get.cardPile((c) => get.tag(c, 'damage'), 'field');
+                                        if (card) {
+                                            player.gain(card, 'gain2');
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 神威灵装·十番
+                        // 你受到伤害时,有x/10的概率免疫(x为伤害值)
+                        // 你使用的第10的整数倍张牌将结算两次
+                        HL_shifan: {
+                            _priority: 8,
+                            trigger: {
+                                player: ['damageBefore'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return Math.random() < 0.1 * event.num;
+                            },
+                            async content(event, trigger, player) {
+                                trigger.cancel();
+                            },
+                            group: ['HL_shifan_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['useCard'],
+                                    },
+                                    forced: true,
+                                    markimage: 'extension/火灵月影/image/HL_shifan_1.png',
+                                    intro: {
+                                        content(storage) {
+                                            return `下${10 - storage}张牌触发额外结算`;
+                                        },
+                                    },
+                                    async content(event, trigger, player) {
+                                        player.addMark('HL_shifan_1');
+                                        if (player.storage.HL_shifan_1 > 9) {
+                                            player.clearMark('HL_shifan_1');
+                                            trigger.effectCount++;
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 王国
+                        // 非精灵回复体力/获得护甲/摸牌/使用牌时,你执行相同操作
+                        HL_wangguo: {
+                            trigger: {
+                                global: ['recoverEnd', 'changeHujiaEnd', 'drawEnd', 'useCardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return !event.player.isjingling() && !event.getParent('HL_wangguo', true);
+                            },
+                            async content(event, trigger, player) {
+                                const name = trigger.name;
+                                if (name == 'useCard') {
+                                    player.chooseToUse(`使用一张牌`)
+                                        .set('filterCard', (c) => player.filterCardx(c))
+                                        .set('ai1', (card, arg) => {
+                                            if (lib.card[card.name]) {
+                                                return number0(player.getUseValue(card, null, true)) + 10;
+                                            }
+                                        });
+                                }
+                                else {
+                                    player[name](1);
+                                }
+                            },
+                        },
+                        // 物质主义
+                        // 非精灵使用第10张牌时,其出牌阶段结束
+                        HL_wuzhi: {
+                            trigger: {
+                                global: ['useCardEnd'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return !event.player.isjingling();
+                            },
+                            async content(event, trigger, player) {
+                                trigger.player.addMark('HL_wuzhi');
+                                if (trigger.player.storage.HL_wuzhi > 9 && _status.currentPhase == trigger.player) {
+                                    trigger.player.removeMark('HL_wuzhi', 10);
+                                    const evt = _status.event.getParent('phaseUse', true);
+                                    if (evt) {
+                                        evt.skipped = true;
+                                    }
+                                }
+                            },
+                        },
+                        // 爱之公主
+                        // 你的回合开始时获得一张【桃】,你的体力回复效果翻倍
+                        HL_aizhigongzhu: {
+                            trigger: {
+                                player: ['phaseBegin'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                const card = get.cardPile((c) => c.name == 'tao', 'field');
+                                if (card) {
+                                    player.gain(card, 'gain2');
+                                }
+                            },
+                            group: ['HL_aizhigongzhu_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['recoverBegin'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        trigger.num = numberq1(trigger.num) * 2;
+                                    },
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -9558,6 +9760,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————夜刀神十香 体力值10/10
+                        HL_shixiang: '夜刀神十香',
+                        HL_aosha: '鏖杀公',
+                        HL_aosha_info: '①你可将♠️️️️/♣️️️️牌当做【决斗】/【杀】使用或打出<br>②你受到【决斗】的伤害时,取消之并获得一张随机伤害牌;你使用【杀】无距离次数限制',
+                        HL_shifan: '神威灵装·十番',
+                        HL_shifan_info: '你受到伤害时,有x/10的概率免疫(x为伤害值)<br>你使用的第10的整数倍张牌将结算两次',
+                        HL_wangguo: '王国',
+                        HL_wangguo_info: '非精灵回复体力/获得护甲/摸牌/使用牌时,你执行相同操作',
+                        HL_wuzhi: '物质主义',
+                        HL_wuzhi_info: '非精灵使用第10张牌时,其出牌阶段结束',
+                        HL_aizhigongzhu: '爱之公主',
+                        HL_aizhigongzhu_info: '你的回合开始时获得一张【桃】,你的体力回复效果翻倍',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————冰芽川四糸乃 体力值4/4
                         HL_bingyachuan: '冰芽川四糸乃',
                         HL_bingjie: '冰结傀儡',
@@ -9581,7 +9795,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_zhihuan: '置换',
                         HL_zhihuan_info: '觉醒技,当你死亡前,你丢弃所有牌,选择一个目标废除其装备栏,与其交换体力上限并回满体力,将手牌摸至体力上限,获得『六合』',
                         HL_liuhe: '六合',
-                        HL_liuhe_info: '你使用的伤害牌额外结算一次,并获得以下一个随机效果<br>1.增加2点体力上限并回复1点体力<br>2.获得随机的一个技能<br>3.永久增加伤害牌结算次数<br>4.对所有敌方角色造成一点伤害',
+                        HL_liuhe_info: '回合限六次,你使用的伤害牌额外结算一次,并获得以下一个随机效果<br>1.增加2点体力上限并回复1点体力<br>2.获得随机的一个技能<br>3.永久增加伤害牌结算次数<br>4.对所有敌方角色造成一点伤害',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————时崎狂三 体力值3/3
                         HL_kuangsan: '时崎狂三',
                         HL_kekedi: '刻刻帝',
