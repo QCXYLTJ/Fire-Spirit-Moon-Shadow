@@ -9056,6 +9056,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 player.removeMark('HL_canshizhicheng');
                                 if (player.storage.HL_canshizhicheng < 1) {
+                                    game.playAudio(`../extension/火灵月影/audio/canshizhicheng${[1, 2].randomGet()}.mp3`);
                                     player.addMark('HL_canshizhicheng', 3);
                                     const target = game.players.find((q) => !q.isjingling());
                                     if (target) {
