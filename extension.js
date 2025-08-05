@@ -2818,18 +2818,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 };
                 lib.element.player.qdie = async function (source) {
                     const player = this;
-                    await player.qdie1();
-                    await player.qdie2();
+                    await player.qdie1(source);
+                    await player.qdie2(source);
+                    await player.qdie3(source);
                     return player;
                 };//可以触发死亡相关时机,但是死亡无法避免
                 lib.element.player.qdie1 = async function (source) {
                     const player = this;
-                    const next = game.createEvent('die');
+                    const next = game.createEvent('die', false);
                     next.source = source;
                     next.player = player;
-                    await next.setContent(function () { });
+                    next._triggered = null;
+                    await next.setContent(async function (event, trigger, player) {
+                        await event.trigger('dieBefore');
+                        await event.trigger('dieBegin');
+                    });
                     return player;
-                };//触发死亡相关时机
+                };//触发死亡前相关时机
                 lib.element.player.qdie2 = async function (source) {
                     const player = this;
                     const next = game.createEvent('diex', false);
@@ -2839,6 +2844,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     await next.setContent(lib.element.content.die);
                     return player;
                 };//斩杀
+                lib.element.player.qdie3 = async function (source) {
+                    const player = this;
+                    const next = game.createEvent('die', false);
+                    next.source = source;
+                    next.player = player;
+                    next._triggered = null;
+                    await next.setContent(async function (event, trigger, player) {
+                        await event.trigger('dieEnd');
+                        await event.trigger('dieAfter');
+                    });
+                    return player;
+                };//触发死亡后相关时机
             }; //解构魔改本体函数
             mogai();
             //—————————————————————————————————————————————————————————————————————————————视为转化虚拟牌相关自创函数
@@ -8255,17 +8272,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 自愈
-                        // 每五个任意回合后,你回复1点体力
+                        // 当你累计成为过其他角色使用牌的目标五次后,你回复1点体力
                         // 你回复体力时,若此回复溢出,将之转变为护甲
                         HL_ziyu: {
                             markimage: 'extension/火灵月影/image/HL_ziyu.png',
                             intro: {
                                 content(storage) {
-                                    return `还有${storage}回合自愈`;
+                                    return `再有${storage}次成为牌的目标后自愈`;
                                 },
                             },
                             trigger: {
-                                global: ['phaseEnd'],
+                                target: ['useCardToPlayer'],
                             },
                             forced: true,
                             init(player) {
@@ -9845,7 +9862,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_wufan_2: '残酷',
                         HL_wufan_2_info: '移除一名其他角色的全部技能,直到你的回合结束',
                         HL_ziyu: '自愈',
-                        HL_ziyu_info: '每五个任意回合后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
+                        HL_ziyu_info: '当你累计成为过其他角色使用牌的目标五次后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         HL_ziyu_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">治愈之炎,无论多么严重的伤势都能快速愈合</b>',
                         HL_kuangbao: '狂暴',
                         HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1',
