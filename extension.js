@@ -1258,30 +1258,30 @@ const boss = function () {
         return player;
     };
     lib.element.player.addFellow = function (name) {
+        const player = this;
         const npc = game.addPlayerQ(name);
-        this.guhuo(npc);
+        player.guhuo(npc);
         return npc;
     }; //添加随从
     lib.element.player.guhuo = function (target) {
-        target.side = this.side;
-        let identity = this.identity;
-        if (this.identity == 'zhu') {
+        const player = this;
+        target.side = player.side;
+        let identity = player.identity;
+        if (player.identity == 'zhu') {
             identity = 'zhong';
         } // 挑战模式多个主身份,会导致boss多个回合
         target.identity = identity;
         target.setIdentity(identity, 'blue');
-        target.boss = this;
+        target.boss = player;
         target.ai.modAttitudeFrom = function (from, to, att) {
-            //这里from是本人
             if (to == from.boss) return 99;
             return att;
-        };
+        }; //这里from是本人
         target.ai.modAttitudeTo = function (from, to, att) {
-            //这里to是本人
             if (to.boss == from) return 99;
             return att;
-        };
-        return target;
+        }; //这里to是本人
+        return player;
     }; //令一名角色服从你
 };
 boss();
@@ -2822,7 +2822,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     await player.qdie2(source);
                     await player.qdie3(source);
                     return player;
-                };//可以触发死亡相关时机,但是死亡无法避免
+                }; //可以触发死亡相关时机,但是死亡无法避免
                 lib.element.player.qdie1 = async function (source) {
                     const player = this;
                     const next = game.createEvent('die', false);
@@ -2834,7 +2834,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         await event.trigger('dieBegin');
                     });
                     return player;
-                };//触发死亡前相关时机
+                }; //触发死亡前相关时机
                 lib.element.player.qdie2 = async function (source) {
                     const player = this;
                     const next = game.createEvent('diex', false);
@@ -2843,7 +2843,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     next._triggered = null;
                     await next.setContent(lib.element.content.die);
                     return player;
-                };//斩杀
+                }; //斩杀
                 lib.element.player.qdie3 = async function (source) {
                     const player = this;
                     const next = game.createEvent('die', false);
@@ -2855,7 +2855,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         await event.trigger('dieAfter');
                     });
                     return player;
-                };//触发死亡后相关时机
+                }; //触发死亡后相关时机
             }; //解构魔改本体函数
             mogai();
             //—————————————————————————————————————————————————————————————————————————————视为转化虚拟牌相关自创函数
@@ -8291,10 +8291,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.isHealthy = function () {
                                     return false;
                                 }; //回血溢出
-                                player.when({ global: 'gameStart' }).then(() => player.classList.add('qinli')); //游戏开始前加不上
-                                player.addFellow('HL_kuangsan');
-                                player.addFellow('HL_bingyachuan');
-                                player.addFellow('HL_shixiang');
+                                player.when({ global: 'gameStart' }).then(() => {
+                                    player.classList.add('qinli');
+                                    player.addFellow('HL_kuangsan');
+                                    player.addFellow('HL_bingyachuan');
+                                    player.addFellow('HL_shixiang');
+                                }); //游戏开始前加不上//游戏开始前召唤的随从没有side
                             },
                             async content(event, trigger, player) {
                                 player.removeMark('HL_ziyu');
@@ -9408,8 +9410,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 break;
                                         }
                                     }
-                                }
-                                else {
+                                } else {
                                     player.storage.HL_bingjie_false++;
                                     if (player.storage.HL_bingjie_false > 3) {
                                         player.storage.HL_bingjie_false = 0;
@@ -9462,7 +9463,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return event.getParent((e) => ['HL_wugandong', 'icesha_skill', 'hanbing_skill'].includes(e.name), true) && event.cards?.length;
                                     },
                                     async content(event, trigger, player) {
-                                        player.gain(trigger.cards, 'gain2')
+                                        player.gain(trigger.cards, 'gain2');
                                     },
                                 },
                             },
@@ -9538,12 +9539,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         } = await npc.chooseBool('随机弃置2张牌或点击取消受到1点无来源冰属性伤害').set('ai', () => true);
                                         if (bool) {
                                             npc.randomDiscard('he', 2);
-                                        }
-                                        else {
+                                        } else {
                                             npc.damage('ice', 'nosource');
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         npc.damage('ice', 'nosource');
                                     }
                                 }
@@ -9716,15 +9715,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const name = trigger.name;
                                 if (name == 'useCard') {
-                                    player.chooseToUse(`使用一张牌`)
+                                    player
+                                        .chooseToUse(`使用一张牌`)
                                         .set('filterCard', (c) => player.filterCardx(c))
                                         .set('ai1', (card, arg) => {
                                             if (lib.card[card.name]) {
                                                 return number0(player.getUseValue(card, null, true)) + 10;
                                             }
                                         });
-                                }
-                                else {
+                                } else {
                                     player[name](1);
                                 }
                             },
