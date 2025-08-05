@@ -9552,6 +9552,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 冰之隐者
                         // 你受到的冰属性伤害视为获得相应数值的护甲,你造成的伤害视为冰属性伤害
                         HL_bingzhiyinzhe: {
+                            audio: 'ext:火灵月影/audio:3',
                             trigger: {
                                 player: ['damageBefore'],
                             },
@@ -9753,6 +9754,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 爱之公主
                         // 你的回合开始时获得一张【桃】,你的体力回复效果翻倍
                         HL_aizhigongzhu: {
+                            audio: 'ext:火灵月影/audio:3',
                             trigger: {
                                 player: ['phaseBegin'],
                             },
