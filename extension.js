@@ -9336,9 +9336,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.storage.HL_bingjie_true = 0;
                                 player.storage.HL_bingjie_false = 0;
                                 player.when({ global: 'gameStart' }).then(() => {
+                                    game.playAudio(`../extension/火灵月影/audio/bingjie${[1, 2, 3].randomGet()}.mp3`);
                                     player.classList.add('bingjie');
                                     player.classList.add('bingyachuan');
                                 }); //游戏开始前加不上
+                                game.playAudio(`../extension/火灵月影/audio/bingyachuan_init${[1, 2, 3].randomGet()}.mp3`);
                             },
                             mod: {
                                 globalFrom(from, to, distance) {
@@ -9413,6 +9415,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.storage.HL_bingjie_false = 0;
                                         player.storage.HL_bingjie = true;
                                         player.classList.add('bingjie');
+                                        game.playAudio(`../extension/火灵月影/audio/bingjie${[1, 2, 3].randomGet()}.mp3`);
                                     }
                                 }
                             },
@@ -9468,6 +9471,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 你造成致命伤害时,取消之
                         // 出牌阶段限一次,你可以将所有护甲分配给其他精灵,然后回复等同于分配护甲数的体力
                         HL_cibei: {
+                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 source: ['damageBefore'],
                             },
