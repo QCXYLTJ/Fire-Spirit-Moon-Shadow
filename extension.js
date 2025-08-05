@@ -3459,6 +3459,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             maxHp: 10,
                             skills: ['HL_aosha', 'HL_shifan', 'HL_wangguo', 'HL_wuzhi', 'HL_aizhigongzhu'],
                             trashBin: [`ext:火灵月影/image/HL_shixiang.png`],
+                            dieAudios: [`ext:火灵月影/audio:2`],
                         },
                     },
                     characterIntro: {
@@ -9582,7 +9583,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ①你可将♠️️️️/♣️️️️牌当做【决斗】/【杀】使用或打出
                         // ②你受到【决斗】的伤害时,取消之并获得一张随机伤害牌;你使用【杀】无距离次数限制
                         HL_aosha: {
+                            audio: 'ext:火灵月影/audio:3',
                             init(player) {
+                                game.playAudio(`../extension/火灵月影/audio/shixiang_init${[1, 2].randomGet()}.mp3`);
                                 player.when({ global: 'gameStart' }).then(() => player.classList.add('shixiang')); //游戏开始前加不上
                             },
                             enable: ['chooseToUse', 'chooseToRespond'],
@@ -9689,6 +9692,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (player.storage.HL_shifan_1 > 9) {
                                             player.clearMark('HL_shifan_1');
                                             trigger.effectCount++;
+                                            game.playAudio(`../extension/火灵月影/audio/shifan_1${[1, 2].randomGet()}.mp3`);
                                         }
                                     },
                                 },
@@ -9733,6 +9737,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 trigger.player.addMark('HL_wuzhi');
                                 if (trigger.player.storage.HL_wuzhi > 9 && _status.currentPhase == trigger.player) {
+                                    game.playAudio(`../extension/火灵月影/audio/wuzhi${[1, 2].randomGet()}.mp3`);
                                     trigger.player.removeMark('HL_wuzhi', 10);
                                     const evt = _status.event.getParent('phaseUse', true);
                                     if (evt) {
