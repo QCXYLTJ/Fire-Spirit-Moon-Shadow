@@ -1408,6 +1408,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     set() { },
                 });
             }
+            const bgm = lib.config.extension_火灵月影_BGM;
+            if (bgm && bgm != '默认音乐') {
+                ui.backgroundMusic.src = `extension/火灵月影/BGM/${bgm}.mp3`;
+                ui.backgroundMusic.loop = true;
+            }
         },
         content(config, pack) {
             get.vcardInfo = function (card) { }; //卡牌storage里面存了DOM元素会循环引用导致不能JSON.stringify
@@ -3663,7 +3668,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_buyingcunzai: {
                             init(player) {
                                 ui.background.style.backgroundImage = `url(extension/火灵月影/image/HL_amiya1.jpg)`;
-                                ui.backgroundMusic.src = `extension/火灵月影/BGM/HL_amiya.mp3`;
+                                ui.backgroundMusic.src = `extension/火灵月影/BGM/yizhi.mp3`;
                                 ui.backgroundMusic.loop = true;
                             },
                             trigger: {
@@ -6487,7 +6492,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             player.addSkill(i);
                                             player.node.avatar.style.backgroundImage = `url(extension/火灵月影/image/HL_shao_EGO.jpg)`;
                                             ui.background.style.backgroundImage = `url(extension/火灵月影/image/shao_EGO.jpg)`;
-                                            ui.backgroundMusic.src = `extension/火灵月影/audio/shao_EGO.mp3`;
+                                            ui.backgroundMusic.src = `extension/火灵月影/BGM/IronLotus.mp3`;
                                             ui.backgroundMusic.loop = true;
                                         }
                                     },
@@ -10414,6 +10419,34 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 name: '<a href="https://qm.qq.com/q/SsTlU9gc24"><span class=Qmenu>【火灵月影】群聊: 771901025</span></a>',
                 clear: true,
             },
+            BGM: {
+                name: '<span class=Qmenu>背景音乐</span>',
+                intro: '背景音乐：可随意点播、切换优质动听的背景音乐',
+                init: '默认音乐',
+                item: {
+                    默认音乐: '<span class=Qmenu>默认音乐</span>',
+                    yizhi: '<span class=Qmenu>yizhi</span>',
+                    IronLotus: '<span class=Qmenu>IronLotus</span>',
+                },
+                onclick(item) {
+                    game.saveConfig('extension_火灵月影_BGM', item);
+                    ui.backgroundMusic.src = `extension/火灵月影/BGM/${item}.mp3`;
+                    ui.backgroundMusic.loop = true;
+                },
+                visualMenu(node, link) {
+                    node.style.height = node.offsetWidth * 0.83 + 'px';
+                    node.style.backgroundSize = '100% 100%';
+                    node.setBackgroundImage(`extension/火灵月影/image/${link}.jpg`);
+                },
+            },
+            死亡移除: {
+                name: '<span class=Qmenu>死亡移除</span>',
+                intro: '死亡后移出游戏',
+                init: true,
+                onclick(result) {
+                    game.saveConfig('dieremove', result);
+                },
+            },
             斩杀测试: {
                 name: '<span class=Qmenu>斩杀测试</span>',
                 intro: '斩尽世间一切敌',
@@ -10423,14 +10456,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 name: '<span class=Qmenu>挑战炼狱模式</span>',
                 intro: '开启后,神之無雙增加技能',
                 init: true,
-            },
-            死亡移除: {
-                name: '<span class=Qmenu>死亡移除</span>',
-                intro: '死亡后移出游戏',
-                init: true,
-                onclick(result) {
-                    game.saveConfig('dieremove', result);
-                },
             },
             文字闪烁: {
                 name: '<span class=Qmenu>文字闪烁</span>',
