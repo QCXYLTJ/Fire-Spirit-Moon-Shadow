@@ -7281,7 +7281,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ②敌方角色亵渎对应律法时,其所有技能失效,并获得持续2轮的对应律法的亵渎印记
                         // ③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮
                         HL_tianqi: {
-                            audio: 'ext:火灵月影/audio:true',
                             init(player) {
                                 HL.zhenlicaijue = 0;
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
@@ -7863,7 +7862,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 万神镇诸天
                         // 你无视超出一点的伤害,终止你的判定
                         HL_wanshen: {
-                            audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 player: ['damageBefore'],
                             },
@@ -7894,7 +7892,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 劫命归一子
                         // 当你对敌方角色造成伤害/成为敌方角色牌的目标后,你令其获得随机一个亵渎印记持续2轮【优先获得已持有律法所对应的亵渎印记】
                         HL_jieming: {
-                            audio: 'ext:火灵月影/audio:true',
                             init(player) {
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
@@ -7917,7 +7914,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 每回合结束时,对该回合内获得过亵渎印记的敌方角色造成2点伤害.若其亵渎印记种类数大于1,则改为失去你持有律法数的体力值
                         // 若其失去的体力值小于你持有律法数,则重复此流程,直到其脱离濒死状态
                         HL_wanlv: {
-                            audio: 'ext:火灵月影/audio:true',
                             init(player) {
                                 player.storage.HL_tianqi = ['HL_shengming', 'HL_zhihui', 'HL_zhanzheng', 'HL_weiyan'];
                             },
