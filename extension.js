@@ -295,7 +295,7 @@ const kangxing1 = function () {
             },
             configurable: false,
         });
-        const list = ['button' /*武将包展示*/, 'selectable' /*可选择目标*/, 'selected' /*已选择目标*/, 'targeted' /*目标*/, 'selecting' /*正在选择目标*/, 'player' /*在场角色*/, 'fullskin' /*立绘*/, 'bossplayer' /*boss列表*/, 'highlight' /*高光*/, 'glow_phase' /*当前回合*/, 'd-skin' /*动皮下的静皮透明度*/];
+        const list = ['button' /*武将包展示*/, 'selectable' /*可选择目标*/, 'selected' /*已选择目标*/, 'targeted' /*目标*/, 'selecting' /*正在选择目标*/, 'player' /*在场角色*/, 'fullskin' /*立绘*/, 'bossplayer' /*boss列表*/, 'highlight' /*高光*/, 'glow_phase' /*当前回合*/, 'd-skin' /*动皮下的静皮透明度*/, 'unseen', 'unseen2'/*隐匿将*/];
         let classlist = player.classList;
         Reflect.defineProperty(player, 'classList', {
             get() {
