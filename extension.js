@@ -3740,7 +3740,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //①游戏开始时你获得3枚<仅剩的创意>,将场上所有角色势力锁定为<神>,并令全场其他角色获得<束缚>状态直到你造成伤害后解除
                         //②每轮开始时或造成伤害/体力变化后,你获得等量的<仅剩的创意>并摸等量的牌
                         //③你的手牌上限等于<仅剩的创意>数
-                        //④准备阶段,你消耗3枚<仅剩的创意>对全场其他角色各造成1点伤害
+                        //④准备阶段,你消耗3枚<仅剩的创意>对全场其他角色各造成(你已损体力值*其当前体力值)%伤害
                         HL_chuangyi: {
                             mod: {
                                 maxHandcard(player, num) {
@@ -3764,7 +3764,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             group: ['HL_chuangyi_1', 'HL_chuangyi_2'],
                             subSkill: {
-                                //②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)
+                                //④准备阶段,你消耗3枚<仅剩的创意>对全场其他角色各造成(你已损体力值*其当前体力值)%伤害
                                 1: {
                                     trigger: {
                                         player: ['phaseZhunbeiBegin'],
@@ -3780,10 +3780,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                         player.storage.HL_chuangyi -= 3;
                                         for (const npc of player.getEnemies()) {
-                                            let num = 1;
-                                            if (player.hasSkill('HL_heiguan')) {
-                                                num += generateX(game.players.length);
-                                            }
+                                            const num = Math.ceil(numberq1(player.maxHp - player.hp) * numberq1(npc.hp) * 0.01);
                                             npc.damage(num);
                                         }
                                     },
@@ -3918,18 +3915,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.wudi = true;
                                 player.when({ global: 'roundStart' }).then(() => (player.wudi = false));
                                 player.restoreSkill('HL_buyingcunzai_1');
-                                lib.character.HL_amiya.skills.addArray(['HL_heiguan', 'HL_qipan', 'HL_yongheng']);
+                                lib.character.HL_amiya.skills.addArray(['HL_qipan', 'HL_yongheng']);
                                 game.skangxing(player);
                                 for (const npc of player.getEnemies()) {
                                     npc.loseHp(Math.ceil(npc.hp / 2));
                                 }
                             },
                         },
-                        // 黑冠余威:
-                        // ①当体力值首次回复至上限后立即令全场其他角色失去一半体力值
-                        // ②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)
-                        HL_heiguan: {},
-                        // 无言的期盼:
+                        // 无言的期盼
                         // 结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等
                         HL_qipan: {
                             audio: 'ext:火灵月影/audio:true',
@@ -9505,6 +9498,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 你造成致命伤害时,取消之
                         // 出牌阶段限一次,你可以将所有护甲分配给其他精灵,然后回复等同于分配护甲数的体力
                         HL_cibei: {
+                            _priority: 77,
                             audio: 'ext:火灵月影/audio:true',
                             trigger: {
                                 source: ['damageBefore'],
@@ -9584,6 +9578,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 冰之隐者
                         // 你受到的冰属性伤害视为获得相应数值的护甲,你造成的伤害视为冰属性伤害
                         HL_bingzhiyinzhe: {
+                            _priority: 73,
                             audio: 'ext:火灵月影/audio:3',
                             trigger: {
                                 player: ['damageBefore'],
@@ -9749,14 +9744,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const name = trigger.name;
                                 if (name == 'useCard') {
-                                    player
-                                        .chooseToUse(`使用一张牌`)
-                                        .set('filterCard', (c) => player.filterCardx(c))
-                                        .set('ai1', (card, arg) => {
-                                            if (lib.card[card.name]) {
-                                                return number0(player.getUseValue(card, null, true)) + 10;
-                                            }
-                                        });
+                                    if (player.countCards('h')) {
+                                        player
+                                            .chooseToUse(`使用一张牌`)
+                                            .set('filterCard', (c) => player.filterCardx(c))
+                                            .set('ai1', (card, arg) => {
+                                                if (lib.card[card.name]) {
+                                                    return number0(player.getUseValue(card, null, true)) + 10;
+                                                }
+                                            });
+                                    }
                                 } else {
                                     player[name](1);
                                 }
@@ -9814,7 +9811,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
                         // 祂是深渊纪元,是深渊本身
                         // 黑暗之刑
-                        // 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场(x为你体力上限)
+                        // 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场,化身至多存在4个(x为你体力上限)
                         // 敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害
                         HL_heianzhixing: {
                             trigger: {
@@ -9836,7 +9833,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 for (const npc of player.getEnemies()) {
                                     await npc.damage(Math.ceil(player.maxHp / 4));
                                 }
-                                let num = Math.ceil(player.maxHp / 6);
+                                const num1 = game.players.filter((q) => q.name == 'HL_lalaiyehuashen').length;
+                                const num2 = Math.ceil(player.maxHp / 6);
+                                let num = Math.min(num2, 4 - num1);
                                 while (num-- > 0) {
                                     player.addFellow('HL_lalaiyehuashen');
                                 }
@@ -10090,7 +10089,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
                         HL_lalaiye: '拉莱耶',
                         HL_heianzhixing: '黑暗之刑',
-                        HL_heianzhixing_info: ' 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场(x为你体力上限)<br>敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害',
+                        HL_heianzhixing_info: ' 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场,化身至多存在4个(x为你体力上限)<br>敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害',
                         HL_zhangkongzhongjie: '掌控终结',
                         HL_zhangkongzhongjie_info: '当你每回合首次成为敌方角色牌的目标时,你令此牌无效,吸取来源一半体力上限与体力值,废除其一个装备栏<br>每回合敌方角色首次摸牌后,你对其造成x/4点伤害',
                         HL_shenyuanshenpan: '深渊审判',
@@ -10427,7 +10426,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_buyingcunzai: '不应存在之人',
                         HL_buyingcunzai_info: '①你始终拥有50%减伤<br>②当血量低于50%时,获得无敌状态【当体力值减少时防止之】直到本轮结束',
                         HL_chuangyi: '仅剩的创意',
-                        HL_chuangyi_info: '①游戏开始时你获得3枚<仅剩的创意>,将场上所有角色势力锁定为<神>,并令敌方角色获得<束缚>状态,直到你造成伤害<br>②每轮开始/造成伤害/体力变化后,你获得等量的<仅剩的创意>并摸等量的牌<br>③你的手牌上限等于<仅剩的创意>数<br>④准备阶段,你消耗3枚<仅剩的创意>对敌方角色各造成1点伤害',
+                        HL_chuangyi_info: '①游戏开始时你获得3枚<仅剩的创意>,将场上所有角色势力锁定为<神>,并令敌方角色获得<束缚>状态,直到你造成伤害<br>②每轮开始/造成伤害/体力变化后,你获得等量的<仅剩的创意>并摸等量的牌<br>③你的手牌上限等于<仅剩的创意>数<br>④准备阶段,你消耗3枚<仅剩的创意>对敌方角色各造成(你已损体力值*其当前体力值)%伤害',
                         HL_jintouchongxian: '尽头重现',
                         HL_jintouchongxian_info: '准备阶段若你<仅剩的创意>达到30枚以上,消耗30枚<仅剩的创意>随机召唤一位随从加入战斗,每名随从限一次.随从除武将牌上技能外皆视为拥有<贵乱>',
                         HL_guiluan: '贵乱',
@@ -10435,9 +10434,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_cunxuxianzhao: '存续先兆',
                         HL_cunxuxianzhao_info: '蓄力技(0/10),结束阶段,若蓄力值已满消耗所有蓄力值随机令一名敌方角色所有技能失效并死亡.每名随从死亡时增加五点蓄力值',
                         HL_wuzhong: '无终',
-                        HL_wuzhong_info: '觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】,重置技能【不应存在之人】',
-                        HL_heiguan: '黑冠余威',
-                        HL_heiguan_info: '①当体力值首次回复至上限后立即令敌方角色失去一半体力值<br>②每次消耗<仅剩的创意>时伤害+X(X为1~7的随机值,存活的角色越多此伤害随机加成越低)',
+                        HL_wuzhong_info: '觉醒技,当你体力值不大于0时将体力值回复至上限,令敌方角色失去一半体力值,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】,重置技能【不应存在之人】',
                         HL_qipan: '无言的期盼',
                         HL_qipan_info: '结束阶段开始时,若场上有其他角色的手牌数大于/小于你,则令所有其他角色将手牌数弃置/摸至与你相等',
                         HL_yongheng: '永恒存续',
