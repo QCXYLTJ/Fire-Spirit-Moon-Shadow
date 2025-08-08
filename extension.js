@@ -2508,11 +2508,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     const video = this.setBackgroundMp4(src);
                     return video;
                 }; //火灵月影背景mp4
-                HTMLElement.prototype.HL_TMBG = function (name) {
-                    const src = `extension/火灵月影/mp4/${name}.webm`;
-                    const video = this.setBackgroundMp4(src);
-                    return video;
-                }; //火灵月影背景webm
                 game.HL_mp4 = async function (name) {
                     return new Promise((resolve) => {
                         const video = document.createElement('video');
