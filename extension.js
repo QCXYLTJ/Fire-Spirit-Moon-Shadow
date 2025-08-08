@@ -6879,7 +6879,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     const evt = his[his.length - 1];
                                     for (const i of evt.sourceDamage) {
                                         if (i.card == trigger.card) {
-                                            player.draw(i.num);
+                                            player.draw(Math.min(i.num, 20));
                                         }
                                     }
                                 }
@@ -7492,7 +7492,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         const num = player.hp + trigger.num - player.maxHp;
                                         player.gainMaxHp(num);
-                                        player.draw(num);
+                                        player.draw(Math.min(num, 20));
                                     },
                                 },
                             },
@@ -7672,7 +7672,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     });
                                 switch (index) {
                                     case 0:
-                                        player.draw(num);
+                                        player.draw(Math.min(num, 20));
                                         break;
                                     case 1:
                                         player.recover(num);
