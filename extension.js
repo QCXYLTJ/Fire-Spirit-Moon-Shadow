@@ -8674,9 +8674,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (trigger.name == 'damage') {
                                     trigger.cancel();
-                                    await player.draw(trigger.num);
+                                    const num = Math.min(trigger.num, 9);
+                                    await player.draw(num);
                                     player.success = true;
-                                    await player.loseMaxHp(Math.min(trigger.num, 9));
+                                    await player.loseMaxHp(num);
                                     player.success = false;
                                 } else {
                                     trigger.cancel();
@@ -9178,7 +9179,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     async content(event, trigger, player) {
                                         await player.gainMaxHp(trigger.num);
-                                        player.draw(trigger.num);
+                                        player.draw(Math.min(trigger.num, 20));
                                     },
                                 },
                             },
@@ -9826,7 +9827,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } else {
                                     HL.laleiye = player;
                                 }
-                                player.draw(player.maxHp);
+                                player.draw(Math.min(player.maxHp, 20));
                                 for (const npc of player.getEnemies()) {
                                     await npc.damage(Math.ceil(player.maxHp / 4));
                                 }
