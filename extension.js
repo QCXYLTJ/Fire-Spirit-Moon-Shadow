@@ -1502,7 +1502,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 },
                 async content(event, trigger, player) {
                     player.success = true;
-                    player.hp = player.hp - trigger.num;
+                    const num = trigger.realnum ? trigger.realnum : trigger.num;
+                    player.hp = player.hp - num;
                     player.update();
                     player.success = false;
                 },
@@ -2828,38 +2829,38 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     await player.qdie3(source);
                     return player;
                 }; //可以触发死亡相关时机,但是死亡无法避免
-                lib.element.player.qdie1 = async function (source) {
+                lib.element.player.qdie1 = function (source) {
                     const player = this;
                     const next = game.createEvent('die', false);
                     next.source = source;
                     next.player = player;
                     next._triggered = null;
-                    await next.setContent(async function (event, trigger, player) {
+                    next.setContent(async function (event, trigger, player) {
                         await event.trigger('dieBefore');
                         await event.trigger('dieBegin');
                     });
-                    return player;
+                    return next;
                 }; //触发死亡前相关时机
-                lib.element.player.qdie2 = async function (source) {
+                lib.element.player.qdie2 = function (source) {
                     const player = this;
                     const next = game.createEvent('diex', false);
                     next.source = source;
                     next.player = player;
                     next._triggered = null;
-                    await next.setContent(lib.element.content.die);
-                    return player;
+                    next.setContent(lib.element.content.die);
+                    return next;
                 }; //斩杀
-                lib.element.player.qdie3 = async function (source) {
+                lib.element.player.qdie3 = function (source) {
                     const player = this;
                     const next = game.createEvent('die', false);
                     next.source = source;
                     next.player = player;
                     next._triggered = null;
-                    await next.setContent(async function (event, trigger, player) {
+                    next.setContent(async function (event, trigger, player) {
                         await event.trigger('dieEnd');
                         await event.trigger('dieAfter');
                     });
-                    return player;
+                    return next;
                 }; //触发死亡后相关时机
             }; //解构魔改本体函数
             mogai();
@@ -3271,6 +3272,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             isBoss: true,
                             isBossAllowed: true,
                         },
+                        HL_lalaiye: {
+                            sex: 'male',
+                            hp: 12,
+                            maxHp: 12,
+                            skills: ['HL_heianzhixing', 'HL_zhangkongzhongjie', 'HL_shenyuanshenpan', 'HL_zhixubengta'],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————普通
                         HL_kuilei: {
                             sex: 'female',
@@ -3466,6 +3475,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trashBin: [`ext:火灵月影/image/HL_shixiang.png`],
                             dieAudios: [`ext:火灵月影/audio:2`],
                         },
+                        HL_lalaiyehuashen: {
+                            sex: 'male',
+                            hp: 2,
+                            maxHp: 2,
+                            skills: ['HL_lalaiyehuashen'],
+                            trashBin: [`ext:火灵月影/image/HL_lalaiyehuashen.png`],
+                        },
                     },
                     characterIntro: {
                         HL_amiya: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>存在于每个故事尽头,带走每位角色,封闭每种可能,停止每段讲述.它是对终结的想象,亦是所有想象的终结,它是一切,唯独不是你熟悉的人',
@@ -3494,6 +3510,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_shao: '设计者:雪月风花(3360488304)<br>编写者:潜在水里的火(1476811518)',
                         HL_jielv: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>传说,在诸纪湮灭之前,太初晦暗未明之时,一场棋局贯穿光阴与维度<br>星辰为棋,万族为赌,执棋者,是不曾具名的存在<br>他们于星海间落下第一子,自此,文明星火与命运经纬,皆循其不可名状之轨迹流转<br>而在那最古老的梦中,一缕神识悄然垂降,凭<记忆>重塑残损之躯<br>此身游走于虚实之隙,与无形宇宙博弈,只待某一刻将虚妄与真实分辨<br>在那无尽博弈中,许多记忆浮现,又被磨损<br>焦土之上,硝烟未散的废墟中,一道孤影漫无目的地穿行<br>也曾有雏菊盛开的原野,三道身影并肩伫立<br>一人目光执着,追寻真理的尽头;<br>一人自彼岸而来,温柔坚定,怀抱理想与超弦科技;<br>一人沉默不语,终将独自前行<br>天地静默,风掠旷野,一切宛若日落前的余温——短暂,却依稀可辨<br>彼时,创世七族尚未联手,世界沉浮于诸王之争<br>升维之火种在文明间明灭,诸界于低语中竞逐,生灵于倾塌中挣扎<br>最终,七王立下界碑,使众神之上亦有规矩,使纷争之中仍可得庇护<br>他们曾共筑一座理想之塔——又共同见证它倾塌<br>联盟瓦解,诸王渐隐<br>锁链穿过十二星环,将腐化的身躯沉入永寂<br>而这场博弈,从未终止<br>直至宇宙沉寂,直至梦中无声',
                         HL_qinli: `不知从哪里穿越而来的炎之精灵,涛涛烈焰焚天煮海,仙姿佚貌宛若天女,美丽与暴力于此刻共存`,
+                        HL_lalaiye: '祂是深渊纪元,是深渊本身',
                     },
                     characterTitle: {
                         HL_李白: `<b style='color: #00FFFF; font-size: 25px;'>醉酒狂詩  青蓮劍仙</b>`,
@@ -3503,6 +3520,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_juemiezhe: `<b style='color:rgb(47, 27, 224); font-size: 25px;'>绝灭者 阳雷的业果</b>`,
                         HL_jielv: `<b style='color:rgba(197, 209, 209, 1); font-size: 25px;'>太初弈无终</b>`,
                         HL_qinli: `<b style='color:rgba(230, 87, 21, 1); font-size: 25px;'>Efreet</b>`,
+                        HL_lalaiye: `<b style='color:rgba(94, 21, 230, 1); font-size: 25px;'>深渊之主</b>`,
                     },
                     skill: {
                         //————————————————————————————————————————————扑克
@@ -3694,6 +3712,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     trigger.cancel();
                                 } else {
                                     trigger.num = Math.ceil(trigger.num / 2);
+                                    trigger.realnum = Math.ceil(trigger.num / 2);
                                 }
                             },
                             group: ['bosshp', 'bossfinish', 'HL_buyingcunzai_1'],
@@ -4215,7 +4234,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_ws_bossjieshao: {},
                         //——————————————————————————————————————————————————————————————————————————————————————————————————焚城魔士
                         // 登场时,对所有敌方角色各造成三点火焰伤害.
-                        // 焚城:准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害
+                        // 焚城
+                        // 准备阶段,连续进行四次判定,对所有敌方角色造成相当于判定结果中♥️️️牌数点火焰伤害
                         HL_fencheng: {
                             init(player) {
                                 for (const npc of player.getEnemies()) {
@@ -4377,7 +4397,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乱武毒士群60勾玉
                         // 登场时,为所有敌方角色附加三层<重伤>效果.(重伤:回复体力时,将回复值设定为0并移除一层<重伤>)
-                        // 乱武:准备阶段,你令所有敌方角色依次选择一项:①本回合无法使用【桃】,失去一点体力②对一名友方角色使用一张【杀】.选择结束后,你摸相当于选择①角色数量张牌,视作依次使用选择②角色数量张【杀】
+                        // 乱武
+                        // 准备阶段,你令所有敌方角色依次选择一项:①本回合无法使用【桃】,失去一点体力②对一名友方角色使用一张【杀】.选择结束后,你摸相当于选择①角色数量张牌,视作依次使用选择②角色数量张【杀】
                         HL_luanwu: {
                             init(player) {
                                 for (const npc of player.getEnemies()) {
@@ -4482,6 +4503,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                                 if (trigger.num > 1) {
                                     trigger.num = 1;
+                                    trigger.realnum = 1;
                                 }
                             },
                         },
@@ -4541,7 +4563,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————镇关魔将群120勾玉
                         // 登场时,展示所有敌方角色的手牌并弃置其中的伤害牌
-                        // 耀武:敌方角色使用伤害牌时,你取消所有目标,令此牌对你结算x次(x为此牌指定的目标数)
+                        // 耀武
+                        // 敌方角色使用伤害牌时,你取消所有目标,令此牌对你结算x次(x为此牌指定的目标数)
                         HL_yaowu: {
                             init(player) {
                                 for (const npc of player.getEnemies()) {
@@ -4575,7 +4598,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             group: ['bosshp', 'bossfinish'],
                         },
-                        // 恃勇:二阶段解锁,当你受到伤害后,你摸一张牌,可以将一张牌当做【杀】对伤害来源使用,若此【杀】造成了伤害,你弃置其一张牌
+                        // 恃勇
+                        // 二阶段解锁,当你受到伤害后,你摸一张牌,可以将一张牌当做【杀】对伤害来源使用,若此【杀】造成了伤害,你弃置其一张牌
                         HL_shiyong: {
                             trigger: {
                                 player: ['damageEnd'],
@@ -4798,7 +4822,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        // 无谋:二阶段解锁,你使用的除【决斗】以外的锦囊牌失效,使用的基本牌结算三次
+                        // 无谋
+                        // 二阶段解锁,你使用的除【决斗】以外的锦囊牌失效,使用的基本牌结算三次
                         HL_wumou: {
                             _priority: 6,
                             trigger: {
@@ -4942,6 +4967,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             lastDo: true,
                             async content(event, trigger, player) {
                                 trigger.num = Math.min(trigger.num / 10, 50);
+                                trigger.realnum = Math.min(trigger.num / 10, 50);
                             },
                             group: ['bosshp', 'bossfinish', 'HL_shengzhe_1'],
                             subSkill: {
@@ -5661,6 +5687,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 player.addMark('HL_A_zhi');
                                 trigger.num = 1;
+                                trigger.realnum = 1;
                             },
                             group: ['bosshp', 'bossfinish', 'HL_A_zhi_1'],
                             subSkill: {
@@ -6409,8 +6436,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (trigger.nature == 'fire') trigger.cancel();
                                 else {
                                     trigger.num--;
-                                    if (player.hp == player.maxHp) player.changeHujia();
-                                    else player.recover();
+                                    if (player.hp == player.maxHp) {
+                                        player.changeHujia();
+                                    }
+                                    else {
+                                        player.recover();
+                                    }
                                 }
                             },
                             ai: {
@@ -8366,7 +8397,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     return number0(player.getUseValue(card, null, true)) + 10;
                                                 }
                                             });
-                                        if (!result.bool) {
+                                        if (result?.bool) { }
+                                        else {
                                             game.log(player, '退出狂暴');
                                             player.HL_kuangbao = false;
                                             player.classList.remove('linked');
@@ -9706,6 +9738,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 王国
                         // 非精灵回复体力/获得护甲/摸牌/使用牌时,你执行相同操作
                         HL_wangguo: {
+                            _priority: 3,
                             trigger: {
                                 global: ['recoverEnd', 'changeHujiaEnd', 'drawEnd', 'useCardEnd'],
                             },
@@ -9778,6 +9811,267 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
+                        // 祂是深渊纪元,是深渊本身
+                        // 黑暗之刑
+                        // 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场(x为你体力上限)
+                        // 敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害
+                        HL_heianzhixing: {
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                player.storage.HL_heianzhixing_2 = 0;
+                                for (const npc of game.players) {
+                                    npc.storage.heianzhixing = 0;
+                                }
+                                if (HL.laleiye && HL.laleiye.isIn()) {
+
+                                }
+                                else {
+                                    HL.laleiye = player;
+                                }
+                                player.draw(player.maxHp);
+                                for (const npc of player.getEnemies()) {
+                                    await npc.damage(Math.ceil(player.maxHp / 4));
+                                }
+                                let num = Math.ceil(player.maxHp / 6);
+                                while (num-- > 0) {
+                                    player.addFellow('HL_lalaiyehuashen');
+                                }
+                            },
+                            group: ['bosshp', 'bossfinish', 'HL_heianzhixing_1', 'HL_heianzhixing_2'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['useCard'],
+                                    },
+                                    forced: true,
+                                    popup: false,
+                                    filter(event, player) {
+                                        return event.player.isEnemiesOf(player);
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.player.storage.heianzhixing_1 ??= 0;
+                                        trigger.player.storage.heianzhixing_1++;
+                                        if (trigger.player.storage.heianzhixing_1 > 2) {
+                                            trigger.player.storage.heianzhixing_1 = 0;
+                                            const {
+                                                result: { cards },
+                                            } = await trigger.player
+                                                .chooseCard(`交给${get.translation(player)}一半牌,否则被吸取一半体力上限与体力值`, 'he', Math.ceil(trigger.player.countCards('he') / 2))
+                                                .set('ai', (c) => 10 - get.value(c));
+                                            if (cards?.length) {
+                                                trigger.player.give(cards, player);
+                                            }
+                                            else {
+                                                game.log(player, '吸取', trigger.player, '体力上限与体力值');
+                                                const num = Math.ceil(trigger.player.maxHp / 2);
+                                                const num1 = Math.ceil(trigger.player.hp / 2);
+                                                trigger.player.maxHp -= num;
+                                                player.maxHp += num;
+                                                trigger.player.hp -= num1;
+                                                player.hp += num1;
+                                                trigger.player.update();
+                                                player.update();
+                                            }
+                                        }
+                                        trigger.player.storage.heianzhixing ??= 0;
+                                        trigger.player.storage.heianzhixing++;
+                                        if (trigger.player.storage.heianzhixing > player.maxHp) {
+                                            game.log(trigger.player, '使用牌数超出本轮限制');
+                                            trigger.parent.all_excluded = true;
+                                        }
+                                    },
+                                },
+                                2: {
+                                    init(player) {
+                                        player.storage.HL_heianzhixing_2 = 0;
+                                    },
+                                    trigger: {
+                                        player: ['damageBegin'],
+                                    },
+                                    forced: true,
+                                    mark: true,
+                                    intro: {
+                                        content: '本轮已受到#点伤害',
+                                    },
+                                    async content(event, trigger, player) {
+                                        const max = Math.floor(player.maxHp / 4);
+                                        const num = Math.min(trigger.num, max - player.storage.HL_heianzhixing_2);
+                                        player.storage.HL_heianzhixing_2 += num;
+                                        trigger.num = num;
+                                        trigger.realnum = num;
+                                        if (num < 1) {
+                                            trigger.cancel();
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 化身体力为2,限伤为1,始终处于潜行状态
+                        // 拉莱耶使用伤害牌后,你可以令此牌额外结算一次,且伤害翻倍
+                        // 拉莱耶受到伤害时,你代替其承担
+                        // <任意角色回合结束后/你受伤时/你死亡时>,你对所有敌方角色造成一点真实伤害
+                        HL_lalaiyehuashen: {
+                            trigger: {
+                                player: ['damageBegin4'],
+                            },
+                            forced: true,
+                            lastDo: true,
+                            filter(event, player) {
+                                return event.num > 1;
+                            },
+                            async content(event, trigger, player) {
+                                trigger.num = 1;
+                            },
+                            group: ['qianxing', 'HL_lalaiyehuashen_1', 'HL_lalaiyehuashen_2', 'HL_lalaiyehuashen_3', 'HL_lalaiyehuashen_4'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['useCard'],
+                                    },
+                                    filter(event, player) {
+                                        return event.player == HL.laleiye;
+                                    },
+                                    check(event, player) {
+                                        return event.player.isFriendsOf(player);
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.effectCount++;
+                                        trigger.baseDamage = numberq1(trigger.baseDamage) * 2;
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        global: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.player == HL.laleiye;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                        player.damage(1);
+                                    },
+                                },
+                                3: {
+                                    trigger: {
+                                        global: ['phaseEnd'],
+                                        player: ['dieBefore', 'damageBefore']
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        for (const npc of player.getEnemies()) {
+                                            await npc.zhenshang(1, player);
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        // 掌控终结
+                        // 当你每回合首次成为敌方角色牌的目标时,你令此牌无效,吸取来源一半体力上限与体力值,废除其一个装备栏
+                        // 每回合敌方角色首次摸牌后,你对其造成x/4点伤害
+                        HL_zhangkongzhongjie: {
+                            trigger: {
+                                target: ['useCardToPLayer'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.isEnemiesOf(player);
+                            },
+                            async content(event, trigger, player) {
+                                trigger.parent.all_excluded = true;
+                                game.log(player, '吸取', trigger.player, '体力上限与体力值');
+                                const num = Math.ceil(trigger.player.maxHp / 2);
+                                const num1 = Math.ceil(trigger.player.hp / 2);
+                                trigger.player.maxHp -= num;
+                                player.maxHp += num;
+                                trigger.player.hp -= num1;
+                                player.hp += num1;
+                                trigger.player.update();
+                                player.update();
+                                const list1 = [];
+                                let num2 = 6;
+                                while (num2-- > 1) {
+                                    if (!trigger.player.hasDisabledSlot(num2)) {
+                                        list1.push(num2);
+                                    }
+                                }
+                                if (list1.length) {
+                                    trigger.player.disableEquip(list1.randomGet());
+                                }
+                            },
+                            group: ['HL_zhangkongzhongjie_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['drawEnd'],
+                                    },
+                                    forced: true,
+                                    usable: 1,
+                                    filter(event, player) {
+                                        return event.player.isEnemiesOf(player);
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = Math.ceil(player.maxHp / 4);
+                                        trigger.player.damage(num);
+                                    },
+                                },
+                            },
+                        },
+                        // 深渊审判
+                        // 当你对敌方角色造成致命伤害时,你斩杀其,吸取其当前所有体力上限与生命值
+                        HL_shenyuanshenpan: {
+                            trigger: {
+                                source: ['damageBefore'],
+                            },
+                            firstDo: true,
+                            forced: true,
+                            filter(event, player) {
+                                return event.player.isEnemiesOf(player) && event.num >= event.player.hp;
+                            },
+                            async content(event, trigger, player) {
+                                const num1 = trigger.player.maxHp;
+                                const num2 = trigger.player.hp;
+                                trigger.player.qdie(player);
+                                player.maxHp += num1;
+                                player.hp += num2;
+                                player.update();
+                            },
+                        },
+                        // 秩序崩塌
+                        // 在第6轮之后的每轮开始时,你抽两张牌,用这两张牌与全场其他角色发起拼点,若你点数大于任意一方或任意拼点无法进行,则你斩杀全场
+                        HL_zhixubengta: {
+                            audio: 'ext:火灵月影/audio:true',
+                            trigger: {
+                                global: ['roundStart'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return game.roundNumber > 5;
+                            },
+                            async content(event, trigger, player) {
+                                let bool = false;
+                                const targets = game.players.filter((q) => q != player);
+                                if (targets.evert((q) => player.canCompare(q))) {
+                                    await player.chooseToCompare(targets).set('callback', async function (event, trigger, player) {
+                                        if (event.winner == player) {
+                                            bool = true;
+                                        }
+                                    });
+                                }
+                                else {
+                                    bool = true;
+                                }
+                                if (bool) {
+                                    for (const npc of player.getEnemies()) {
+                                        await npc.qdie(player);
+                                    }
+                                }
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -9790,6 +10084,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————拉莱耶化身 2勾玉
+                        HL_lalaiyehuashen: '拉莱耶化身',
+                        HL_lalaiyehuashen_info: '拉莱耶使用伤害牌后,你可以令此牌额外结算一次,且伤害翻倍<br>你拥有1限伤.拉莱耶受到伤害时,你代替其承担<br><任意角色回合结束后/你受伤时/你死亡时>,你对所有敌方角色造成一点真实伤害',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
+                        HL_lalaiye: '拉莱耶',
+                        HL_heianzhixing: '黑暗之刑',
+                        HL_heianzhixing_info: ' 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场(x为你体力上限)<br>敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害',
+                        HL_zhangkongzhongjie: '掌控终结',
+                        HL_zhangkongzhongjie_info: '当你每回合首次成为敌方角色牌的目标时,你令此牌无效,吸取来源一半体力上限与体力值,废除其一个装备栏<br>每回合敌方角色首次摸牌后,你对其造成x/4点伤害',
+                        HL_shenyuanshenpan: '深渊审判',
+                        HL_shenyuanshenpan_info: '当你对敌方角色造成致命伤害时,你斩杀其,吸取其当前所有体力上限与生命值',
+                        HL_zhixubengta: '秩序崩塌',
+                        HL_zhixubengta_info: '在第6轮之后的每轮开始时,你抽两张牌,用这两张牌与全场其他角色发起拼点,若你点数大于任意一方或任意拼点无法进行,则你斩杀全场',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————夜刀神十香 体力值10/10
                         HL_shixiang: '夜刀神十香',
                         HL_aosha: '鏖杀公',
