@@ -295,7 +295,7 @@ const kangxing1 = function () {
             },
             configurable: false,
         });
-        const list = ['button' /*武将包展示*/, 'selectable' /*可选择目标*/, 'selected' /*已选择目标*/, 'targeted' /*目标*/, 'selecting' /*正在选择目标*/, 'player' /*在场角色*/, 'fullskin' /*立绘*/, 'bossplayer' /*boss列表*/, 'highlight' /*高光*/, 'glow_phase' /*当前回合*/, 'd-skin' /*动皮下的静皮透明度*/, 'unseen', 'unseen2'/*隐匿将*/];
+        const list = ['button' /*武将包展示*/, 'selectable' /*可选择目标*/, 'selected' /*已选择目标*/, 'targeted' /*目标*/, 'selecting' /*正在选择目标*/, 'player' /*在场角色*/, 'fullskin' /*立绘*/, 'bossplayer' /*boss列表*/, 'highlight' /*高光*/, 'glow_phase' /*当前回合*/, 'd-skin' /*动皮下的静皮透明度*/, 'unseen', 'unseen2' /*隐匿将*/];
         let classlist = player.classList;
         Reflect.defineProperty(player, 'classList', {
             get() {
@@ -6431,8 +6431,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     trigger.num--;
                                     if (player.hp == player.maxHp) {
                                         player.changeHujia();
-                                    }
-                                    else {
+                                    } else {
                                         player.recover();
                                     }
                                 }
@@ -8390,8 +8389,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     return number0(player.getUseValue(card, null, true)) + 10;
                                                 }
                                             });
-                                        if (result?.bool) { }
-                                        else {
+                                        if (result?.bool) {
+                                        } else {
                                             game.log(player, '退出狂暴');
                                             player.HL_kuangbao = false;
                                             player.classList.remove('linked');
@@ -9824,9 +9823,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     npc.storage.heianzhixing = 0;
                                 }
                                 if (HL.laleiye && HL.laleiye.isIn()) {
-
-                                }
-                                else {
+                                } else {
                                     HL.laleiye = player;
                                 }
                                 player.draw(player.maxHp);
@@ -9858,13 +9855,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             trigger.player.storage.heianzhixing_1 = 0;
                                             const {
                                                 result: { cards },
-                                            } = await trigger.player
-                                                .chooseCard(`交给${get.translation(player)}一半牌,否则被吸取一半体力上限与体力值`, 'he', Math.ceil(trigger.player.countCards('he') / 2))
-                                                .set('ai', (c) => 10 - get.value(c));
+                                            } = await trigger.player.chooseCard(`交给${get.translation(player)}一半牌,否则被吸取一半体力上限与体力值`, 'he', Math.ceil(trigger.player.countCards('he') / 2)).set('ai', (c) => 10 - get.value(c));
                                             if (cards?.length) {
                                                 trigger.player.give(cards, player);
-                                            }
-                                            else {
+                                            } else {
                                                 game.log(player, '吸取', trigger.player, '体力上限与体力值');
                                                 const num = Math.ceil(trigger.player.maxHp / 2);
                                                 const num1 = Math.ceil(trigger.player.hp / 2);
@@ -9910,7 +9904,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 化身体力为2,限伤为1,始终处于潜行状态
-                        // 拉莱耶使用伤害牌后,你可以令此牌额外结算一次,且伤害翻倍
+                        // 拉莱耶使用牌后,你可以令此牌额外结算一次,且基础数值翻倍
                         // 拉莱耶受到伤害时,你代替其承担
                         // <任意角色回合结束后/你受伤时/你死亡时>,你对所有敌方角色造成一点真实伤害
                         HL_lalaiyehuashen: {
@@ -9958,7 +9952,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 3: {
                                     trigger: {
                                         global: ['phaseEnd'],
-                                        player: ['dieBefore', 'damageBefore']
+                                        player: ['dieBefore', 'damageBefore'],
                                     },
                                     forced: true,
                                     async content(event, trigger, player) {
@@ -10060,8 +10054,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             bool = true;
                                         }
                                     });
-                                }
-                                else {
+                                } else {
                                     bool = true;
                                 }
                                 if (bool) {
@@ -10085,7 +10078,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————拉莱耶化身 2勾玉
                         HL_lalaiyehuashen: '拉莱耶化身',
-                        HL_lalaiyehuashen_info: '拉莱耶使用伤害牌后,你可以令此牌额外结算一次,且伤害翻倍<br>你拥有1限伤.拉莱耶受到伤害时,你代替其承担<br><任意角色回合结束后/你受伤时/你死亡时>,你对所有敌方角色造成一点真实伤害',
+                        HL_lalaiyehuashen_info: '拉莱耶使用牌后,你可以令此牌额外结算一次,且基础数值翻倍<br>你拥有1限伤.拉莱耶受到伤害时,你代替其承担<br><任意角色回合结束后/你受伤时/你死亡时>,你对所有敌方角色造成一点真实伤害',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
                         HL_lalaiye: '拉莱耶',
                         HL_heianzhixing: '黑暗之刑',
