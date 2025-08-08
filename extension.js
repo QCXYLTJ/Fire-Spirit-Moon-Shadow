@@ -9811,7 +9811,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
                         // 祂是深渊纪元,是深渊本身
                         // 黑暗之刑
-                        // 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场,化身至多存在4个(x为你体力上限)
+                        // 每轮开始时,你摸x张牌,召唤x/6个化身登场(化身至多存在4个),对所有敌方角色造成x/4点伤害(x为你体力上限)
                         // 敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害
                         HL_heianzhixing: {
                             trigger: {
@@ -9828,14 +9828,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     HL.laleiye = player;
                                 }
                                 player.draw(Math.min(player.maxHp, 20));
-                                for (const npc of player.getEnemies()) {
-                                    await npc.damage(Math.ceil(player.maxHp / 4));
-                                }
                                 const num1 = game.players.filter((q) => q.name == 'HL_lalaiyehuashen').length;
                                 const num2 = Math.ceil(player.maxHp / 6);
                                 let num = Math.min(num2, 4 - num1);
                                 while (num-- > 0) {
                                     player.addFellow('HL_lalaiyehuashen');
+                                }
+                                for (const npc of player.getEnemies()) {
+                                    await npc.damage(Math.ceil(player.maxHp / 4));
                                 }
                             },
                             group: ['bosshp', 'bossfinish', 'HL_heianzhixing_1', 'HL_heianzhixing_2'],
@@ -10063,6 +10063,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         await npc.qdie(player);
                                     }
                                 }
+                                else {
+                                    player.success = true;
+                                    player.hp = 0;
+                                    player.die();
+                                }
                             },
                         },
                     },
@@ -10083,13 +10088,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————深渊之主拉莱耶 12勾玉
                         HL_lalaiye: '拉莱耶',
                         HL_heianzhixing: '黑暗之刑',
-                        HL_heianzhixing_info: ' 每轮开始时,你摸x张牌,对所有敌方角色造成x/4点伤害,召唤x/6个化身登场,化身至多存在4个(x为你体力上限)<br>敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害',
+                        HL_heianzhixing_info: '每轮开始时,你摸x张牌,召唤x/6个化身登场(化身至多存在4个),对所有敌方角色造成x/4点伤害(x为你体力上限)<br>敌方角色每轮最多可以使用x张牌,敌方角色每使用三张牌后须交给你一半牌,否则你吸取其一半体力上限与体力值,你每轮至多受到x/4点伤害',
                         HL_zhangkongzhongjie: '掌控终结',
                         HL_zhangkongzhongjie_info: '当你每回合首次成为敌方角色牌的目标时,你令此牌无效,吸取来源一半体力上限与体力值,废除其一个装备栏<br>每回合敌方角色首次摸牌后,你对其造成x/4点伤害',
                         HL_shenyuanshenpan: '深渊审判',
                         HL_shenyuanshenpan_info: '当你对敌方角色造成致命伤害时,你斩杀其,吸取其当前所有体力上限与生命值',
                         HL_zhixubengta: '秩序崩塌',
-                        HL_zhixubengta_info: '在第6轮之后的每轮开始时,你抽两张牌,用这两张牌与全场其他角色发起拼点,若你点数大于任意一方或任意拼点无法进行,则你斩杀全场',
+                        HL_zhixubengta_info: '在第6轮之后的每轮开始时,你抽两张牌,用这两张牌与全场其他角色发起拼点,若你点数大于任意一方或任意拼点无法进行,则你斩杀全场;否则你斩杀自己',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————夜刀神十香 体力值10/10
                         HL_shixiang: '夜刀神十香',
                         HL_aosha: '鏖杀公',
