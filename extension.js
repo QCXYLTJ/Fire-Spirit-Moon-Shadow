@@ -3723,7 +3723,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['changeHp', 'damageBefore'],
+                                        player: ['damageAfter'],
                                     },
                                     filter(event, player) {
                                         return player.hp < player.maxHp / 2 && !player.storage.HL_buyingcunzai_1;
@@ -3905,7 +3905,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             forced: true,
                             juexingji: true,
                             trigger: {
-                                player: ['changeHp', 'damageBefore'],
+                                player: ['damageAfter'],
                             },
                             filter(event, player) {
                                 return player.hp < 1 && !player.storage.HL_wuzhong;
@@ -4950,7 +4950,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['changeHp', 'damageBefore'],
+                                        player: ['damageAfter'],
                                     },
                                     forced: true,
                                     filter(event, player) {
@@ -5920,7 +5920,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 觉醒技,体力值低于一半时,你将武将牌替换为【至怒狂雷】
                         HL_A_zhuan: {
                             trigger: {
-                                player: ['changeHp', 'damageBefore'],
+                                player: ['damageAfter'],
                             },
                             _priority: 400,
                             forced: true,
@@ -6140,7 +6140,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 觉醒技,当你体力值不大于0时,将武将牌更换为【晨昏之眼】,并进行一个额外回合
                         HL_A_ce: {
                             trigger: {
-                                player: ['changeHp', 'damageBefore'],
+                                player: ['damageAfter'],
                             },
                             forced: true,
                             juexingji: true,
@@ -7244,7 +7244,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             subSkill: {
                                 1: {
                                     trigger: {
-                                        player: ['changeHp', 'damageBefore'],
+                                        player: ['damageAfter'],
                                     },
                                     forced: true,
                                     filter(event, player) {
