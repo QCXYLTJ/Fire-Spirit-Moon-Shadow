@@ -7977,6 +7977,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     },
                                 }); //扣减体力上限抗性
+                                Reflect.defineProperty(player, 'disabledSlots', {
+                                    get() {
+                                        return {};
+                                    },
+                                    set() { },
+                                }); //装备区废除抗性
                                 game.skangxing(player); //移除/赋空技能抗性
                                 // let skills = [];
                                 // Reflect.defineProperty(player, 'skills', {
@@ -8281,7 +8287,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 自愈
-                        // 当你累计成为过其他角色使用牌的目标五次后,你回复1点体力
+                        // 当你累计成为过牌的目标五次后,你回复1点体力
                         // 你回复体力时,若此回复溢出,将之转变为护甲
                         HL_ziyu: {
                             markimage: 'extension/火灵月影/image/HL_ziyu.png',
@@ -8335,7 +8341,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 狂暴
                         // 当你死亡前,若你处于狂暴状态则取消之
-                        // 否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
+                        // 否则你获取一张『终结技』,进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
                         // 清除所有【严厉】/【残酷】标记,并发动一次对应效果
                         // 狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍
                         // 若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1
@@ -8359,6 +8365,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } else {
                                     await player.canku();
                                     await player.yanli();
+                                    let card = get.cardPile((c) => c.name == 'HL_zhongjieji', 'field');
+                                    if (!card) {
+                                        card = game.createCard('HL_zhongjieji');
+                                    }
+                                    await player.gain(card, 'gain2');
                                     game.log(player, '进入狂暴');
                                     player.HL_kuangbao = true;
                                     player.classList.add('linked');
@@ -10061,6 +10072,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             },
                         },
+                        // 终结技
+                        // 此牌不因使用从你的手牌离开时,你获得之
+                        HL_zhongjieji: {
+                            trigger: {
+                                player: ['loseAfter'],
+                            },
+                            forced: true,
+                            filter(event, player) {
+                                return event.cards?.some((c) => c.name == 'HL_zhongjieji') && !['recast', 'gift'].includes(event.getParent(2).name) && !['useCard', 'respond', 'equip'].includes(event.parent.name);
+                            },
+                            async content(event, trigger, player) {
+                                const cards = trigger.cards.filter((c) => c.name == 'HL_zhongjieji');
+                                player.gain(cards, 'gain2');
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -10169,10 +10195,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_wufan_2: '残酷',
                         HL_wufan_2_info: '移除一名其他角色的全部技能,直到你的回合结束',
                         HL_ziyu: '自愈',
-                        HL_ziyu_info: '当你累计成为过其他角色使用牌的目标五次后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
+                        HL_ziyu_info: '当你累计成为过牌的目标五次后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         HL_ziyu_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">治愈之炎,无论多么严重的伤势都能快速愈合</b>',
                         HL_kuangbao: '狂暴',
-                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1',
+                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你获取一张『终结技』,进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1',
                         HL_kuangbao_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">来吧!我们还能继续厮杀!这是你所期盼的战斗!这是你所渴望的战争!</b>',
                         //————————————————————————————————————————————扑克
                         pukepai_duizi: '对子',
@@ -10555,6 +10581,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     name: '火灵月影',
                     connect: true,
                     card: {
+                        // 水弹
+                        // 回合限一次,你可以将一枚<水弹>转移给其他角色,不因此而失去<水弹>时,受到一点水属性伤害
                         shuidan: {
                             type: 'basic',
                             enable: true,
@@ -10651,6 +10679,36 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        // 终结技
+                        // 出牌阶段对一名其他角色使用,对其造成x点伤害(x为你的<燃>数+1),使用后你清除自身所有<燃>
+                        // 此牌不因使用从你的手牌离开时,你获得之
+                        HL_zhongjieji: {
+                            global: ['HL_zhongjieji'],
+                            type: 'basic',
+                            enable: true,
+                            filterTarget(card, player, target) {
+                                return target != player;
+                            },
+                            selectTarget: 1,
+                            async content(event, trigger, player) {
+                                const num = player.countMark('HL_zhuolan');
+                                await event.target.damage(num + 1);
+                                player.clearMark('HL_zhuolan');
+                            },
+                            ai: {
+                                order: 10,
+                                result: {
+                                    target: -2,
+                                },
+                                tag: {
+                                    damage: 1,
+                                },
+                                basic: {
+                                    useful: 1,
+                                    value: 5,
+                                },
+                            },
+                        },
                     },
                     translate: {
                         shuidan: '水弹',
@@ -10659,6 +10717,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         pukepai_info: '回合限一次,将一张扑克对一名其他角色使用,目标须与使用者轮番打出一张更大的扑克<br>直到某一方打出失败,此人受到1点伤害<br>对子<br>将两张同点数扑克对一名其他角色使用,目标须与使用者轮番打出两张更大的同点数扑克<br>直到某一方打出失败,此人受到1点伤害<br>炸弹<br>将四张同点数扑克对一名其他角色使用,对目标造成2点伤害<br>王炸<br>将大王小王对一名其他角色使用,对目标造成4点伤害,并且对目标相邻的角色造成一点伤害',
                         lejishengbei: '乐极生悲',
                         lejishengbei_info: '出牌阶段对自己使用,目标摸2张牌,将全场添加<乐极生悲>领域直到目标下个回合开始时或死亡',
+                        HL_zhongjieji: '终结技',
+                        HL_zhongjieji_info: '出牌阶段对一名其他角色使用,对其造成x点伤害(x为你的<燃>数+1),使用后你清除自身所有<燃><br>此牌不因使用从你的手牌离开时,你获得之',
                     },
                 };
                 for (const i in QQQ.card) {
@@ -10693,7 +10753,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             target: (player, target, card) => get.equipResult(player, target, card),
                         };
                     }
-                    info.image = `ext:火灵月影/image/${i}.jpg`;
+                    if (!info.image) {
+                        if (info.fullskin) {
+                            info.image = `ext:火灵月影/image/${i}.png`;
+                        } else {
+                            info.image = `ext:火灵月影/image/${i}.jpg`;
+                        }
+                    }
                     lib.inpile.add(i);
                     if (info.mode && !info.mode.includes(lib.config.mode)) continue;
                     lib.card.list.push([lib.suits.randomGet(), lib.number.randomGet(), i]);

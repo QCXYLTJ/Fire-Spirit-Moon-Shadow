@@ -87,7 +87,7 @@ body>#window>#arena>.player.fullskin.dead.qinli>.avatar {
     filter: none;
     -webkit-filter: none;
     transform: none !important;
-    background-image: url(./image/qinli_dead.png) !important;
+    background-image: url(./image/qinli_dead.jpg) !important;
     /*import才能覆盖内联样式原背景图*/
 }
 
