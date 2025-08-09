@@ -2455,6 +2455,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     return this;
                 }; //引入mp4新逻辑
                 HTMLElement.prototype.setBackgroundMp4 = function (src) {
+                    if (this.qvideo) {
+                        this.qvideo.remove();
+                    }
                     const video = document.createElement('video');
                     video.src = src;
                     video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
@@ -2464,6 +2467,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     video.addEventListener('error', function () {
                         video.remove();
                     });
+                    this.qvideo = video;
                     return video;
                 }; //给父元素添加一个覆盖的背景mp4
                 game.charactersrc = function (name) {
@@ -4124,97 +4128,77 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             filterTarget: true,
                             selectTarget: 1,
                             async content(event, trigger, player) {
-                                const skill = event.target.GS();
-                                game.expandSkills(skill);
-                                for (const x of skill) {
-                                    Reflect.defineProperty(lib.skill, x, {
+                                const cs = function (player) {
+                                    const skill = player.GS();
+                                    game.expandSkills(skill);
+                                    for (const x of skill) {
+                                        Reflect.defineProperty(lib.skill, x, {
+                                            get() {
+                                                return {};
+                                            },
+                                            set() { },
+                                        });
+                                    }
+                                    for (const key in lib.hook) {
+                                        if (key.startsWith(player.playerid)) {
+                                            Reflect.defineProperty(lib.hook, key, {
+                                                get() {
+                                                    return [];
+                                                },
+                                                set() { },
+                                            });
+                                        }
+                                    }
+                                    for (const hook in lib.hook.globalskill) {
+                                        if (lib.hook.globalskill[hook].some((q) => skill.includes(q))) {
+                                            Reflect.defineProperty(lib.hook.globalskill, hook, {
+                                                get() {
+                                                    return [];
+                                                },
+                                                set() { },
+                                            });
+                                        }
+                                    }
+                                    Reflect.defineProperty(player, 'skills', {
+                                        get() {
+                                            return [];
+                                        },
+                                        set() { },
+                                    });
+                                    Reflect.defineProperty(player, 'invisibleSkills', {
+                                        get() {
+                                            return [];
+                                        },
+                                        set() { },
+                                    });
+                                    Reflect.defineProperty(player, 'hiddenSkills', {
+                                        get() {
+                                            return [];
+                                        },
+                                        set() { },
+                                    });
+                                    Reflect.defineProperty(player, 'tempSkills', {
                                         get() {
                                             return {};
                                         },
                                         set() { },
                                     });
-                                }
-                                for (const key in lib.hook) {
-                                    if (key.startsWith(event.target.playerid)) {
-                                        Reflect.defineProperty(lib.hook, key, {
-                                            get() {
-                                                return [];
-                                            },
-                                            set() { },
-                                        });
-                                    }
-                                }
-                                for (const hook in lib.hook.globalskill) {
-                                    if (lib.hook.globalskill[hook].some((q) => skill.includes(q))) {
-                                        Reflect.defineProperty(lib.hook.globalskill, hook, {
-                                            get() {
-                                                return [];
-                                            },
-                                            set() { },
-                                        });
-                                    }
-                                }
-                                Reflect.defineProperty(event.target, 'skills', {
-                                    get() {
-                                        return [];
-                                    },
-                                    set() { },
-                                });
-                                Reflect.defineProperty(event.target, 'invisibleSkills', {
-                                    get() {
-                                        return [];
-                                    },
-                                    set() { },
-                                });
-                                Reflect.defineProperty(event.target, 'hiddenSkills', {
-                                    get() {
-                                        return [];
-                                    },
-                                    set() { },
-                                });
-                                Reflect.defineProperty(event.target, 'tempSkills', {
-                                    get() {
-                                        return {};
-                                    },
-                                    set() { },
-                                });
-                                Reflect.defineProperty(event.target, 'additionalSkills', {
-                                    get() {
-                                        return new Proxy(
-                                            {},
-                                            {
-                                                get(u, i) {
-                                                    return [];
-                                                },
-                                            }
-                                        );
-                                    },
-                                    set() { },
-                                });
-                                if (game.players.includes(event.target)) {
-                                    const index = game.players.indexOf(event.target);
-                                    game.players.splice(index, 1);
-                                } //如果这两步合成一步,那么修改的数组就是上一次getter的数组而不是game.players,导致修改失败
-                                if (!game.dead.includes(event.target)) {
-                                    game.dead.unshift(event.target);
-                                }
-                                let class1 = window.Element.prototype.getAttribute.call(event.target, 'class');
-                                window.Element.prototype.setAttribute.call(event.target, 'class', (class1 += ' dead'));
-                                if (lib.element.player.dieAfter) {
-                                    lib.element.player.dieAfter.call(event.target);
-                                }
-                                if (lib.element.player.dieAfter2) {
-                                    lib.element.player.dieAfter2.call(event.target);
-                                }
-                                lib.element.player.$die.call(event.target);
-                                const stat = player.stat;
-                                const statx = stat[stat.length - 1];
-                                if (!statx.kill) {
-                                    statx.kill = 1;
-                                } else {
-                                    statx.kill++;
-                                }
-                                game.log(event.target, '被', player, '杀害');
+                                    Reflect.defineProperty(player, 'additionalSkills', {
+                                        get() {
+                                            return new Proxy(
+                                                {},
+                                                {
+                                                    get(u, i) {
+                                                        return [];
+                                                    },
+                                                }
+                                            );
+                                        },
+                                        set() { },
+                                    });
+                                };
+                                cs(event.target);
+                                event.target.qdie(player);
                             },
                             ai: {
                                 order: 99,
@@ -6241,7 +6225,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             selectCard: 2,
                             position: 'he',
                             async content(event, trigger, player) {
-                                player.classList.remove('linked', 'turnedover');
+                                player.classList.remove('linked', 'linked2', 'turnedover');
                                 player.gainMaxHp(3);
                                 player.recover(3);
                                 player.draw(7);
@@ -8378,6 +8362,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     game.log(player, '进入狂暴');
                                     player.HL_kuangbao = true;
                                     player.classList.add('linked');
+                                    player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/qinli_kuangbao.mp4`);
                                     let bool = true;
                                     while (player.HL_kuangbao) {
                                         const { result } = await player
@@ -8391,19 +8376,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             });
                                         if (result?.bool) {
                                         } else {
-                                            game.log(player, '退出狂暴');
                                             player.HL_kuangbao = false;
-                                            player.classList.remove('linked');
                                             bool = false;
-                                        }
-                                    }
+                                        }//无牌可出退出狂暴
+                                    }//狂暴中
+                                    game.log(player, '退出狂暴');
+                                    player.classList.remove('linked');
+                                    player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/HL_qinli.webm`);
                                     player.clearMark('HL_kuangbao_2');
                                     if (bool) {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3, 4].randomGet()}.mp3`);
                                         trigger.cancel();
                                         player.hp = Math.max(1, player.hp);
                                         player.update();
-                                    }
+                                    }//恢复正常
+                                    else {
+                                        player.node.avatar.qvideo?.remove();
+                                    }//死亡cg
                                 }
                             },
                             group: ['HL_kuangbao_1', 'HL_kuangbao_2', 'HL_kuangbao_3'],
@@ -8417,10 +8406,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return event.player.isEnemiesOf(player, true) && player.HL_kuangbao;
                                     },
                                     async content(event, trigger, player) {
-                                        game.log(player, '退出狂暴');
                                         player.HL_kuangbao = false;
-                                        player.classList.remove('linked');
-                                    },
+                                    },//杀敌退出狂暴
                                 },
                                 2: {
                                     trigger: {
@@ -9709,19 +9696,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_shifan_1'],
                             subSkill: {
                                 1: {
-                                    trigger: {
-                                        player: ['useCard'],
-                                    },
-                                    forced: true,
                                     markimage: 'extension/火灵月影/image/HL_shifan_1.png',
                                     intro: {
                                         content(storage) {
                                             return `下${10 - storage}张牌触发额外结算`;
                                         },
                                     },
+                                    trigger: {
+                                        player: ['useCard'],
+                                    },
+                                    forced: true,
                                     async content(event, trigger, player) {
                                         player.addMark('HL_shifan_1');
-                                        if (player.storage.HL_shifan_1 > 9) {
+                                        if (player.storage.HL_shifan_1 > 9 && trigger.targets?.length && !['equip', 'delay'].includes(get.type(trigger.card))) {
                                             player.clearMark('HL_shifan_1');
                                             trigger.effectCount++;
                                             game.playAudio(`../extension/火灵月影/audio/shifan_1${[1, 2].randomGet()}.mp3`);
@@ -9932,7 +9919,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         global: ['useCard'],
                                     },
                                     filter(event, player) {
-                                        return event.player == HL.laleiye;
+                                        return event.player == HL.laleiye && event.targets?.length && !['equip', 'delay'].includes(get.type(event.card));
                                     },
                                     check(event, player) {
                                         return event.player.isFriendsOf(player);
