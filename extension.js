@@ -492,7 +492,7 @@ const kangxing1 = function () {
             return new Proxy(allskill, {
                 get(u, i) {
                     if (i in kskill) {
-                        return Object.assign({}, kskill[i]);
+                        return deepClone(kskill[i]);//不能用直接assign,防止kskill子属性trigger里的数组被修改
                     }
                     return u[i];
                 },
@@ -749,10 +749,13 @@ const kangxing2 = function () {
                         game.HL_mp4('HL_李白');
                     } //李白动画
                 },
-                trigger: {
-                    player: ['changeHp'],
-                    global: ['roundStart'],
+                get trigger() {
+                    return {
+                        player: ['changeHp'],
+                        global: ['roundStart'],
+                    };
                 },
+                set trigger(v) { },
                 forced: true,
                 usable: 2, //AAA
                 audio: 'ext:火灵月影/audio:32',
@@ -913,9 +916,10 @@ const kangxing2 = function () {
                             };
                         }
                         return {
-                            [namex]: game.triggerlist[namex],
+                            [namex]: game.triggerlist[namex].slice(),
                         };
                     },
+                    set trigger(v) { },
                     forced: true,
                     popup: false,
                     filter(event, player, namey) {
@@ -1605,6 +1609,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             game.nkangxing(game.boss, game.boss.name);
                             game.skangxing(game.boss);
                             game.boss.bosskangxing = true;
+                            game.sort();
                         },
                     };
                 }
@@ -1670,6 +1675,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         game.nkangxing(game.boss, name);
                         game.skangxing(game.boss, skills);
                         game.boss.bosskangxing = true;
+                        game.sort();
                     },
                 };
                 lib.skill._HL_libai_boss = {
@@ -1709,6 +1715,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         game.nkangxing(game.boss, 'HL_libai1');
                         game.skangxing(game.boss);
                         game.boss.bosskangxing = true;
+                        game.sort();
                     },
                 };
             }
@@ -3284,6 +3291,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             isBoss: true,
                             isBossAllowed: true,
                         },
+                        HL_dihuanglong: {
+                            sex: 'male',
+                            hp: 9,
+                            maxHp: 9,
+                            hujia: 33550336,
+                            skills: ['HL_shenwangquanneng', 'HL_longxiaojiutian', 'HL_dihuanglonghou', 'HL_shenshiqianban'],
+                            trashBin: [`ext:火灵月影/image/HL_dihuanglong.png`],
+                            isBoss: true,
+                            isBossAllowed: true,
+                        },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————普通
                         HL_kuilei: {
                             sex: 'female',
@@ -3525,6 +3542,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jielv: `<b style='color:rgba(197, 209, 209, 1); font-size: 25px;'>太初弈无终</b>`,
                         HL_qinli: `<b style='color:rgba(230, 87, 21, 1); font-size: 25px;'>Efreet</b>`,
                         HL_lalaiye: `<b style='color:rgba(94, 21, 230, 1); font-size: 25px;'>深渊之主</b>`,
+                        HL_dihuanglong: `<b style='color:rgba(216, 213, 16, 1); font-size: 25px;'>万世龙尊</b>`,
                     },
                     skill: {
                         //————————————————————————————————————————————扑克
@@ -10106,6 +10124,320 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.gain(cards, 'gain2');
                             },
                         },
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————
+                        // 万世龙尊·帝皇龙    势力:龙   血量/上限/护甲:9/9/33550336
+                        // 神王权能
+                        // ①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次
+                        // ②全场其他角色的手牌数不得超过自身体力值.若有角色手牌数为全场最少,则令其他角色将手牌数弃置至与该角色相同
+                        // ③当有角色进行额外回合时取消之
+                        HL_shenwangquanneng: {
+                            trigger: {
+                                global: ['phaseBegin'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                trigger.phaseList = ['phaseZhunbei', 'phaseJudge', 'phaseDraw', 'phaseUse', 'phaseDiscard', 'phaseJieshu'].randomSort();
+                                const players = game.players.slice();
+                                for (let i = players.length - 1; i > 0; i--) {
+                                    const j = Math.floor(Math.random() * (i + 1));
+                                    [players[i], players[j]] = [players[j], players[i]];
+                                }// Fisher-Yates 算法洗牌
+                                players.forEach((player, index) => {
+                                    player.dataset.position = index;
+                                });
+                                game.sort();
+                            },
+                            group: ['HL_shenwangquanneng_1', 'HL_shenwangquanneng_2'],
+                            subSkill: {
+                                1: {
+                                    _priority: 34,
+                                    trigger: {
+                                        global: ['gainBefore', 'loseEnd'],
+                                    },
+                                    forced: true,
+                                    filter(event, player, name) {
+                                        const min = Math.min(...game.players.map((q) => q.countCards('h')));
+                                        if (name == 'loseEnd') {
+                                            return game.players.some((q) => q.countCards('h') > min && q != player);
+                                        }
+                                        return event.cards?.length && event.player.countCards('h') + event.cards.length > min && event.player != player;
+                                    },
+                                    async content(event, trigger, player) {
+                                        if (trigger.name == 'lose') {
+                                            const min = Math.min(...game.players.map((q) => q.countCards('h')));
+                                            for (const npc of game.players.filter((q) => q.countCards('h') > min && q != player)) {
+                                                await npc.chooseToDiscard(`将手牌数弃置至${min}`, 'h', npc.countCards('h') - min, true);
+                                            }
+                                        }
+                                        else {
+                                            trigger.cancel();
+                                        }
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        global: ['phaseBefore'],
+                                    },
+                                    forced: true,
+                                    firstDo: true,
+                                    filter(event, player) {
+                                        return event.parent.name != 'phaseLoop' || event.skill;
+                                    },
+                                    async content(event, trigger, player) {
+                                        game.log(player, '被禁止进行额外回合');
+                                        trigger.cancel(); //抢的回合取消就不需要更新轮数了
+                                    },
+                                },
+                            },
+                        },
+                        // 龙啸九天
+                        // ①你拥有护甲值后二位数的限伤.每轮结束时,重置你的护甲数至游戏开始时
+                        // ②你免疫除普通【杀】以外所有伤害
+                        // ③当你未进入濒死状态而即将死亡时,取消之斩杀来源
+                        HL_longxiaojiutian: {
+                            init(player) {
+                                const info = lib.character[player.name];
+                                let maxhp = Math.max(info.maxHp, player.maxHp);
+                                Reflect.defineProperty(player, 'maxHp', {
+                                    get() {
+                                        return maxhp;
+                                    },
+                                    set(value) {
+                                        if (value > maxhp) {
+                                            maxhp = value;
+                                        }
+                                    },
+                                }); //扣减体力上限抗性
+                                let qhp = Math.max(info.hp, player.hp);
+                                Reflect.defineProperty(player, 'hp', {
+                                    get() {
+                                        return qhp;
+                                    },
+                                    set(value) {
+                                        if (value > qhp) {
+                                            qhp = value;
+                                        } else {
+                                            if (player.success && player.hujia < 1) {
+                                                qhp = value;
+                                            }
+                                        }
+                                    },
+                                });
+                                let qhujia = Math.max(info.hujia, player.hujia);
+                                Reflect.defineProperty(player, 'hujia', {
+                                    get() {
+                                        return qhujia;
+                                    },
+                                    set(value) {
+                                        if (value > qhujia) {
+                                            qhujia = value;
+                                        } else {
+                                            if (player.success) {
+                                                qhujia = value;
+                                            }
+                                        }
+                                    },
+                                });
+                                Reflect.defineProperty(player, 'skipList', {
+                                    get() {
+                                        return [];
+                                    },
+                                    set() { },
+                                });
+                            },
+                            trigger: {
+                                player: ['damageEnd'],
+                            },
+                            firstDo: true,
+                            forced: true,
+                            popup: false,
+                            charlotte: true,
+                            fixed: true,
+                            kangxing: true,
+                            filter(event, player) {
+                                return event.num > 0;
+                            },
+                            async content(event, trigger, player) {
+                                player.success = true;
+                                const num = trigger.realnum ? trigger.realnum : trigger.num;
+                                if (player.hujia > 0) {
+                                    player.hujia -= num;
+                                } else {
+                                    player.hp -= num;
+                                }
+                                player.update();
+                                player.success = false;
+                            },
+                            group: ['HL_longxiaojiutian_1', 'HL_longxiaojiutian_2', 'HL_longxiaojiutian_3', 'HL_longxiaojiutian_4'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        player: ['damageBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        if (event.cards?.length == 1 && event.card?.name == 'sha') {
+                                            const card = event.cards[0];
+                                            if (card.name == 'sha' && !card.nature && !event.nature && !event.card.nature) {
+                                                return false;
+                                            }
+                                        }
+                                        return true;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                    },
+                                },
+                                2: {
+                                    trigger: {
+                                        player: ['damageBegin4'],
+                                    },
+                                    forced: true,
+                                    lastDo: true,
+                                    filter(event, player) {
+                                        return event.num > Math.floor(player.hujia % 100);
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.num = Math.floor(player.hujia % 100);
+                                        trigger.realnum = Math.floor(player.hujia % 100);
+                                    },
+                                },
+                                3: {
+                                    trigger: {
+                                        global: ['roundStart'],
+                                    },
+                                    forced: true,
+                                    async content(event, trigger, player) {
+                                        const info = lib.character[player.name];
+                                        player.hujia = Math.max(info?.maxHp, player.maxHp);
+                                    },
+                                },
+                                4: {
+                                    trigger: {
+                                        player: ['dieBefore'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        if (event.parent?.name == 'dying' && player.hp <= 0) {
+                                            return false;
+                                        }
+                                        return true;
+                                    },
+                                    async content(event, trigger, player) {
+                                        trigger.cancel();
+                                        let players = player.getEnemies();
+                                        if (trigger.source?.isEnemiesOf(player)) {
+                                            players = [trigger.source];
+                                        }
+                                        for (const npc of players) {
+                                            await npc.qdie(player);
+                                        }
+                                    },
+                                },
+                            }
+                        },
+                        // 帝皇龙吼
+                        // 当一张牌名的牌累计进入弃牌堆三次后,你令所有敌方角色进行一次濒死结算
+                        // 若其脱离濒死状态,则其选择一张牌保留,随后弃置其剩余所有牌
+                        HL_dihuanglonghou: {
+                            init(player) {
+                                player.storage.HL_dihuanglonghou = {};
+                            },
+                            trigger: {
+                                global: ['loseAfter'],
+                            },
+                            forced: true,
+                            popup: false,
+                            filter(event, player) {
+                                return event.cards?.some((c) => get.position(c) == 'd');
+                            },
+                            async content(event, trigger, player) {
+                                for (const card of trigger.cards.filter((c) => get.position(c) == 'd')) {
+                                    player.storage.HL_dihuanglonghou[card.name] ??= 0;
+                                    player.storage.HL_dihuanglonghou[card.name]++;
+                                    if (player.storage.HL_dihuanglonghou[card.name] > 2) {
+                                        player.storage.HL_dihuanglonghou[card.name] = 0;
+                                        for (const npc of player.getEnemies()) {
+                                            await npc.dyingResult();
+                                            const allcards = npc.getCards('he');
+                                            if (npc.isAlive() && allcards.length) {
+                                                const {
+                                                    result: { cards },
+                                                } = await npc.chooseCard('选择一张牌保留', 'he', true)
+                                                    .set('ai', (c) => get.value(c));
+                                                if (cards?.length) {
+                                                    allcards.remove(cards[0]);
+                                                }
+                                                await npc.discard(allcards);
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                        },
+                        // 神识牵绊
+                        // ①你受到伤害后,展示牌堆顶伤害值三倍的牌,将其中任意张牌标为<鳞>随机置于牌堆中,获得其余牌
+                        // ②当一名角色获得<鳞>后,你选择一项『令其受到X点雷电伤害/令其获得X点护甲』(X为此次获得的<鳞>数)
+                        HL_shenshiqianban: {
+                            trigger: {
+                                player: ['damageAfter'],
+                            },
+                            forced: true,
+                            async content(event, trigger, player) {
+                                const num = Math.min(30, 3 * numberq1(trigger.num));
+                                const cards = get.cards(3);
+                                await player.showCards(cards);
+                                const {
+                                    result: { links },
+                                } = await player
+                                    .chooseButton(['将其中任意张牌标为<鳞>随机置于牌堆中,获得其余牌', cards])
+                                    .set('ai', (button) => 6 - get.value(button.link));
+                                if (links?.length) {
+                                    for (const card of links) {
+                                        card.addGaintag('HL_shenshiqianban');
+                                        cards.remove(card);
+                                    }
+                                    player.gain(cards, 'gain2');
+                                }
+                            },
+                            group: ['HL_shenshiqianban_1'],
+                            subSkill: {
+                                1: {
+                                    trigger: {
+                                        global: ['gainAfter'],
+                                    },
+                                    forced: true,
+                                    filter(event, player) {
+                                        return event.cards?.some((c) => c.gaintag?.includes('HL_shenshiqianban'));
+                                    },
+                                    async content(event, trigger, player) {
+                                        const num = trigger.cards.filter((c) => c.gaintag?.includes('HL_shenshiqianban')).length;
+                                        const controllist = ['选项一', '选项二'];
+                                        const choiceList = [`受到${num}点雷电伤害`, `获得${num}点护甲`];
+                                        const {
+                                            result: { index },
+                                        } = await player
+                                            .chooseControl(controllist)
+                                            .set('prompt', `令${get.translation(trigger.player)}执行一项`)
+                                            .set('choiceList', choiceList)
+                                            .set('ai', function (event, player) {
+                                                if (trigger.player.isEnemiesOf(player)) {
+                                                    return '选项一';
+                                                }
+                                                return '选项二';
+                                            });
+                                        switch (index) {
+                                            case 0:
+                                                trigger.player.damage(num, 'thunder');
+                                                break;
+                                            case 1:
+                                                trigger.player.changeHujia(num);
+                                                break;
+                                        }
+                                    },
+                                },
+                            },
+                        },
                     },
                     translate: {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -10118,6 +10450,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL__info: '',
                         HL_: '',
                         HL__info: '',
+                        //——————————————————————————————————————————————————————————————————————————————————————————————————帝皇龙
+                        HL_dihuanglong: '帝皇龙',
+                        HL_shenwangquanneng: '神王权能',
+                        HL_shenwangquanneng_info: '①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次<br>②全场其他角色的手牌数不得超过自身体力值.若有角色手牌数为全场最少,则令其他角色将手牌数弃置至与该角色相同<br>③当有角色进行额外回合时取消之',
+                        HL_longxiaojiutian: '龙啸九天',
+                        HL_longxiaojiutian_info: '①你拥有护甲值后二位数的限伤.每轮结束时,重置你的护甲数至游戏开始时<br>②你免疫除普通【杀】以外所有伤害<br>③当你未进入濒死状态而即将死亡时,取消之斩杀来源',
+                        HL_dihuanglonghou: '帝皇龙吼',
+                        HL_dihuanglonghou_info: '当一张牌名的牌累计进入弃牌堆三次后,你令所有敌方角色进行一次濒死结算<br>若其脱离濒死状态,则其选择一张牌保留,随后弃置其剩余所有牌',
+                        HL_shenshiqianban: '神识牵绊',
+                        HL_shenshiqianban_info: '①你受到伤害后,展示牌堆顶伤害值三倍的牌,将其中任意张牌标为<鳞>随机置于牌堆中,获得其余牌<br>②当一名角色获得<鳞>后,你选择一项『令其受到X点雷电伤害/令其获得X点护甲』(X为此次获得的<鳞>数)',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————拉莱耶化身 2勾玉
                         HL_lalaiyehuashen: '拉莱耶化身',
                         HL_lalaiyehuashen_info: '拉莱耶使用牌后,你可以令此牌额外结算一次,且基础数值翻倍<br>你拥有1限伤.拉莱耶受到伤害时,你代替其承担<br><任意角色回合结束后/你受伤时/你死亡时>,你对所有敌方角色造成一点真实伤害',
