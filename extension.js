@@ -8344,7 +8344,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 狂暴
                         // 当你死亡前,若你处于狂暴状态则取消之
-                        // 否则你获取一张『终结技』,进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
+                        // 否则你获取一张点数为5的『终结技』,进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀
                         // 清除所有【严厉】/【残酷】标记,并发动一次对应效果
                         // 狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍
                         // 若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1
@@ -8369,9 +8369,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 } else {
                                     await player.canku();
                                     await player.yanli();
-                                    let card = get.cardPile((c) => c.name == 'HL_zhongjieji', 'field');
+                                    let card = get.cardPile((c) => c.name == 'HL_zhongjieji' && c.number == 5, 'field');
                                     if (!card) {
-                                        card = game.createCard('HL_zhongjieji');
+                                        card = game.createCard('HL_zhongjieji', lib.suits.randomGet(), 5);
                                     }
                                     await player.gain(card, 'gain2');
                                     game.log(player, '进入狂暴');
@@ -10217,7 +10217,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_ziyu_info: '当你累计成为过牌的目标五次后,你回复1点体力<br>你回复体力时,若此回复溢出,将之转变为护甲',
                         HL_ziyu_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">治愈之炎,无论多么严重的伤势都能快速愈合</b>',
                         HL_kuangbao: '狂暴',
-                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你获取一张『终结技』,进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1',
+                        HL_kuangbao_info: '当你死亡前,若你处于狂暴状态则取消之<br>否则你获取一张点数为5的『终结技』,进入狂暴状态,直至无伤害牌可出或任意敌方被你击杀<br>清除所有【严厉】/【残酷】标记,并发动一次对应效果<br>狂暴状态下,你只可使用伤害牌.每使用一张伤害牌,下一次造成的伤害翻倍<br>若有敌方被你击杀,你取消你的死亡结算,将体力至少回复至1',
                         HL_kuangbao_append: '<b style="color:rgba(230, 87, 21, 1); font-size: 15px;">来吧!我们还能继续厮杀!这是你所期盼的战斗!这是你所渴望的战争!</b>',
                         //————————————————————————————————————————————扑克
                         pukepai_duizi: '对子',
