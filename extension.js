@@ -8090,6 +8090,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     firstDo: true,
                                     async content(event, trigger, player) {
+                                        game.log(player, '将火焰伤害转为回复');
                                         trigger.setContent(async function (event, trigger, player) {
                                             await event.trigger('damageBegin1');
                                             await event.trigger('damageBegin2');
@@ -8136,6 +8137,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         for (const npc of game.players.filter((q) => q.countMark('HL_zhuolan') && q != trigger.player)) {
                                             npc.removeMark('HL_zhuolan');
+                                            game.log(npc, '被', trigger.player, '牵连而受到火焰伤害');
                                             await npc.damage(trigger.num, 'fire', 'nosource');
                                         }
                                     },
@@ -8176,6 +8178,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     .set('filterCard', (c) => get.color(c) != get.color(trigger.card) || c.suit == trigger.card.suit)
                                     .set('ai', (c) => -get.effect(player, trigger.card, trigger.player, player) - get.value(c));
                                 if (cards && cards[0]) {
+                                    game.log(player, '无效了', trigger.card);
                                     game.playAudio(`../extension/火灵月影/audio/qinli_jiaozhan${[1, 2, 3].randomGet()}.mp3`);
                                     trigger.parent.all_excluded = true;
                                     if (cards[0].suit == trigger.card.suit && trigger.cards?.length) {
@@ -8389,8 +8392,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         } else {
                                             player.HL_kuangbao = false;
                                             bool = false;
-                                        }//无牌可出退出狂暴
-                                    }//狂暴中
+                                        } //无牌可出退出狂暴
+                                    } //狂暴中
                                     game.log(player, '退出狂暴');
                                     player.classList.remove('linked');
                                     player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/HL_qinli.webm`);
@@ -8400,10 +8403,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         trigger.cancel();
                                         player.hp = Math.max(1, player.hp);
                                         player.update();
-                                    }//恢复正常
+                                    } //恢复正常
                                     else {
                                         player.node.avatar.qvideo?.remove();
-                                    }//死亡cg
+                                    } //死亡cg
                                 }
                             },
                             group: ['HL_kuangbao_1', 'HL_kuangbao_2', 'HL_kuangbao_3'],
@@ -8418,7 +8421,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         player.HL_kuangbao = false;
-                                    },//杀敌退出狂暴
+                                    }, //杀敌退出狂暴
                                 },
                                 2: {
                                     trigger: {
@@ -10075,6 +10078,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 终结技
                         // 此牌不因使用从你的手牌离开时,你获得之
                         HL_zhongjieji: {
+                            mod: {
+                                canBeGained(card, source, player) {
+                                    if (card.name == 'HL_zhongjieji') return false;
+                                },
+                                canBeDiscarded(card, source, player) {
+                                    if (card.name == 'HL_zhongjieji') return false;
+                                },
+                                canBeReplaced(card, player) {
+                                    if (card.cards?.some((c) => c.name == 'HL_zhongjieji')) return false;
+                                }, //这里是vcard
+                                cardDiscardable(card, player) {
+                                    if (card.name == 'HL_zhongjieji') return false;
+                                },
+                            },
                             trigger: {
                                 player: ['loseAfter'],
                             },
