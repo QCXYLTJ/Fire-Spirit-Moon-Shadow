@@ -10309,7 +10309,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     async content(event, trigger, player) {
                                         const info = lib.character[player.name];
-                                        player.hujia = Math.max(info?.maxHp, player.maxHp);
+                                        player.hujia = Math.max(info?.hujia, player.hujia);
                                     },
                                 },
                                 4: {
