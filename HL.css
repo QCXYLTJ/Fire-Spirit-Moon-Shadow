@@ -91,16 +91,6 @@ body>#window>#arena>.player.fullskin.dead.qinli>.avatar {
     /*import才能覆盖内联样式原背景图*/
 }
 
-/* 琴里正常状态 */
-body>#window>#arena>.player.fullskin.qinli:not(.dead)>.avatar {
-    background-image: url(./image/HL_qinli.png);
-}
-
-/* 琴里狂暴横置 */
-body>#window>#arena>.player.fullskin.qinli.linked>.avatar {
-    background-image: url(./image/qinli_link.jpg) !important;
-}
-
 /* 天气按钮 */
 body>.tqjs {
     right: 10%;

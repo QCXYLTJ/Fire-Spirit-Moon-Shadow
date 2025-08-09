@@ -8362,6 +8362,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             audio: 'ext:火灵月影/audio:3',
                             forced: true,
                             async content(event, trigger, player) {
+                                const avatar = player.node.avatar;
                                 if (player.HL_kuangbao) {
                                     game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3].randomGet()}.mp3`);
                                     trigger.cancel();
@@ -8376,13 +8377,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     game.log(player, '进入狂暴');
                                     player.HL_kuangbao = true;
                                     player.classList.add('linked');
-                                    player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/qinli_kuangbao.mp4`);
+                                    avatar.setBackgroundImage(`extension/火灵月影/mp4/qinli_kuangbao.mp4`);
+                                    avatar.qvideo.style.objectFit = 'contain';
                                     let bool = true;
                                     while (player.HL_kuangbao) {
                                         const { result } = await player
                                             .chooseToUse()
                                             .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
-                                            .set('filterTarget', (c, p, t) => t != p)
+                                            .set('filterTarget', (c, p, t) => true)//可以对自己用伤害牌
                                             .set('ai1', (card, arg) => {
                                                 if (lib.card[card.name]) {
                                                     return number0(player.getUseValue(card, null, true)) + 10;
@@ -8396,7 +8398,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     } //狂暴中
                                     game.log(player, '退出狂暴');
                                     player.classList.remove('linked');
-                                    player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/HL_qinli.webm`);
+                                    avatar.setBackgroundImage(`extension/火灵月影/mp4/HL_qinli.webm`);
                                     player.clearMark('HL_kuangbao_2');
                                     if (bool) {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_fuhuo${[1, 2, 3, 4].randomGet()}.mp3`);
@@ -8405,7 +8407,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.update();
                                     } //恢复正常
                                     else {
-                                        player.node.avatar.qvideo?.remove();
+                                        avatar.qvideo.remove();
                                     } //死亡cg
                                 }
                             },
@@ -10266,7 +10268,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_duoxing: '夺形',
                         HL_duoxing_info: '每轮开始时,你可以获得一个记录的技能直到此轮结束<br>当你体力值不大于0时,若场上有你的傀儡,令随机一个傀儡死亡,你将体力值回复至上限<br>当你的傀儡死亡后,你执行一个出牌阶段,若此傀儡体力上限大于5,你获得一个<傀>',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————傀儡
-                        HL_kuilei: '傀儡',
+                        HL_kuilei: '残心傀儡',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白boss介绍
                         HL_libai_boss: '李白',
                         HL_libai_bossjieshao: '李白boss介绍',
