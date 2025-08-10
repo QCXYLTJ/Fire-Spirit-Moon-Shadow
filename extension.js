@@ -2407,21 +2407,24 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     if (isNaN(Number(num))) return 1;
                     return Math.max(Number(num), 1);
                 }; //始终返回正数且至少为1
-                window.deepClone = function (obj) {
-                    if (obj === null || typeof obj !== 'object') {
+                window.deepClone = function (obj, visited = new WeakMap()) {
+                    if (obj === null || typeof obj !== 'object' || obj instanceof window.Element) {
                         return obj;
                     }
-                    if (Array.isArray(obj)) {
-                        return obj.map((item) => deepClone(item));
-                    } else {
-                        const clonedObj = {};
-                        for (let key in obj) {
-                            if (obj.hasOwnProperty(key)) {
-                                clonedObj[key] = deepClone(obj[key]);
-                            }
-                        }
-                        return clonedObj;
+                    if (visited.has(obj)) {
+                        return visited.get(obj);
                     }
+                    if (Array.isArray(obj)) {
+                        return obj.map(item => deepClone(item));
+                    }
+                    const clonedObj = {};
+                    visited.set(obj, clonedObj);
+                    for (let key in obj) {
+                        if (obj.hasOwnProperty(key)) {
+                            clonedObj[key] = deepClone(obj[key], visited);
+                        }
+                    }
+                    return clonedObj;
                 }; //深拷贝对象
                 window.factorial = function (num) {
                     num = Math.round(num);
