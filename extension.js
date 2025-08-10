@@ -7894,7 +7894,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const yinji = HL.lvfa.length ? HL.lvfa.randomGet() : player.storage.HL_tianqi.randomGet();
                                 if (yinji) {
-                                    trigger.player.xiedu(`xiedu_${yinji}`);
+                                    trigger.player.xiedu(`_${yinji}_xiedu`);
                                 }
                             },
                         },
@@ -10090,7 +10090,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 万世龙尊·帝皇龙    势力:龙   血量/上限/护甲:9/9/33550336
                         // 神王权能
                         // ①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次
-                        // ②全场其他角色的手牌数不得超过自身体力值.若有角色手牌数为全场最少,则令其他角色将手牌数弃置至与该角色相同
+                        // ②全场其他角色的手牌数不得超过自身体力值与全场手牌最少角色的手牌数
                         // ③当有角色进行额外回合时取消之
                         HL_shenwangquanneng: {
                             trigger: {
@@ -10415,7 +10415,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————帝皇龙
                         HL_dihuanglong: '帝皇龙',
                         HL_shenwangquanneng: '神王权能',
-                        HL_shenwangquanneng_info: '①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次<br>②全场其他角色的手牌数不得超过自身体力值.若有角色手牌数为全场最少,则令其他角色将手牌数弃置至与该角色相同<br>③当有角色进行额外回合时取消之',
+                        HL_shenwangquanneng_info: '①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次<br>②全场其他角色的手牌数不得超过自身体力值与全场手牌最少角色的手牌数<br>③当有角色进行额外回合时取消之',
                         HL_longxiaojiutian: '龙啸九天',
                         HL_longxiaojiutian_info: '①你拥有护甲值后二位数的限伤.每轮结束时,重置你的护甲数至游戏开始时<br>②你免疫除普通【杀】以外所有伤害<br>③当你未进入濒死状态而即将死亡时,取消之斩杀来源',
                         HL_dihuanglonghou: '帝皇龙吼',
