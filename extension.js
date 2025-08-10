@@ -3133,7 +3133,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     player.storage[yinji] = 0;
                 }
                 player.storage[yinji] += 2;
-                player.addSkill(yinji);
+                player.markSkill(yinji);
             };
             lib.element.player.yanli = async function () {
                 const player = this;
@@ -7450,9 +7450,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 生命律法
                         // 准备阶段和结束阶段,你回复7点体力值
                         // 你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限
-                        // 生命亵渎
-                        // 敌方角色回复量大于1时,视为亵渎生命律法
-                        // 持有此印记时,无法使用回复牌,无法回复体力值
                         _HL_shengming: {
                             trigger: {
                                 player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'],
@@ -7463,10 +7460,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 player.recover(7);
-                            },
-                            skillBlocker(skill, player) {
-                                const info = lib.skill[skill];
-                                return info && !info.kangxing;
                             },
                             group: ['_HL_shengming_1', '_HL_shengming_2'],
                             subSkill: {
@@ -7479,7 +7472,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return HL.lvfa.includes('HL_shengming') && HL.jielvboss?.isEnemiesOf(player) && event.num > 1;
                                     },
                                     async content(event, trigger, player) {
-                                        player.xiedu('xiedu_HL_shengming');
+                                        player.xiedu('_HL_shengming_xiedu');
                                     },
                                 },
                                 2: {
@@ -7499,21 +7492,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
-                        xiedu_HL_shengming: {
-                            init(player) {
-                                if (!player.storage.skill_blocker) {
-                                    player.storage.skill_blocker = [];
-                                }
-                                player.storage.skill_blocker.add('_HL_shengming');
-                            },
-                            onremove(player) {
-                                if (player.storage.skill_blocker) {
-                                    player.storage.skill_blocker.remove('_HL_shengming');
-                                }
+                        // 生命亵渎
+                        // 敌方角色回复量大于1时,视为亵渎生命律法
+                        // 持有此印记时,无法使用回复牌,无法回复体力值
+                        _HL_shengming_xiedu: {
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `生命亵渎剩余${storage}轮`;
+                                },
                             },
                             mod: {
                                 cardEnabled2(card, player) {
-                                    if (get.tag(card, 'recover')) {
+                                    if (player.storage._HL_shengming_xiedu > 0 && get.tag(card, 'recover')) {
                                         return false;
                                     }
                                 },
@@ -7523,26 +7514,26 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
-                            mark: true,
-                            intro: {
-                                content(storage) {
-                                    return `生命亵渎剩余${storage}轮`;
-                                },
+                            filter(event, player) {
+                                return player.storage._HL_shengming_xiedu > 0;
                             },
                             async content(event, trigger, player) {
                                 trigger.cancel();
                             },
-                            group: ['xiedu_HL_shengming_1'],
+                            group: ['_HL_shengming_xiedu_1'],
                             subSkill: {
                                 1: {
                                     trigger: {
                                         global: ['roundStart'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.storage._HL_shengming_xiedu > 0;
+                                    },
                                     async content(event, trigger, player) {
-                                        player.storage.xiedu_HL_shengming--;
-                                        if (player.storage.xiedu_HL_shengming < 1) {
-                                            player.removeSkill('xiedu_HL_shengming');
+                                        player.storage._HL_shengming_xiedu--;
+                                        if (player.storage._HL_shengming_xiedu < 1) {
+                                            player.removeSkill('_HL_shengming_xiedu');
                                         }
                                     },
                                 },
@@ -7550,9 +7541,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 智慧律法
                         // 准备阶段和结束阶段,你摸七张牌
-                        // 智慧亵渎
-                        // 敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法
-                        // 持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌
                         _HL_zhihui: {
                             trigger: {
                                 player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'],
@@ -7563,10 +7551,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 player.draw(7);
-                            },
-                            skillBlocker(skill, player) {
-                                const info = lib.skill[skill];
-                                return info && !info.kangxing;
                             },
                             group: ['_HL_zhihui_1'],
                             subSkill: {
@@ -7579,27 +7563,25 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return HL.lvfa.includes('HL_zhihui') && HL.jielvboss?.isEnemiesOf(player) && !event.getParent('phaseDraw', true) && event.cards?.length;
                                     },
                                     async content(event, trigger, player) {
-                                        player.xiedu('xiedu_HL_zhihui');
-                                        player.addGaintag(trigger.cards, 'xiedu_HL_zhihui');
+                                        player.xiedu('_HL_zhihui_xiedu');
+                                        player.addGaintag(trigger.cards, '_HL_zhihui_xiedu');
                                     },
                                 },
                             },
                         },
-                        xiedu_HL_zhihui: {
-                            init(player) {
-                                if (!player.storage.skill_blocker) {
-                                    player.storage.skill_blocker = [];
-                                }
-                                player.storage.skill_blocker.add('_HL_zhihui');
-                            },
-                            onremove(player) {
-                                if (player.storage.skill_blocker) {
-                                    player.storage.skill_blocker.remove('_HL_zhihui');
-                                }
+                        // 智慧亵渎
+                        // 敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法
+                        // 持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌
+                        _HL_zhihui_xiedu: {
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `智慧亵渎剩余${storage}轮`;
+                                },
                             },
                             mod: {
                                 cardEnabled2(card, player) {
-                                    if (card.gaintag && card.gaintag.includes('xiedu_HL_zhihui')) {
+                                    if (player.storage._HL_zhihui_xiedu > 0 && card.gaintag && card.gaintag.includes('_HL_zhihui_xiedu')) {
                                         return false;
                                     }
                                 },
@@ -7609,29 +7591,26 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
-                            mark: true,
-                            intro: {
-                                content(storage) {
-                                    return `智慧亵渎剩余${storage}轮`;
-                                },
-                            },
                             filter(event, player) {
-                                return player.hasCard((c) => c.gaintag.includes('xiedu_HL_zhihui'), 'he');
+                                return player.storage._HL_zhihui_xiedu > 0 && player.hasCard((c) => c.gaintag.includes('_HL_zhihui_xiedu'), 'he');
                             },
                             async content(event, trigger, player) {
-                                player.discard(player.getCards('he', (c) => c.gaintag.includes('xiedu_HL_zhihui')));
+                                player.discard(player.getCards('he', (c) => c.gaintag.includes('_HL_zhihui_xiedu')));
                             },
-                            group: ['xiedu_HL_zhihui_1'],
+                            group: ['_HL_zhihui_xiedu_1'],
                             subSkill: {
                                 1: {
                                     trigger: {
                                         global: ['roundStart'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.storage._HL_zhihui_xiedu > 0;
+                                    },
                                     async content(event, trigger, player) {
-                                        player.storage.xiedu_HL_zhihui--;
-                                        if (player.storage.xiedu_HL_zhihui < 1) {
-                                            player.removeSkill('xiedu_HL_zhihui');
+                                        player.storage._HL_zhihui_xiedu--;
+                                        if (player.storage._HL_zhihui_xiedu < 1) {
+                                            player.removeSkill('_HL_zhihui_xiedu');
                                         }
                                     },
                                 },
@@ -7639,9 +7618,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 战争律法
                         // 你使用伤害牌后,摸造成伤害数张牌或回复等量体力值
-                        // 战争亵渎
-                        // 敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法
-                        // 持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害
                         _HL_zhanzheng: {
                             trigger: {
                                 player: ['useCardEnd'],
@@ -7681,10 +7657,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         break;
                                 }
                             },
-                            skillBlocker(skill, player) {
-                                const info = lib.skill[skill];
-                                return info && !info.kangxing;
-                            },
                             group: ['_HL_zhanzheng_1'],
                             subSkill: {
                                 1: {
@@ -7698,48 +7670,46 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return HL.lvfa.includes('HL_zhanzheng') && HL.jielvboss?.isEnemiesOf(player) && get.tag(event.card, 'damage') && evt.useCard.some((e) => get.tag(e.card, 'damage'));
                                     },
                                     async content(event, trigger, player) {
-                                        player.xiedu('xiedu_HL_zhanzheng');
+                                        player.xiedu('_HL_zhanzheng_xiedu');
                                     },
                                 },
                             },
                         },
-                        xiedu_HL_zhanzheng: {
-                            init(player) {
-                                if (!player.storage.skill_blocker) {
-                                    player.storage.skill_blocker = [];
-                                }
-                                player.storage.skill_blocker.add('_HL_zhanzheng');
-                            },
-                            onremove(player) {
-                                if (player.storage.skill_blocker) {
-                                    player.storage.skill_blocker.remove('_HL_zhanzheng');
-                                }
-                            },
-                            trigger: {
-                                source: ['damageBefore'],
-                            },
-                            forced: true,
-                            kangxing: true,
+                        // 战争亵渎
+                        // 敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法
+                        // 持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害
+                        _HL_zhanzheng_xiedu: {
                             mark: true,
                             intro: {
                                 content(storage) {
                                     return `战争亵渎剩余${storage}轮`;
                                 },
                             },
+                            trigger: {
+                                source: ['damageBefore'],
+                            },
+                            forced: true,
+                            kangxing: true,
+                            filter(event, player) {
+                                return player.storage._HL_zhanzheng_xiedu > 0;
+                            },
                             async content(event, trigger, player) {
                                 trigger.cancel();
                             },
-                            group: ['xiedu_HL_zhanzheng_1', 'xiedu_HL_zhanzheng_2'],
+                            group: ['_HL_zhanzheng_xiedu_1', '_HL_zhanzheng_xiedu_2'],
                             subSkill: {
                                 1: {
                                     trigger: {
                                         global: ['roundStart'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.storage._HL_zhanzheng_xiedu > 0;
+                                    },
                                     async content(event, trigger, player) {
-                                        player.storage.xiedu_HL_zhanzheng--;
-                                        if (player.storage.xiedu_HL_zhanzheng < 1) {
-                                            player.removeSkill('xiedu_HL_zhanzheng');
+                                        player.storage._HL_zhanzheng_xiedu--;
+                                        if (player.storage._HL_zhanzheng_xiedu < 1) {
+                                            player.removeSkill('_HL_zhanzheng_xiedu');
                                         }
                                     },
                                 },
@@ -7751,7 +7721,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     filter(event, player) {
                                         const his = player.actionHistory;
                                         const evt = his[his.length - 1];
-                                        return evt.sourceDamage.length;
+                                        return player.storage._HL_zhanzheng_xiedu > 0 && evt.sourceDamage.length;
                                     },
                                     async content(event, trigger, player) {
                                         let num = 0;
@@ -7767,9 +7737,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 威严律法
                         // 你成为牌的目标/受到伤害/失去体力时,你摸一张牌
-                        // 威严亵渎
-                        // 敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法
-                        // 持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段
                         _HL_weiyan: {
                             trigger: {
                                 target: ['useCardToPlayer'],
@@ -7782,10 +7749,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 player.draw();
                             },
-                            skillBlocker(skill, player) {
-                                const info = lib.skill[skill];
-                                return info && !info.kangxing;
-                            },
                             group: ['_HL_weiyan_1'],
                             subSkill: {
                                 1: {
@@ -7797,26 +7760,24 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return HL.lvfa.includes('HL_weiyan') && HL.jielvboss?.isEnemiesOf(player) && !get.tag(event.card, 'recover') && event.target == HL.jielvboss;
                                     },
                                     async content(event, trigger, player) {
-                                        player.xiedu('xiedu_HL_weiyan');
+                                        player.xiedu('_HL_weiyan_xiedu');
                                     },
                                 },
                             },
                         },
-                        xiedu_HL_weiyan: {
-                            init(player) {
-                                if (!player.storage.skill_blocker) {
-                                    player.storage.skill_blocker = [];
-                                }
-                                player.storage.skill_blocker.add('_HL_weiyan');
-                            },
-                            onremove(player) {
-                                if (player.storage.skill_blocker) {
-                                    player.storage.skill_blocker.remove('_HL_weiyan');
-                                }
+                        // 威严亵渎
+                        // 敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法
+                        // 持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段
+                        _HL_weiyan_xiedu: {
+                            mark: true,
+                            intro: {
+                                content(storage) {
+                                    return `威严亵渎剩余${storage}轮`;
+                                },
                             },
                             mod: {
                                 playerEnabled(card, player, target) {
-                                    if (target == HL.jielvboss) {
+                                    if (player.storage._HL_weiyan_xiedu > 0 && target == HL.jielvboss) {
                                         return false;
                                     }
                                 },
@@ -7826,14 +7787,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             kangxing: true,
-                            mark: true,
-                            intro: {
-                                content(storage) {
-                                    return `威严亵渎剩余${storage}轮`;
-                                },
-                            },
                             filter(event, player) {
-                                return !get.tag(event.card, 'recover') && _status.currentPhase == player;
+                                return player.storage._HL_weiyan_xiedu > 0 && !get.tag(event.card, 'recover') && _status.currentPhase == player;
                             },
                             async content(event, trigger, player) {
                                 const evt = _status.event.getParent('phaseUse', true);
@@ -7841,17 +7796,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     evt.skipped = true;
                                 }
                             },
-                            group: ['xiedu_HL_weiyan_1', 'xiedu_HL_weiyan_2'],
+                            group: ['_HL_weiyan_xiedu_1', '_HL_weiyan_xiedu_2'],
                             subSkill: {
                                 1: {
                                     trigger: {
                                         global: ['roundStart'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.storage._HL_weiyan_xiedu > 0;
+                                    },
                                     async content(event, trigger, player) {
-                                        player.storage.xiedu_HL_weiyan--;
-                                        if (player.storage.xiedu_HL_weiyan < 1) {
-                                            player.removeSkill('xiedu_HL_weiyan');
+                                        player.storage._HL_weiyan_xiedu--;
+                                        if (player.storage._HL_weiyan_xiedu < 1) {
+                                            player.removeSkill('_HL_weiyan_xiedu');
                                         }
                                     },
                                 },
@@ -7860,6 +7818,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['phaseEnd'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.storage._HL_weiyan_xiedu > 0;
+                                    },
                                     async content(event, trigger, player) {
                                         const controllist = ['选项一', '选项二'];
                                         const choiceList = ['翻面', '跳过下个出牌阶段'];
@@ -10096,7 +10057,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 终结技
-                        // 此牌不因使用从你的手牌离开时,你获得之
+                        // 此牌不因使用而失去时,取消之
                         HL_zhongjieji: {
                             mod: {
                                 canBeGained(card, source, player) {
@@ -10113,15 +10074,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                             trigger: {
-                                player: ['loseAfter'],
+                                player: ['loseBefore'],
                             },
                             forced: true,
                             filter(event, player) {
                                 return event.cards?.some((c) => c.name == 'HL_zhongjieji') && !['recast', 'gift'].includes(event.getParent(2).name) && !['useCard', 'respond', 'equip'].includes(event.parent.name);
                             },
                             async content(event, trigger, player) {
-                                const cards = trigger.cards.filter((c) => c.name == 'HL_zhongjieji');
-                                player.gain(cards, 'gain2');
+                                trigger.cards = trigger.cards.filter((c) => c.name != 'HL_zhongjieji');
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————
@@ -10571,30 +10531,30 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————太初弈无终·戒律    神      7/7
                         HL_jielv: '戒律',
                         HL_tianqi: '天启拈作劫',
-                        HL_tianqi_info: '①每轮开始时,你从四项律法中选择获得其中两项律法(覆盖之前)<br>②敌方角色亵渎对应律法时,其所有技能失效,并获得持续2轮的对应律法的亵渎印记<br>③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮',
+                        HL_tianqi_info: '①每轮开始时,你从四项律法中选择获得其中两项律法(覆盖之前)<br>②敌方角色亵渎对应律法时,其获得持续2轮的对应律法的亵渎印记<br>③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮',
                         HL_tianqi_append: '真理裁决<br><b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b><br>生命律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限</b><br>生命亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b><br>智慧律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b><br>智慧亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b><br>战争律法<br><b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b><br>战争亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b><br>威严律法<br><b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b><br>威严亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
                         _HL_zhenlicaijue: '真理裁决',
                         _HL_zhenlicaijue_info: '<b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b>',
                         HL_shengming: '生命律法',
                         _HL_shengming: '生命律法',
                         _HL_shengming_info: '<b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限</b>',
-                        xiedu_HL_shengming: '生命亵渎',
-                        xiedu_HL_shengming_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b>',
+                        _HL_shengming_xiedu: '生命亵渎',
+                        _HL_shengming_xiedu_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b>',
                         HL_zhihui: '智慧律法',
                         _HL_zhihui: '智慧律法',
                         _HL_zhihui_info: '<b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b>',
-                        xiedu_HL_zhihui: '智慧亵渎',
-                        xiedu_HL_zhihui_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b>',
+                        _HL_zhihui_xiedu: '智慧亵渎',
+                        _HL_zhihui_xiedu_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b>',
                         HL_zhanzheng: '战争律法',
                         _HL_zhanzheng: '战争律法',
                         _HL_zhanzheng_info: '<b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b>',
-                        xiedu_HL_zhanzheng: '战争亵渎',
-                        xiedu_HL_zhanzheng_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b>',
+                        _HL_zhanzheng_xiedu: '战争亵渎',
+                        _HL_zhanzheng_xiedu_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b>',
                         HL_weiyan: '威严律法',
                         _HL_weiyan: '威严律法',
                         _HL_weiyan_info: '<b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b>',
-                        xiedu_HL_weiyan: '威严亵渎',
-                        xiedu_HL_weiyan_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
+                        _HL_weiyan_xiedu: '威严亵渎',
+                        _HL_weiyan_xiedu_info: '<b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
                         HL_wanshen: '万神镇诸天',
                         HL_wanshen_info: '你无视超出一点的伤害,终止你的判定',
                         HL_jieming: '劫命归一子',
@@ -11042,7 +11002,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         // 终结技
                         // 出牌阶段对一名其他角色使用,对其造成x点伤害(x为你的<燃>数+1),使用后你清除自身所有<燃>
-                        // 此牌不因使用从你的手牌离开时,你获得之
+                        // 此牌不因使用而失去时,取消之
                         HL_zhongjieji: {
                             global: ['HL_zhongjieji'],
                             type: 'basic',
@@ -11079,7 +11039,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         lejishengbei: '乐极生悲',
                         lejishengbei_info: '出牌阶段对自己使用,目标摸2张牌,将全场添加<乐极生悲>领域直到目标下个回合开始时或死亡',
                         HL_zhongjieji: '终结技',
-                        HL_zhongjieji_info: '出牌阶段对一名其他角色使用,对其造成x点伤害(x为你的<燃>数+1),使用后你清除自身所有<燃><br>此牌不因使用从你的手牌离开时,你获得之',
+                        HL_zhongjieji_info: '出牌阶段对一名其他角色使用,对其造成x点伤害(x为你的<燃>数+1),使用后你清除自身所有<燃><br>此牌不因使用而失去时,取消之',
                     },
                 };
                 for (const i in QQQ.card) {
