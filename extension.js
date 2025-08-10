@@ -10090,7 +10090,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 万世龙尊·帝皇龙    势力:龙   血量/上限/护甲:9/9/33550336
                         // 神王权能
                         // ①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次
-                        // ②全场其他角色的手牌数不得超过自身体力值与全场手牌最少角色的手牌数
+                        // ②全场其他角色的手牌数不得超过全场手牌最少角色的手牌数+2
                         // ③当有角色进行额外回合时取消之
                         HL_shenwangquanneng: {
                             trigger: {
@@ -10118,7 +10118,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player, name) {
-                                        const min = Math.min(...game.players.map((q) => q.countCards('h')));
+                                        const min = Math.min(...game.players.map((q) => q.countCards('h'))) + 2;
                                         if (name == 'loseEnd') {
                                             return game.players.some((q) => q.countCards('h') > min && q != player);
                                         }
@@ -10126,7 +10126,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         if (trigger.name == 'lose') {
-                                            const min = Math.min(...game.players.map((q) => q.countCards('h')));
+                                            const min = Math.min(...game.players.map((q) => q.countCards('h'))) + 2;
                                             for (const npc of game.players.filter((q) => q.countCards('h') > min && q != player)) {
                                                 await npc.chooseToDiscard(`将手牌数弃置至${min}`, 'h', npc.countCards('h') - min, true);
                                             }
@@ -10153,8 +10153,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 龙啸九天
-                        // ①你拥有护甲值后二位数的限伤.每轮结束时,重置你的护甲数至游戏开始时
-                        // ②你免疫除普通【杀】以外所有伤害
+                        // ①你拥有护甲值后四位数的限伤(若为0则限伤消失).每轮结束时,重置你的护甲数至游戏开始时
+                        // ②你免疫除普通实体【杀】以外所有伤害
                         // ③当你未进入濒死状态而即将死亡时,取消之斩杀来源
                         HL_longxiaojiutian: {
                             init(player) {
@@ -10257,11 +10257,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     forced: true,
                                     lastDo: true,
                                     filter(event, player) {
-                                        return event.num > Math.floor(player.hujia % 100);
+                                        const num = Math.floor(player.hujia % 10000);
+                                        if (num < 1) {
+                                            return false;
+                                        }
+                                        return event.num > num;
                                     },
                                     async content(event, trigger, player) {
-                                        trigger.num = Math.floor(player.hujia % 100);
-                                        trigger.realnum = Math.floor(player.hujia % 100);
+                                        trigger.num = Math.floor(player.hujia % 10000);
+                                        trigger.realnum = Math.floor(player.hujia % 10000);
                                     },
                                 },
                                 3: {
@@ -10415,9 +10419,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //——————————————————————————————————————————————————————————————————————————————————————————————————帝皇龙
                         HL_dihuanglong: '帝皇龙',
                         HL_shenwangquanneng: '神王权能',
-                        HL_shenwangquanneng_info: '①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次<br>②全场其他角色的手牌数不得超过自身体力值与全场手牌最少角色的手牌数<br>③当有角色进行额外回合时取消之',
+                        HL_shenwangquanneng_info: '①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次<br>②全场其他角色的手牌数不得超过全场手牌最少角色的手牌数+2<br>③当有角色进行额外回合时取消之',
                         HL_longxiaojiutian: '龙啸九天',
-                        HL_longxiaojiutian_info: '①你拥有护甲值后二位数的限伤.每轮结束时,重置你的护甲数至游戏开始时<br>②你免疫除普通【杀】以外所有伤害<br>③当你未进入濒死状态而即将死亡时,取消之斩杀来源',
+                        HL_longxiaojiutian_info: '①你拥有护甲值后四位数的限伤(若为0则限伤消失).每轮结束时,重置你的护甲数至游戏开始时<br>②你免疫除普通实体【杀】以外所有伤害<br>③当你未进入濒死状态而即将死亡时,取消之斩杀来源',
                         HL_dihuanglonghou: '帝皇龙吼',
                         HL_dihuanglonghou_info: '当一张牌名的牌累计进入弃牌堆三次后,你令所有敌方角色进行一次濒死结算<br>若其脱离濒死状态,则其选择一张牌保留,随后弃置其剩余所有牌',
                         HL_shenshiqianban: '神识牵绊',
