@@ -1408,7 +1408,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     get() {
                         return list.randomSort().slice(); //每次生成新数组,不加slice的话每次都是原数组,修改会被映射进去
                     },
-                    configurable: false,
                     set() { },
                 });
             }
@@ -1739,10 +1738,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             }
             if (lib.config.extension_火灵月影_武将全部可选) {
                 Reflect.defineProperty(lib.filter, 'characterDisabled', {
-                    get: () =>
-                        function (i) {
+                    get() {
+                        return function (i) {
                             return !lib.character[i];
-                        },
+                        };
+                    },
                     set() { },
                 }); //取消禁将
                 lib.filter.characterDisabled2 = function (i) {
@@ -10153,7 +10153,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                         },
                         // 龙啸九天
-                        // ①你拥有护甲值后四位数的限伤(若为0则限伤消失).每轮结束时,重置你的护甲数至游戏开始时
+                        // ①你拥有护甲值后四位数的限伤(若为0则限伤消失)
+                        // 每轮结束时,若你没有护甲,重置你的护甲数至游戏开始时
                         // ②你免疫除普通实体【杀】以外所有伤害
                         // ③当你未进入濒死状态而即将死亡时,取消之斩杀来源
                         HL_longxiaojiutian: {
@@ -10273,6 +10274,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         global: ['roundStart'],
                                     },
                                     forced: true,
+                                    filter(event, player) {
+                                        return player.hujia < 1;
+                                    },
                                     async content(event, trigger, player) {
                                         const info = lib.character[player.name];
                                         player.hujia = Math.max(info?.hujia, player.hujia);
@@ -10421,7 +10425,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_shenwangquanneng: '神王权能',
                         HL_shenwangquanneng_info: '①任意角色回合开始时,随机打乱其回合内阶段,随机分配全场其他角色的座次<br>②全场其他角色的手牌数不得超过全场手牌最少角色的手牌数+2<br>③当有角色进行额外回合时取消之',
                         HL_longxiaojiutian: '龙啸九天',
-                        HL_longxiaojiutian_info: '①你拥有护甲值后四位数的限伤(若为0则限伤消失).每轮结束时,重置你的护甲数至游戏开始时<br>②你免疫除普通实体【杀】以外所有伤害<br>③当你未进入濒死状态而即将死亡时,取消之斩杀来源',
+                        HL_longxiaojiutian_info: '①你拥有护甲值后四位数的限伤(若为0则限伤消失).每轮结束时,若你没有护甲,重置你的护甲数至游戏开始时<br>②你免疫除普通实体【杀】以外所有伤害<br>③当你未进入濒死状态而即将死亡时,取消之斩杀来源',
                         HL_dihuanglonghou: '帝皇龙吼',
                         HL_dihuanglonghou_info: '当一张牌名的牌累计进入弃牌堆三次后,你令所有敌方角色进行一次濒死结算<br>若其脱离濒死状态,则其选择一张牌保留,随后弃置其剩余所有牌',
                         HL_shenshiqianban: '神识牵绊',
