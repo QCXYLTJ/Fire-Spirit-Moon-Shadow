@@ -2415,7 +2415,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         return visited.get(obj);
                     }
                     if (Array.isArray(obj)) {
-                        return obj.map(item => deepClone(item));
+                        return obj.map((item) => deepClone(item, visited));
                     }
                     const clonedObj = {};
                     visited.set(obj, clonedObj);
