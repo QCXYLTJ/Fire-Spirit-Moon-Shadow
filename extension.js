@@ -1492,10 +1492,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     });
                 },
                 trigger: {
-                    player: ['damageEnd'],
+                    player: ['damageAfter'],
                 },
                 popup: false,
-                firstDo: true,
+                lastDo: true,
+                _priority: 999,
                 forced: true,
                 charlotte: true,
                 fixed: true,
@@ -2465,9 +2466,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     return this;
                 }; //引入mp4新逻辑
                 HTMLElement.prototype.setBackgroundMp4 = function (src) {
-                    if (this.qvideo) {
-                        this.qvideo.remove();
-                    }
                     const video = document.createElement('video');
                     video.src = src;
                     video.style.cssText = 'bottom: 0%; left: 0%; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; position: absolute; z-index: -5;';
@@ -2477,6 +2475,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     video.addEventListener('error', function () {
                         video.remove();
                     });
+                    if (this.qvideo) {
+                        this.qvideo.remove();
+                    }
                     this.qvideo = video;
                     return video;
                 }; //给父元素添加一个覆盖的背景mp4
@@ -3745,6 +3746,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['bosshp', 'bossfinish', 'HL_buyingcunzai_1'],
                             subSkill: {
                                 1: {
+                                    lastDo: true,
+                                    _priority: 998,
                                     trigger: {
                                         player: ['damageAfter'],
                                     },
@@ -3924,6 +3927,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 无终
                         // 觉醒技,当你体力值不大于0时将体力值回复至上限,获得技能【黑冠余威】,【无言的期盼】和【永恒存续】,重置技能【不应存在之人】
                         HL_wuzhong: {
+                            lastDo: true,
+                            _priority: 997,
                             audio: 'ext:火灵月影/audio:true',
                             forced: true,
                             juexingji: true,
@@ -4972,6 +4977,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['bosshp', 'bossfinish', 'HL_shengzhe_1'],
                             subSkill: {
                                 1: {
+                                    lastDo: true,
+                                    _priority: 998,
                                     trigger: {
                                         player: ['damageAfter'],
                                     },
@@ -5942,6 +5949,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 抟————九万里之炎
                         // 觉醒技,体力值低于一半时,你将武将牌替换为【至怒狂雷】
                         HL_A_zhuan: {
+                            lastDo: true,
+                            _priority: 998,
                             trigger: {
                                 player: ['damageAfter'],
                             },
@@ -6162,6 +6171,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 策————九万里之电
                         // 觉醒技,当你体力值不大于0时,将武将牌更换为【晨昏之眼】,并进行一个额外回合
                         HL_A_ce: {
+                            lastDo: true,
+                            _priority: 998,
                             trigger: {
                                 player: ['damageAfter'],
                             },
@@ -7266,6 +7277,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_duoxing_1', 'HL_duoxing_2'],
                             subSkill: {
                                 1: {
+                                    lastDo: true,
+                                    _priority: 998,
                                     trigger: {
                                         player: ['damageAfter'],
                                     },
@@ -8044,6 +8057,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_zhuolan${[4, 5, 6].randomGet()}.mp3`);
                                     } else {
                                         game.playAudio(`../extension/火灵月影/audio/qinli_zhuolan${[1, 2, 3].randomGet()}.mp3`);
+                                        player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/HL_zhuolan1.webm`);
+                                        player.node.avatar.qvideo.loop = false;
+                                        player.node.avatar.qvideo.addEventListener('ended', function () {
+                                            player.node.avatar.setBackgroundImage(`extension/火灵月影/mp4/HL_qinli.webm`);
+                                        });
                                     }
                                     for (const [target, num] of list) {
                                         await target.damage(num, 'fire');
@@ -8053,8 +8071,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             group: ['HL_zhuolan_1', 'HL_zhuolan_2', 'HL_zhuolan_3'],
                             subSkill: {
                                 1: {
+                                    _priority: 17,
                                     trigger: {
-                                        source: ['damageAfter'],
+                                        source: ['damageEnd'],
                                     },
                                     filter(event, player) {
                                         return event.nature == 'fire' && event.num > 0 && !player.HL_kuangbao;
@@ -8111,6 +8130,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                 },
                                 3: {
+                                    _priority: 18,
                                     trigger: {
                                         global: ['damageEnd'],
                                     },
@@ -8180,34 +8200,44 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ①严厉:你可弃置自己区域内任意张牌,观看一名其他角色的手牌,获得其一张牌
                         // ②残酷:移除一名其他角色的全部技能,直到你的回合结束
                         HL_wufan: {
-                            trigger: {
-                                player: ['loseEnd', 'gainEnd'],
-                            },
-                            forced: true,
-                            filter(event, player) {
-                                return player.countCards('h') != 5;
-                            },
-                            async content(event, trigger, player) {
-                                const num = player.countCards('h') - 5;
-                                if (num > 0) {
-                                    await player.chooseToDiscard(true, num, 'h').set('ai', (c) => {
-                                        if (player.isPhaseUsing()) {
-                                            if (player.hasValueTarget(c, null, true)) return -1;
-                                            return 20 - get.value(c);
+                            init(player) {
+                                new MutationObserver(async function () {
+                                    const num = player.node.handcards1.childNodes.length - 5;
+                                    if (num > 0) {
+                                        const { result } = await player
+                                            .chooseCard('将手牌数调整为5', 'h', num, true)
+                                            .set('ai', (c) => {
+                                                if (player.isPhaseUsing()) {
+                                                    if (player.hasValueTarget(c, null, true)) return -1;
+                                                    return 20 - get.value(c);
+                                                }
+                                                return 6 - get.useful(c);
+                                            });
+                                        if (result?.cards?.length) {
+                                            for (const card of result.cards) {
+                                                ui.discardPile.appendChild(card);
+                                            }
+                                            ui.updatehl();
                                         }
-                                        return 6 - get.useful(c);
-                                    });
-                                    player.addMark('HL_wufan_2', num);
-                                    if (player.storage.HL_wufan_2 > 9) {
-                                        await player.canku();
+                                        player.addMark('HL_wufan_2', num);
+                                        if (player.storage.HL_wufan_2 > 9) {
+                                            await player.canku();
+                                        }
                                     }
-                                } else {
-                                    await player.draw(-num);
-                                    player.addMark('HL_wufan_1', -num);
-                                    if (player.storage.HL_wufan_1 > 9) {
-                                        await player.yanli();
+                                    if (num < 0) {
+                                        const cards = get.cards(-num);
+                                        for (const card of cards) {
+                                            player.node.handcards1.appendChild(card);
+                                        }
+                                        ui.updatehl();
+                                        player.addMark('HL_wufan_1', -num);
+                                        if (player.storage.HL_wufan_1 > 9) {
+                                            await player.yanli();
+                                        }
                                     }
-                                }
+                                }).observe(player.node.handcards1, {
+                                    childList: true,
+                                });
                             },
                             ai: {
                                 effect: {
@@ -10355,7 +10385,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // ②当一名角色获得<鳞>后,你选择一项『令其受到X点雷电伤害/令其获得X点护甲』(X为此次获得的<鳞>数)
                         HL_shenshiqianban: {
                             trigger: {
-                                player: ['damageAfter'],
+                                player: ['damageEnd'],
                             },
                             forced: true,
                             async content(event, trigger, player) {
