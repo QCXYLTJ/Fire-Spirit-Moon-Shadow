@@ -1962,6 +1962,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             let newlined = false;
                             let newlined2;
                             let packsource;
+                            let filternode = null;
                             const clickCapt = function (e) {
                                 if (_status.dragged) {
                                     return;
@@ -2208,7 +2209,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 packsource = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
                                 packsource.style.margin = '3px';
                                 newlined.appendChild(packsource);
-                                let filternode = null;
+
                                 const clickCaptNode = function (e) {
                                     delete _status.filterCharacter;
                                     ui.window.classList.remove('shortcutpaused');
@@ -6174,7 +6175,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageAfter'],
                             },
-                            _priority: 400,
                             forced: true,
                             limited: true,
                             filter(event, player) {
@@ -10719,16 +10719,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                     },
                     translate: {
-                        //——————————————————————————————————————————————————————————————————————————————————————————————————
-                        HL_: '',
-                        HL_: '',
-                        HL__info: '',
-                        HL_: '',
-                        HL__info: '',
-                        HL_: '',
-                        HL__info: '',
-                        HL_: '',
-                        HL__info: '',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————帝皇龙
                         HL_dihuanglong: '帝皇龙',
                         HL_shenwangquanneng: '神王权能',
