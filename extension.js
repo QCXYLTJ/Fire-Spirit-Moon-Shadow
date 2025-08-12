@@ -773,7 +773,7 @@ const kangxing2 = function () {
                 },
                 set trigger(v) { },
                 forced: true,
-                usable: 2, //AAA
+                usable: 2,
                 audio: 'ext:火灵月影/audio:32',
                 async content(event, trigger, player) {
                     let count = Math.min(numberq1(trigger.num), 9);
@@ -2707,17 +2707,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             //—————————————————————————————————————————————————————————————————————————————解构魔改本体函数
             const mogai = function () {
                 lib.element.player.dyingResult = async function () {
-                    const player = this;
-                    game.log(player, '濒死');
-                    _status.dying.unshift(player);
+                    const player1 = this;
+                    game.log(player1, '濒死');
+                    _status.dying.unshift(player1);
                     for (const i of game.players) {
                         const { result } = await i.chooseToUse({
-                            filterCard: (card, player, event) => lib.filter.cardSavable(card, player, _status.dying[0]),
+                            filterCard(card, player, event) {
+                                return lib.filter.cardSavable(card, player, player1);
+                            },
                             filterTarget(card, player, target) {
-                                if (target != _status.dying[0]) {
-                                    return false;
-                                }
-                                if (!card) {
+                                if (!card || target != player1) {
                                     return false;
                                 }
                                 const info = get.info(card);
@@ -2733,24 +2732,26 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                                 return true;
                             },
-                            prompt: get.translation(_status.dying[0]) + '濒死,是否帮助？',
-                            ai1: () => 1,
+                            prompt: get.translation(player1) + '濒死,是否帮助？',
+                            ai1() {
+                                return 1;
+                            },
                             ai2() {
-                                return get.attitude(_status.dying[0], i);
-                            }, //QQQ
+                                return get.attitude(player1, i);
+                            },
                             type: 'dying',
                             targetRequired: true,
-                            dying: _status.dying[0],
+                            dying: player1,
                         });
                         if (result?.bool) {
-                            _status.dying.remove(player);
+                            _status.dying.remove(player1);
                             break;
                         }
                     }
-                    if (_status.dying.includes(player)) {
-                        await player.die();
+                    if (_status.dying.includes(player1)) {
+                        await player1.die();
                     }
-                    return player;
+                    return player1;
                 }; //濒死结算
                 lib.element.player.yinni = function () {
                     const player = this;
