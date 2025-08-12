@@ -119,9 +119,15 @@ game.addMode(
         },
         get: {
             rawAttitude(from, to) {
-                if (!from) return 0;
-                if (!to) return 0;
-                if (from.side == to.side) return 10;
+                if (!from) {
+                    return 0;
+                }
+                if (!to) {
+                    return 0;
+                }
+                if (from.side == to.side) {
+                    return 10;
+                }
                 return -10;
             },
         },
@@ -295,9 +301,15 @@ game.addMode(
         },
         get: {
             rawAttitude(from, to) {
-                if (!from) return 0;
-                if (!to) return 0;
-                if (from.side == to.side) return 10;
+                if (!from) {
+                    return 0;
+                }
+                if (!to) {
+                    return 0;
+                }
+                if (from.side == to.side) {
+                    return 10;
+                }
                 return -10;
             },
         },
@@ -507,9 +519,15 @@ game.addMode(
         },
         get: {
             rawAttitude(from, to) {
-                if (!from) return 0;
-                if (!to) return 0;
-                if (from.side == to.side) return 10;
+                if (!from) {
+                    return 0;
+                }
+                if (!to) {
+                    return 0;
+                }
+                if (from.side == to.side) {
+                    return 10;
+                }
                 return -10;
             },
         },
@@ -1549,7 +1567,9 @@ game.addMode(
                 shanhe.cardlist = [];
                 for (const i in lib.card) {
                     const info = lib.card[i];
-                    if (info.mode && !info.mode.includes(lib.config.mode)) continue;
+                    if (info.mode && !info.mode.includes(lib.config.mode)) {
+                        continue;
+                    }
                     if (info.type != 'equip' && lib.translate[i] && lib.translate[`${i}_info`]) {
                         shanhe.cardlist.push(i);
                     }
@@ -1673,9 +1693,15 @@ game.addMode(
         },
         get: {
             rawAttitude(from, to) {
-                if (!from) return 0;
-                if (!to) return 0;
-                if (from.side == to.side) return 10;
+                if (!from) {
+                    return 0;
+                }
+                if (!to) {
+                    return 0;
+                }
+                if (from.side == to.side) {
+                    return 10;
+                }
                 return -10;
             },
         },

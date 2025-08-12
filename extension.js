@@ -40,7 +40,9 @@ const sha = function () {
     }
     Reflect.defineProperty(_status, 'withError', {
         get() {
-            if (game.players.some((q) => q.name == 'HL_许劭')) return true;
+            if (game.players.some((q) => q.name == 'HL_许劭')) {
+                return true;
+            }
             return false;
         },
         set() { },
@@ -267,9 +269,15 @@ const kangxing1 = function () {
                     if (player.name == 'HL_许劭') {
                         return new Proxy(qstorage, {
                             get(u, i) {
-                                if (i == 'skill_blocker') return [];
-                                if (i.startsWith('temp_ban_')) return false;
-                                if (['nohp', 'norecover'].includes(i)) return false;
+                                if (i == 'skill_blocker') {
+                                    return [];
+                                }
+                                if (i.startsWith('temp_ban_')) {
+                                    return false;
+                                }
+                                if (['nohp', 'norecover'].includes(i)) {
+                                    return false;
+                                }
                                 if (!(i in u) && !i.startsWith('_') && !['东皇钟', 'jiu'].includes(i)) {
                                     return [
                                         [[], []],
@@ -282,8 +290,12 @@ const kangxing1 = function () {
                     } //用hasskill会爆栈
                     return new Proxy(qstorage, {
                         get(u, i) {
-                            if (i == 'skill_blocker') return [];
-                            if (i.startsWith('temp_ban_')) return false;
+                            if (i == 'skill_blocker') {
+                                return [];
+                            }
+                            if (i.startsWith('temp_ban_')) {
+                                return false;
+                            }
                             return u[i];
                         },
                     });
@@ -492,7 +504,7 @@ const kangxing1 = function () {
             return new Proxy(allskill, {
                 get(u, i) {
                     if (i in kskill) {
-                        return deepClone(kskill[i]);//不能用直接assign,防止kskill子属性trigger里的数组被修改
+                        return deepClone(kskill[i]); //不能用直接assign,防止kskill子属性trigger里的数组被修改
                     }
                     return u[i];
                 },
@@ -653,7 +665,9 @@ const kangxing1 = function () {
     //—————————————————————————————————————————————————————————————————————————————可有可无的部分,但是防止某些人强制胜利就自以为赢了
     let ocheckresult = game.checkResult;
     const xcheckresult = function () {
-        if (obj.players.some((q) => q.getEnemies().length)) return;
+        if (obj.players.some((q) => q.getEnemies().length)) {
+            return;
+        }
         return ocheckresult();
     };
     Reflect.defineProperty(game, 'checkResult', {
@@ -698,7 +712,9 @@ const kangxing1 = function () {
     lib.arenaReady.push(function () {
         new MutationObserver(function () {
             for (const player of obj.players) {
-                if (ui.arena.contains(player)) continue;
+                if (ui.arena.contains(player)) {
+                    continue;
+                }
                 console.log('还原角色被删除的武将牌');
                 ui.arena.appendChild(player);
             }
@@ -706,7 +722,7 @@ const kangxing1 = function () {
             childList: true,
         });
         new MutationObserver((mutationsList) => {
-            for (let mutation of mutationsList) {
+            for (const mutation of mutationsList) {
                 mutation.addedNodes.forEach((node) => {
                     const string = node.innerHTML;
                     for (const player of obj.players) {
@@ -720,7 +736,7 @@ const kangxing1 = function () {
             childList: true,
         });
         new MutationObserver((mutationsList) => {
-            for (let mutation of mutationsList) {
+            for (const mutation of mutationsList) {
                 mutation.addedNodes.forEach((node) => {
                     const string = node.innerHTML;
                     for (const player of obj.players) {
@@ -1256,7 +1272,9 @@ const boss = function () {
     game.addPlayerQ = function (name) {
         const player = ui.create.player(ui.arena).addTempClass('start');
         player.getId();
-        if (name) player.init(name);
+        if (name) {
+            player.init(name);
+        }
         game.players.push(player);
         player.draw(Math.min(player.maxHp, 20));
         return player;
@@ -1278,11 +1296,15 @@ const boss = function () {
         target.setIdentity(identity, 'blue');
         target.boss = player;
         target.ai.modAttitudeFrom = function (from, to, att) {
-            if (to == from.boss) return 99;
+            if (to == from.boss) {
+                return 99;
+            }
             return att;
         }; //这里from是本人
         target.ai.modAttitudeTo = function (from, to, att) {
-            if (to.boss == from) return 99;
+            if (to.boss == from) {
+                return 99;
+            }
             return att;
         }; //这里to是本人
         return player;
@@ -1720,7 +1742,84 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 };
             }
             if (lib.config.extension_火灵月影_关闭本体BOSS) {
-                for (const i of ['boss_hundun', 'boss_qiongqi', 'boss_taotie', 'boss_taowu', 'boss_zhuyin', 'boss_xiangliu', 'boss_zhuyan', 'boss_bifang', 'boss_yingzhao', 'boss_qingmushilian', 'boss_qinglong', 'boss_mushengoumang', 'boss_shujing', 'boss_taihao', 'boss_chiyanshilian', 'boss_zhuque', 'boss_huoshenzhurong', 'boss_yanling', 'boss_yandi', 'boss_baimangshilian', 'boss_baihu', 'boss_jinshenrushou', 'boss_mingxingzhu', 'boss_shaohao', 'boss_xuanlinshilian', 'boss_xuanwu', 'boss_shuishengonggong', 'boss_shuishenxuanming', 'boss_zhuanxu', 'boss_zhuoguiquxie', 'boss_nianshou_heti', 'boss_nianshou_jingjue', 'boss_nianshou_renxing', 'boss_nianshou_ruizhi', 'boss_nianshou_baonu', 'boss_baiwuchang', 'boss_heiwuchang', 'boss_luocha', 'boss_yecha', 'boss_niutou', 'boss_mamian', 'boss_chi', 'boss_mo', 'boss_wang', 'boss_liang', 'boss_qinguangwang', 'boss_chujiangwang', 'boss_songdiwang', 'boss_wuguanwang', 'boss_yanluowang', 'boss_bianchengwang', 'boss_taishanwang', 'boss_dushiwang', 'boss_pingdengwang', 'boss_zhuanlunwang', 'boss_mengpo', 'boss_dizangwang', 'boss_lvbu1', 'boss_lvbu2', 'boss_lvbu3', 'boss_caocao', 'boss_guojia', 'boss_zhangchunhua', 'boss_zhenji', 'boss_liubei', 'boss_zhugeliang', 'boss_huangyueying', 'boss_pangtong', 'boss_zhouyu', 'boss_caiwenji', 'boss_zhangjiao', 'boss_zuoci', 'boss_diaochan', 'boss_huatuo', 'boss_dongzhuo', 'boss_sunce']) {
+                for (const i of [
+                    'boss_hundun',
+                    'boss_qiongqi',
+                    'boss_taotie',
+                    'boss_taowu',
+                    'boss_zhuyin',
+                    'boss_xiangliu',
+                    'boss_zhuyan',
+                    'boss_bifang',
+                    'boss_yingzhao',
+                    'boss_qingmushilian',
+                    'boss_qinglong',
+                    'boss_mushengoumang',
+                    'boss_shujing',
+                    'boss_taihao',
+                    'boss_chiyanshilian',
+                    'boss_zhuque',
+                    'boss_huoshenzhurong',
+                    'boss_yanling',
+                    'boss_yandi',
+                    'boss_baimangshilian',
+                    'boss_baihu',
+                    'boss_jinshenrushou',
+                    'boss_mingxingzhu',
+                    'boss_shaohao',
+                    'boss_xuanlinshilian',
+                    'boss_xuanwu',
+                    'boss_shuishengonggong',
+                    'boss_shuishenxuanming',
+                    'boss_zhuanxu',
+                    'boss_zhuoguiquxie',
+                    'boss_nianshou_heti',
+                    'boss_nianshou_jingjue',
+                    'boss_nianshou_renxing',
+                    'boss_nianshou_ruizhi',
+                    'boss_nianshou_baonu',
+                    'boss_baiwuchang',
+                    'boss_heiwuchang',
+                    'boss_luocha',
+                    'boss_yecha',
+                    'boss_niutou',
+                    'boss_mamian',
+                    'boss_chi',
+                    'boss_mo',
+                    'boss_wang',
+                    'boss_liang',
+                    'boss_qinguangwang',
+                    'boss_chujiangwang',
+                    'boss_songdiwang',
+                    'boss_wuguanwang',
+                    'boss_yanluowang',
+                    'boss_bianchengwang',
+                    'boss_taishanwang',
+                    'boss_dushiwang',
+                    'boss_pingdengwang',
+                    'boss_zhuanlunwang',
+                    'boss_mengpo',
+                    'boss_dizangwang',
+                    'boss_lvbu1',
+                    'boss_lvbu2',
+                    'boss_lvbu3',
+                    'boss_caocao',
+                    'boss_guojia',
+                    'boss_zhangchunhua',
+                    'boss_zhenji',
+                    'boss_liubei',
+                    'boss_zhugeliang',
+                    'boss_huangyueying',
+                    'boss_pangtong',
+                    'boss_zhouyu',
+                    'boss_caiwenji',
+                    'boss_zhangjiao',
+                    'boss_zuoci',
+                    'boss_diaochan',
+                    'boss_huatuo',
+                    'boss_dongzhuo',
+                    'boss_sunce',
+                ]) {
                     lib.config.mode_config.boss[`${i}_boss_config`] = false;
                 }
                 game.saveConfig(`mode_config`, lib.config.mode_config);
@@ -1728,8 +1827,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             if (lib.config.extension_火灵月影_文字闪烁) {
                 const style = document.createElement('style');
                 style.innerHTML = '@keyframes QQQ{';
-                for (var i = 1; i <= 20; i++) {
-                    let rand1 = Math.floor(Math.random() * 255),
+                for (let i = 1; i <= 20; i++) {
+                    const rand1 = Math.floor(Math.random() * 255),
                         rand2 = Math.floor(Math.random() * 255),
                         rand3 = Math.floor(Math.random() * 255);
                     style.innerHTML += i * 5 + `%{text-shadow: black 0 0 1px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 2px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 5px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 10px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px,rgba(${rand1}, ${rand2}, ${rand3}, 0.6) 0 0 20px}`;
@@ -1750,18 +1849,18 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     return !lib.character[i];
                 }; //取消禁将
                 get.gainableSkills = function (func, player) {
-                    var list = [];
-                    for (var i in lib.character) {
-                        for (var j = 0; j < lib.character[i][3].length; j++) {
+                    const list = [];
+                    for (let i in lib.character) {
+                        for (let j = 0; j < lib.character[i][3].length; j++) {
                             list.add(lib.character[i][3][j]);
                         }
                     }
                     return list;
                 }; //BOSS选将
                 get.gainableSkillsName = function (name, func) {
-                    var list = [];
+                    const list = [];
                     if (name && lib.character[name]) {
-                        for (var j = 0; j < lib.character[name][3].length; j++) {
+                        for (let j = 0; j < lib.character[name][3].length; j++) {
                             list.add(lib.character[name][3][j]);
                         }
                     }
@@ -1770,8 +1869,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 Reflect.defineProperty(ui.create, 'characterDialog', {
                     get() {
                         return function () {
-                            var filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
-                            for (var i = 0; i < arguments.length; i++) {
+                            let filter, str, noclick, thisiscard, seperate, expandall, onlypack, heightset, precharacter, characterx;
+                            for (let i = 0; i < arguments.length; i++) {
                                 if (arguments[i] === 'thisiscard') {
                                     thisiscard = true;
                                 } else if (arguments[i] === 'expandall') {
@@ -1794,16 +1893,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     noclick = arguments[i];
                                 }
                             }
-                            var list = [];
+                            const list = [];
                             const groups = [];
-                            var dialog;
-                            var node = ui.create.div('.caption.pointerspan');
+                            let dialog;
+                            const node = ui.create.div('.caption.pointerspan');
                             if (get.is.phoneLayout()) {
                                 node.style.fontSize = '30px';
                             }
-                            var namecapt = [];
-                            var getCapt = function (str) {
-                                var capt;
+                            const namecapt = [];
+                            const getCapt = function (str) {
+                                let capt;
                                 if (str.indexOf('_') == -1) {
                                     capt = str[0];
                                 } else {
@@ -1816,23 +1915,29 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return capt;
                             };
                             if (thisiscard) {
-                                for (var i in lib.card) {
-                                    if (!lib.translate[`${i}_info`]) continue;
-                                    if (filter && filter(i)) continue;
+                                for (let i in lib.card) {
+                                    if (!lib.translate[`${i}_info`]) {
+                                        continue;
+                                    }
+                                    if (filter && filter(i)) {
+                                        continue;
+                                    }
                                     list.push(['', get.translation(lib.card[i].type), i]);
                                     if (namecapt.indexOf(getCapt(i)) == -1) {
                                         namecapt.push(getCapt(i));
                                     }
                                 }
                             } else {
-                                var groupnum = {};
-                                for (var i in lib.character) {
+                                const groupnum = {};
+                                for (let i in lib.character) {
                                     list.push(i);
                                     if (get.is.double(i)) {
                                         groups.add('double');
                                     } else {
                                         const Q = lib.character[i][1];
-                                        if (!groupnum[Q]) groupnum[Q] = 0;
+                                        if (!groupnum[Q]) {
+                                            groupnum[Q] = 0;
+                                        }
                                         groupnum[Q]++;
                                         if (groupnum[Q] > 20) {
                                             groups.add(lib.character[i][1]);
@@ -1850,15 +1955,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             if (!thisiscard) {
                                 namecapt.remove('自定义');
                                 namecapt.push('newline');
-                                for (var i in lib.characterDialogGroup) {
+                                for (let i in lib.characterDialogGroup) {
                                     namecapt.push(i);
                                 }
                             }
-                            var newlined = false;
-                            var newlined2;
-                            var packsource;
-                            var clickCapt = function (e) {
-                                if (_status.dragged) return;
+                            let newlined = false;
+                            let newlined2;
+                            let packsource;
+                            const clickCapt = function (e) {
+                                if (_status.dragged) {
+                                    return;
+                                }
                                 if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
                                     dialog.currentcapt2 = null;
                                     dialog.currentcaptnode2.classList.remove('thundertext');
@@ -1873,7 +1980,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (this.touchlink) {
                                             this.touchlink.classList.remove('active');
                                         }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                        for (let i = 0; i < dialog.buttons.length; i++) {
                                             if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
@@ -1895,7 +2002,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (this.touchlink) {
                                             this.touchlink.classList.add('active');
                                         }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                        for (let i = 0; i < dialog.buttons.length; i++) {
                                             if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
@@ -1924,7 +2031,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (this.touchlink) {
                                             this.touchlink.classList.remove('active');
                                         }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                        for (let i = 0; i < dialog.buttons.length; i++) {
                                             if (dialog.currentgroup && dialog.buttons[i].group != dialog.currentgroup) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
@@ -1949,7 +2056,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             packsource.innerHTML = this.innerHTML;
                                             packsource.classList.add('thundertext');
                                         }
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                        for (let i = 0; i < dialog.buttons.length; i++) {
                                             if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
@@ -1966,7 +2073,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 }
                                 if (dialog.seperate) {
-                                    for (var i = 0; i < dialog.seperate.length; i++) {
+                                    for (let i = 0; i < dialog.seperate.length; i++) {
                                         if (!dialog.seperate[i].nextSibling.querySelector('.button:not(.nodisplay)')) {
                                             dialog.seperate[i].style.display = 'none';
                                             dialog.seperate[i].nextSibling.style.display = 'none';
@@ -1983,9 +2090,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         packsource.classList.remove('thundertext');
                                     }
                                 }
-                                if (e) e.stopPropagation();
+                                if (e) {
+                                    e.stopPropagation();
+                                }
                             };
-                            for (var i = 0; i < namecapt.length; i++) {
+                            for (let i = 0; i < namecapt.length; i++) {
                                 if (namecapt[i] == 'newline') {
                                     newlined = document.createElement('div');
                                     newlined.style.marginTop = '5px';
@@ -1998,7 +2107,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     newlined.style.textAlign = 'center';
                                     node.appendChild(newlined);
                                 } else if (newlined) {
-                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius');
+                                    const span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius');
                                     span.style.margin = '3px';
                                     span.style.width = 'auto';
                                     span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
@@ -2012,7 +2121,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         span._nature = 'wood';
                                     }
                                 } else {
-                                    var span = document.createElement('span');
+                                    const span = document.createElement('span');
                                     span.innerHTML = ` ${namecapt[i].toUpperCase()} `;
                                     span.link = namecapt[i];
                                     span.alphabet = true;
@@ -2021,25 +2130,27 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             }
                             if (!thisiscard) {
-                                var natures = ['water', 'soil', 'wood', 'metal'];
-                                var span = document.createElement('span');
+                                const natures = ['water', 'soil', 'wood', 'metal'];
+                                const span = document.createElement('span');
                                 newlined.appendChild(span);
                                 span.style.margin = '8px';
-                                var clickGroup = function () {
-                                    if (_status.dragged) return;
+                                const clickGroup = function () {
+                                    if (_status.dragged) {
+                                        return;
+                                    }
                                     if (dialog.currentcapt2 == '最近' && dialog.currentcaptnode2 != this && !dialog.currentcaptnode2.inited) {
                                         dialog.currentcapt2 = null;
                                         dialog.currentcaptnode2.classList.remove('thundertext');
                                         dialog.currentcaptnode2.inited = true;
                                         dialog.currentcaptnode2 = null;
                                     }
-                                    var node = this,
+                                    let node = this,
                                         link = this.link;
                                     if (node.classList.contains('thundertext')) {
                                         dialog.currentgroup = null;
                                         dialog.currentgroupnode = null;
                                         node.classList.remove('thundertext');
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                        for (let i = 0; i < dialog.buttons.length; i++) {
                                             if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
@@ -2055,17 +2166,23 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         dialog.currentgroup = link;
                                         dialog.currentgroupnode = node;
                                         node.classList.add('thundertext');
-                                        for (var i = 0; i < dialog.buttons.length; i++) {
+                                        for (let i = 0; i < dialog.buttons.length; i++) {
                                             if (dialog.currentcapt && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt)) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.currentcapt2 && dialog.buttons[i].capt != dialog.getCurrentCapt(dialog.buttons[i].link, dialog.buttons[i].capt, true)) {
                                                 dialog.buttons[i].classList.add('nodisplay');
                                             } else if (dialog.currentgroup == 'double') {
-                                                if (dialog.buttons[i]._changeGroup) dialog.buttons[i].classList.remove('nodisplay');
-                                                else dialog.buttons[i].classList.add('nodisplay');
+                                                if (dialog.buttons[i]._changeGroup) {
+                                                    dialog.buttons[i].classList.remove('nodisplay');
+                                                } else {
+                                                    dialog.buttons[i].classList.add('nodisplay');
+                                                }
                                             } else if (dialog.currentgroup == 'ye') {
-                                                if (dialog.buttons[i].group == 'ye') dialog.buttons[i].classList.remove('nodisplay');
-                                                else dialog.buttons[i].classList.add('nodisplay');
+                                                if (dialog.buttons[i].group == 'ye') {
+                                                    dialog.buttons[i].classList.remove('nodisplay');
+                                                } else {
+                                                    dialog.buttons[i].classList.add('nodisplay');
+                                                }
                                             } else {
                                                 if (dialog.buttons[i]._changeGroup || dialog.buttons[i].group != dialog.currentgroup) {
                                                     dialog.buttons[i].classList.add('nodisplay');
@@ -2076,8 +2193,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     }
                                 };
-                                for (var i = 0; i < groups.length; i++) {
-                                    var span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
+                                for (let i = 0; i < groups.length; i++) {
+                                    const span = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
                                     span.style.margin = '3px';
                                     newlined.appendChild(span);
                                     span.innerHTML = get.translation(groups[i]);
@@ -2085,14 +2202,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     span._nature = natures[i];
                                     span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', clickGroup);
                                 }
-                                var span = document.createElement('span');
-                                newlined.appendChild(span);
-                                span.style.margin = '8px';
+                                const span2 = document.createElement('span');
+                                newlined.appendChild(span2);
+                                span2.style.margin = '8px';
                                 packsource = ui.create.div('.tdnode.pointerdiv.shadowed.reduce_radius.reduce_margin');
                                 packsource.style.margin = '3px';
                                 newlined.appendChild(packsource);
-                                var filternode = null;
-                                var clickCaptNode = function (e) {
+                                let filternode = null;
+                                const clickCaptNode = function (e) {
                                     delete _status.filterCharacter;
                                     ui.window.classList.remove('shortcutpaused');
                                     filternode.delete();
@@ -2105,14 +2222,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     filternode = ui.create.div('.popup-container.filter-character.modenopause');
                                     ui.create.div(filternode);
                                     filternode.listen(function (e) {
-                                        if (this.classList.contains('removing')) return;
+                                        if (this.classList.contains('removing')) {
+                                            return;
+                                        }
                                         delete _status.filterCharacter;
                                         ui.window.classList.remove('shortcutpaused');
                                         this.delete();
                                         this.classList.remove('shown');
                                         e.stopPropagation();
                                     });
-                                    for (var i = 0; i < node.childElementCount; i++) {
+                                    for (let i = 0; i < node.childElementCount; i++) {
                                         if (node.childNodes[i].tagName.toLowerCase() == 'span') {
                                             node.childNodes[i].style.display = 'none';
                                             node.childNodes[i].touchlink = ui.create.div(filternode.firstChild, clickCaptNode, '.menubutton.large.capt', node.childNodes[i].innerHTML);
@@ -2143,15 +2262,19 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 newlined2.style.textAlign = 'center';
                                 node.appendChild(newlined2);
                                 packsource.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                                    if (packsource.onlypack) return;
-                                    if (_status.dragged) return;
+                                    if (packsource.onlypack) {
+                                        return;
+                                    }
+                                    if (_status.dragged) {
+                                        return;
+                                    }
                                     if (get.is.phoneLayout() && lib.config.filternode_button && filternode) {
                                         _status.filterCharacter = true;
                                         ui.window.classList.add('shortcutpaused');
                                         ui.window.appendChild(filternode);
                                         ui.refresh(filternode);
                                         filternode.classList.add('shown');
-                                        var dh = filternode.offsetHeight - filternode.firstChild.offsetHeight;
+                                        const dh = filternode.offsetHeight - filternode.firstChild.offsetHeight;
                                         if (dh > 0) {
                                             filternode.firstChild.style.top = dh / 2 + 'px';
                                         } else {
@@ -2165,18 +2288,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     }
                                 });
-                                var packlist = [];
-                                for (var i = 0; i < lib.config.all.characters.length; i++) {
-                                    if (!lib.config.characters.includes(lib.config.all.characters[i])) continue;
+                                const packlist = [];
+                                for (let i = 0; i < lib.config.all.characters.length; i++) {
+                                    if (!lib.config.characters.includes(lib.config.all.characters[i])) {
+                                        continue;
+                                    }
                                     packlist.push(lib.config.all.characters[i]);
                                 }
-                                for (var i in lib.characterPack) {
+                                for (let i in lib.characterPack) {
                                     if (lib.config.characters.includes(i) && !lib.config.all.characters.includes(i)) {
                                         packlist.push(i);
                                     }
                                 }
-                                for (var i = 0; i < packlist.length; i++) {
-                                    var span = document.createElement('div');
+                                for (let i = 0; i < packlist.length; i++) {
+                                    const span = document.createElement('div');
                                     span.style.display = 'inline-block';
                                     span.style.width = 'auto';
                                     span.style.margin = '5px';
@@ -2195,10 +2320,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 }
                             }
-                            var groupSort;
+                            let groupSort;
                             if (thisiscard) {
                                 groupSort = function (name) {
-                                    var type = lib.card[name[2]].type;
+                                    const type = lib.card[name[2]].type;
                                     if (lib.cardType[type]) {
                                         return lib.cardType[type];
                                     }
@@ -2220,9 +2345,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                 };
                                 list.sort(function (a, b) {
-                                    var del = groupSort(a) - groupSort(b);
-                                    if (del != 0) return del;
-                                    var aa = a,
+                                    const del = groupSort(a) - groupSort(b);
+                                    if (del != 0) {
+                                        return del;
+                                    }
+                                    const aa = a,
                                         bb = b;
                                     if (a.includes('_')) {
                                         a = a.slice(a.lastIndexOf('_') + 1);
@@ -2251,9 +2378,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 dialog._scrollset = true;
                             }
                             dialog.getCurrentCapt = function (link, capt, noalph) {
-                                var currentcapt = noalph ? this.currentcapt2 : this.currentcapt;
+                                const currentcapt = noalph ? this.currentcapt2 : this.currentcapt;
                                 if (this.seperatelist && noalph) {
-                                    if (this.seperatelist[currentcapt].includes(link)) return capt;
+                                    if (this.seperatelist[currentcapt].includes(link)) {
+                                        return capt;
+                                    }
                                     return null;
                                 }
                                 if (lib.characterDialogGroup[currentcapt]) {
@@ -2288,8 +2417,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                         newlined.style.textAlign = 'center';
                                         node.appendChild(newlined);
-                                        for (var i in dialog.seperatelist) {
-                                            var span = document.createElement('span');
+                                        for (let i in dialog.seperatelist) {
+                                            const span = document.createElement('span');
                                             span.style.margin = '3px';
                                             span.innerHTML = i;
                                             span.link = i;
@@ -2298,15 +2427,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             newlined.appendChild(span);
                                         }
                                     }
-                                    for (var i in seperate) {
-                                        if (i == 'list') continue;
-                                        var link = '';
-                                        var linkcontent = seperate[i];
+                                    for (let i in seperate) {
+                                        if (i == 'list') {
+                                            continue;
+                                        }
+                                        let link = '';
+                                        const linkcontent = seperate[i];
                                         if (i.includes('_link:')) {
                                             link = i.slice(i.indexOf('_link:') + 6);
                                             i = i.slice(0, i.indexOf('_link:'));
                                         }
-                                        var nodesep = dialog.add(i);
+                                        const nodesep = dialog.add(i);
                                         nodesep.link = link;
                                         dialog.seperate.push(nodesep);
                                         dialog.add([linkcontent, 'vcard'], noclick);
@@ -2324,7 +2455,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             }
                             dialog.add(ui.create.div('.placeholder'));
-                            for (var i = 0; i < dialog.buttons.length; i++) {
+                            for (let i = 0; i < dialog.buttons.length; i++) {
                                 if (thisiscard) {
                                     dialog.buttons[i].capt = getCapt(dialog.buttons[i].link[2]);
                                 } else {
@@ -2338,17 +2469,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             }
                             //仅仅下面是新加的,by Curpond
-                            let container = dialog.querySelector('.content-container>.content');
-                            let Searcher = ui.create.div('.searcher.caption');
-                            let input = document.createElement('input');
+                            const container = dialog.querySelector('.content-container>.content');
+                            const Searcher = ui.create.div('.searcher.caption');
+                            const input = document.createElement('input');
                             input.style.textAlign = 'center';
                             input.style.border = 'solid 2px #294510';
                             input.style.borderRadius = '6px';
                             input.style.fontWeight = 'bold';
                             input.style.fontSize = '21px';
-                            let find = ui.create.button(['find', '搜索'], 'tdnodes');
+                            const find = ui.create.button(['find', '搜索'], 'tdnodes');
                             find.style.display = 'inline';
-                            let clickfind = function (e) {
+                            const clickfind = function (e) {
                                 e.stopPropagation();
                                 let value = input.value;
                                 if (value == '') {
@@ -2356,8 +2487,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     input.focus();
                                     return;
                                 }
-                                let list = [];
-                                for (let btn of dialog.buttons) {
+                                const list = [];
+                                for (const btn of dialog.buttons) {
                                     if (new RegExp(value, 'g').test(get.translation(btn.link))) {
                                         btn.classList.remove('nodisplay');
                                     } else {
@@ -2366,7 +2497,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             };
                             input.addEventListener('keyup', (e) => {
-                                if (e.key == 'Enter') clickfind(e);
+                                if (e.key == 'Enter') {
+                                    clickfind(e);
+                                }
                             });
                             find.listen(clickfind);
                             Searcher.appendChild(input);
@@ -2384,28 +2517,38 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             const numfunc = function () {
                 if (!lib.number) {
                     lib.number = [];
-                    for (var i = 1; i < 14; i++) {
+                    for (let i = 1; i < 14; i++) {
                         lib.number.add(i);
                     }
                 } //添加lib.number
                 window.sgn = function (bool) {
-                    if (bool) return 1;
+                    if (bool) {
+                        return 1;
+                    }
                     return -1;
                 }; //true转为1,false转为-1
                 window.numberq0 = function (num) {
-                    if (isNaN(Number(num))) return 0;
+                    if (isNaN(Number(num))) {
+                        return 0;
+                    }
                     return Math.abs(Number(num));
                 }; //始终返回正数(取绝对值)
                 window.numberq1 = function (num) {
-                    if (isNaN(Number(num))) return 1;
+                    if (isNaN(Number(num))) {
+                        return 1;
+                    }
                     return Math.max(Math.abs(Number(num)), 1);
                 }; //始终返回正数且至少为1(取绝对值)
                 window.number0 = function (num) {
-                    if (isNaN(Number(num))) return 0;
+                    if (isNaN(Number(num))) {
+                        return 0;
+                    }
                     return Math.max(Number(num), 0);
                 }; //始终返回正数
                 window.number1 = function (num) {
-                    if (isNaN(Number(num))) return 1;
+                    if (isNaN(Number(num))) {
+                        return 1;
+                    }
                     return Math.max(Number(num), 1);
                 }; //始终返回正数且至少为1
                 window.deepClone = function (obj, visited = new WeakMap()) {
@@ -2420,7 +2563,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     const clonedObj = {};
                     visited.set(obj, clonedObj);
-                    for (let key in obj) {
+                    for (const key in obj) {
                         if (obj.hasOwnProperty(key)) {
                             clonedObj[key] = deepClone(obj[key], visited);
                         }
@@ -2442,10 +2585,16 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     return result;
                 }; //阶乘
                 window.isPrime = function (num) {
-                    if (num === 2 || num === 3) return true;
-                    if (num < 2 || num % 2 === 0 || num % 3 === 0) return false;
+                    if (num === 2 || num === 3) {
+                        return true;
+                    }
+                    if (num < 2 || num % 2 === 0 || num % 3 === 0) {
+                        return false;
+                    }
                     for (let i = 5; i * i <= num; i += 6) {
-                        if (num % i === 0 || num % (i + 2) === 0) return false;
+                        if (num % i === 0 || num % (i + 2) === 0) {
+                            return false;
+                        }
                     }
                     return true;
                 }; // 质数
@@ -2564,14 +2713,22 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         const { result } = await i.chooseToUse({
                             filterCard: (card, player, event) => lib.filter.cardSavable(card, player, _status.dying[0]),
                             filterTarget(card, player, target) {
-                                if (target != _status.dying[0]) return false;
-                                if (!card) return false;
-                                var info = get.info(card);
+                                if (target != _status.dying[0]) {
+                                    return false;
+                                }
+                                if (!card) {
+                                    return false;
+                                }
+                                const info = get.info(card);
                                 if (!info.singleCard || ui.selected.targets.length == 0) {
-                                    var mod = game.checkMod(card, player, target, 'unchanged', 'playerEnabled', player);
-                                    if (mod == false) return false;
-                                    var mod = game.checkMod(card, player, target, 'unchanged', 'targetEnabled', target);
-                                    if (mod != 'unchanged') return mod;
+                                    const mod1 = game.checkMod(card, player, target, 'unchanged', 'playerEnabled', player);
+                                    if (mod1 == false) {
+                                        return false;
+                                    }
+                                    const mod2 = game.checkMod(card, player, target, 'unchanged', 'targetEnabled', target);
+                                    if (mod2 != 'unchanged') {
+                                        return mod2;
+                                    }
                                 }
                                 return true;
                             },
@@ -2668,8 +2825,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     if (!info.multitarget) {
                         for (const target of targets) {
-                            if (target && target.isDead()) return;
-                            if (info.notarget) return;
+                            if (target && target.isDead()) {
+                                return;
+                            }
+                            if (info.notarget) {
+                                return;
+                            }
                             const next = game.createEvent(name, false);
                             if (next.parent) {
                                 next.parent.directHit = [];
@@ -2693,7 +2854,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             await next.setContent(info.content);
                         }
                     } else {
-                        if (info.notarget) return;
+                        if (info.notarget) {
+                            return;
+                        }
                         const next = game.createEvent(name, false);
                         if (next.parent) {
                             next.parent.directHit = [];
@@ -2782,7 +2945,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     player.hp -= num;
                     player.update();
                     player.$damage(source);
-                    var natures = (nature || '').split(lib.natureSeparator);
+                    const natures = (nature || '').split(lib.natureSeparator);
                     game.broadcastAll(
                         function (natures, player) {
                             if (lib.config.animation && !lib.config.low_performance) {
@@ -2797,7 +2960,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         natures,
                         player
                     );
-                    var numx = player.hasSkillTag('nohujia') ? num : Math.max(0, num - player.hujia);
+                    let numx = player.hasSkillTag('nohujia') ? num : Math.max(0, num - player.hujia);
                     player.$damagepop(-numx, natures[0]);
                     if (player.hp <= 0 && player.isAlive()) {
                         player.dying({ source: source });
@@ -2887,14 +3050,26 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     }
                     const player = this,
                         info = get.info(card);
-                    if (!lib.filter.cardEnabled(card, player)) return false; //卡牌使用限制
-                    if (info.notarget) return true;
-                    if (!info.filterTarget) return true;
-                    if (!info.enable) return true;
+                    if (!lib.filter.cardEnabled(card, player)) {
+                        return false;
+                    } //卡牌使用限制
+                    if (info.notarget) {
+                        return true;
+                    }
+                    if (!info.filterTarget) {
+                        return true;
+                    }
+                    if (!info.enable) {
+                        return true;
+                    }
                     return game.hasPlayer(function (current) {
-                        if (info.multicheck && !info.multicheck(card, player)) return false;
+                        if (info.multicheck && !info.multicheck(card, player)) {
+                            return false;
+                        }
                         if (filter) {
-                            if (!lib.filter.targetInRange(card, player, current)) return false; //距离限制
+                            if (!lib.filter.targetInRange(card, player, current)) {
+                                return false;
+                            } //距离限制
                             return lib.filter.targetEnabledx(card, player, current);
                         }
                         return lib.filter.targetEnabled(card, player, current); //目标限制
@@ -2914,13 +3089,25 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     else if (evt.filterCard && evt.filterCard != lib.filter.filterCard) {
                         return evt.filterCard(card, player, evt); //这里也有次数限制
                     } else {
-                        if (!lib.filter.cardEnabled(card, player)) return false; //卡牌使用限制
-                        if (info.notarget) return true;
-                        if (!info.filterTarget) return true;
-                        if (!info.enable) return true;
-                        if (evt.name == 'chooseToRespond') return true; //chooseToRespond无次数距离目标限制
+                        if (!lib.filter.cardEnabled(card, player)) {
+                            return false;
+                        } //卡牌使用限制
+                        if (info.notarget) {
+                            return true;
+                        }
+                        if (!info.filterTarget) {
+                            return true;
+                        }
+                        if (!info.enable) {
+                            return true;
+                        }
+                        if (evt.name == 'chooseToRespond') {
+                            return true;
+                        } //chooseToRespond无次数距离目标限制
                         if (filter) {
-                            if (!lib.filter.cardUsable(card, player, evt)) return false; //次数限制
+                            if (!lib.filter.cardUsable(card, player, evt)) {
+                                return false;
+                            } //次数限制
                         }
                         if (evt.filterTarget && evt.filterTarget != lib.filter.filterTarget) {
                             return game.hasPlayer(function (current) {
@@ -2928,9 +3115,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             });
                         }
                         return game.hasPlayer(function (current) {
-                            if (info.multicheck && !info.multicheck(card, player)) return false;
+                            if (info.multicheck && !info.multicheck(card, player)) {
+                                return false;
+                            }
                             if (filter) {
-                                if (!lib.filter.targetInRange(card, player, current)) return false; //距离限制
+                                if (!lib.filter.targetInRange(card, player, current)) {
+                                    return false;
+                                } //距离限制
                                 return lib.filter.targetEnabledx(card, player, current);
                             }
                             return lib.filter.targetEnabled(card, player, current); //目标限制
@@ -3036,7 +3227,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         player.hiddenSkills.remove(skillx);
                         player.invisibleSkills.remove(skillx);
                         delete player.tempSkills[skillx];
-                        for (var i in player.additionalSkills) {
+                        for (let i in player.additionalSkills) {
                             player.additionalSkills[i].remove(skillx);
                         }
                         player.checkConflict(skillx);
@@ -3044,7 +3235,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         if (lib.skill.global.includes(skillx)) {
                             lib.skill.global.remove(skillx);
                             delete lib.skill.globalmap[skillx];
-                            for (var i in lib.hook.globalskill) {
+                            for (let i in lib.hook.globalskill) {
                                 lib.hook.globalskill[i].remove(skillx);
                             }
                         }
@@ -3059,7 +3250,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     game.expandSkills(skills);
                     for (const skillx of skills) {
                         player.initedSkills.remove(skillx);
-                        for (var i in lib.hook) {
+                        for (let i in lib.hook) {
                             if (Array.isArray(lib.hook[i]) && lib.hook[i].includes(skillx)) {
                                 try {
                                     delete lib.hook[i];
@@ -3068,7 +3259,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             }
                         }
-                        for (var i in lib.hook.globalskill) {
+                        for (let i in lib.hook.globalskill) {
                             if (lib.hook.globalskill[i].includes(skillx)) {
                                 lib.hook.globalskill[i].remove(skillx);
                                 if (lib.hook.globalskill[i].length == 0) {
@@ -3145,9 +3336,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 const {
                     result: { links },
                 } = await player.chooseButton(['严厉:弃置自己区域内任意张牌', player.getCards('hej')], [1, player.countCards('hej')]).set('ai', (b) => {
-                    if (get.position(b.link) == 'e') return -1;
+                    if (get.position(b.link) == 'e') {
+                        return -1;
+                    }
                     if (player.isPhaseUsing()) {
-                        if (player.hasValueTarget(b.link, null, true)) return -1;
+                        if (player.hasValueTarget(b.link, null, true)) {
+                            return -1;
+                        }
                         return 20 - get.value(b.link);
                     }
                     return 6 - get.useful(b.link);
@@ -3533,11 +3728,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_zhinukuanglei: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>天空之泰坦,不再宰制翁法罗斯的昼夜,却仍不改孤绝高傲的本性<br>在它眼中,破碎世界的凡俗是如此丑陋—————比起由光明守护的世界,浑浑噩噩的庸人反而与黑潮更加相配',
                         HL_juemiezhe: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>以霸道统治天空的征服者,被黑潮裹挟后的样貌.往昔的是非功过或许难以评说,但此刻饱含杀意的,只是一团破坏一切的无明业火',
                         HL_shao: '设计者:雪月风花(3360488304)<br>编写者:潜在水里的火(1476811518)',
-                        HL_jielv: '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>传说,在诸纪湮灭之前,太初晦暗未明之时,一场棋局贯穿光阴与维度<br>星辰为棋,万族为赌,执棋者,是不曾具名的存在<br>他们于星海间落下第一子,自此,文明星火与命运经纬,皆循其不可名状之轨迹流转<br>而在那最古老的梦中,一缕神识悄然垂降,凭<记忆>重塑残损之躯<br>此身游走于虚实之隙,与无形宇宙博弈,只待某一刻将虚妄与真实分辨<br>在那无尽博弈中,许多记忆浮现,又被磨损<br>焦土之上,硝烟未散的废墟中,一道孤影漫无目的地穿行<br>也曾有雏菊盛开的原野,三道身影并肩伫立<br>一人目光执着,追寻真理的尽头;<br>一人自彼岸而来,温柔坚定,怀抱理想与超弦科技;<br>一人沉默不语,终将独自前行<br>天地静默,风掠旷野,一切宛若日落前的余温——短暂,却依稀可辨<br>彼时,创世七族尚未联手,世界沉浮于诸王之争<br>升维之火种在文明间明灭,诸界于低语中竞逐,生灵于倾塌中挣扎<br>最终,七王立下界碑,使众神之上亦有规矩,使纷争之中仍可得庇护<br>他们曾共筑一座理想之塔——又共同见证它倾塌<br>联盟瓦解,诸王渐隐<br>锁链穿过十二星环,将腐化的身躯沉入永寂<br>而这场博弈,从未终止<br>直至宇宙沉寂,直至梦中无声',
+                        HL_jielv:
+                            '设计者:玲(2283058282)<br>编写者:潜在水里的火(1476811518)<br>传说,在诸纪湮灭之前,太初晦暗未明之时,一场棋局贯穿光阴与维度<br>星辰为棋,万族为赌,执棋者,是不曾具名的存在<br>他们于星海间落下第一子,自此,文明星火与命运经纬,皆循其不可名状之轨迹流转<br>而在那最古老的梦中,一缕神识悄然垂降,凭<记忆>重塑残损之躯<br>此身游走于虚实之隙,与无形宇宙博弈,只待某一刻将虚妄与真实分辨<br>在那无尽博弈中,许多记忆浮现,又被磨损<br>焦土之上,硝烟未散的废墟中,一道孤影漫无目的地穿行<br>也曾有雏菊盛开的原野,三道身影并肩伫立<br>一人目光执着,追寻真理的尽头;<br>一人自彼岸而来,温柔坚定,怀抱理想与超弦科技;<br>一人沉默不语,终将独自前行<br>天地静默,风掠旷野,一切宛若日落前的余温——短暂,却依稀可辨<br>彼时,创世七族尚未联手,世界沉浮于诸王之争<br>升维之火种在文明间明灭,诸界于低语中竞逐,生灵于倾塌中挣扎<br>最终,七王立下界碑,使众神之上亦有规矩,使纷争之中仍可得庇护<br>他们曾共筑一座理想之塔——又共同见证它倾塌<br>联盟瓦解,诸王渐隐<br>锁链穿过十二星环,将腐化的身躯沉入永寂<br>而这场博弈,从未终止<br>直至宇宙沉寂,直至梦中无声',
                         HL_qinli: `不知从哪里穿越而来的炎之精灵,涛涛烈焰焚天煮海,仙姿佚貌宛若天女,美丽与暴力于此刻共存`,
                         HL_lalaiye: '祂是深渊纪元,是深渊本身',
-                        HL_dihuanglong: '帝皇龙,创世龙族的万世至尊,同时也是这片宇宙中最古老的创世神之一<br>帝皇龙远在宇宙爆炸的微粒汇聚成世界之前,便已栖息在这个位面的缝隙中观察着这片宇宙<br>亿万年前,自太初之火引燃这片宇宙的奇点引发了被后世视为万物起源的宇宙大爆炸<br>神灵族创造这片宇宙中的全部灵魂,意识与感知;魔神族创造了宇宙中容纳灵魂的身躯,载体与其他一切生命物质;龙族开辟了整个宇宙所需要的时间与空间维度,让物质得以存在<br>而帝皇龙则是这片宇宙中,时空最初的缔造者<br>无人知晓这场诸神创世的真正意义<br>他们不知晓肉身与灵魂或许只是诸神汇聚散落于大爆炸中的太初之火的容器<br>更不知晓时间与空间,只是诸神为了将这片宇宙的奇点与低维造物隔绝所打造的最无形,不可跨越的墙<br>造物们歌唱着诸神让自己诞生的神迹,直到魔神王带着太初之火焚寂世界之时,这场酝酸了亿万年的阴谋才逐渐浮出水面<br>但那时候诸神已回归更高纬度的世界,只等着下一个带着太初之火的王者,中响高维宇宙的大门,诸神也将太初之火回收<br>但同为创世者的帝皇龙却选择将自己的神识留于这片宇宙<br>传说中,帝皇龙的力量足以颠倒时空,改变过去和未来,即使是创世者中,他也是最强的几个之一.......<br>然而帝皇龙却自诩为中立者,于时空起源处观察着宇宙的演化和历史的进程,不去干涉,也不去评判,只是静静地窥视着宇宙的真理<br>即使这个宇宙单调而无趣,其所有世界线的未来都无一例外地通向同一个毁灭的未来<br>但在他沉睡的亿万年间,这个世界却调诞生出连他也无法视其未来的世界线<br>有趣实在是太有趣了!<br>曾于无根宇宙中游,全知全能的龙族至尊感受到了太初之火降临于这片宇宙或许并非偶然<br>新的世界线的诞生,也并非偶然<br>冥冥之中,那根诸神也无法左右的命运蛛丝仿佛再次被牵动<br>帝皇龙相信蛛丝的另一头,便是那名为宇宙真理的存在',
-                        HL_qiankun: '一个经典的悲剧<br>勇士拿起曾经那把屠龙的刀,这次,没有恶龙,他却将刀尖对准了自己最亲的人<br>鲜血满足了杀戮的欲望,腹部的饱食感掩盖了家中的空荡荡<br>他望向镜中,仿佛正有个怪物朝他露出笑容<br>夜色漆黑,伴随着电闪雷鸣,乾坤降临此地<br>面对此等惨剧,他心中既无痛恨,也无怜悯,只有一如既往的冷酷<br>尔后,乾坤宣判了对怪物的抹杀<br>此起彼伏的笑声夹杂在雷鸣中,一阵渗人<br>怪物问:<你听说过龙之诅咒吗？><br>以龙之性命结成的诅咒,无法消除,无法转移,唯待诅咒完成,才能终止<br>而这诅咒,没有落在勇士身上,却报复性地施加给了勇士的至亲之人<br>一一他的亲人将在诅咒的力量下,逐渐失去五感、六欲、七情,换来不灭躯体与浓烈杀欲,最终沦为没有感情的杀人怪物<br>于是,在亲人们彻底怪物化之前,他不得不再次拿起了那把屠龙的刀<br>故事说罢,欲降的神罚却并未因此而止,雷鸣依然轰隆作响<br>乾坤悬飞于空中,居高临下地审视着他:<忍痛灭亲,是为大义.但,擅用秘法吞食他人沦为怪物,乃戒律所不容><br>话音刚落,乾坤掌中便翻涌起神力.来自九天之上的神罚如闪电般迅速降下<br>在即将抵达大地清除掉所有罪恶的这刹那,忽听见怪物躯体中同时响起女人、小孩急切的声音<br><不,不要!><br><放过我们吧><br><只有这样,我们才能继续生活在一起.><br><我想要我们一家人永远地在一起><br>.....<br>然而,乾坤只是冷眼看着眼前这个违背天地法则而诞生的怪物,毫不犹豫地降下神罚<br>怪物的躯体在神罚中逐渐消散,这一家人似是知晓命运将至终点,连哀哭都止住了,抓紧最后的时间依依话别<br><对不起.若你当初嫁的人不是我,该多好><br><可我,不悔><br>怪物的躯体终是消散了,什么也没留下<br>乾坤如常地回到虚无空间,陷入沉眠<br>他的梦里一片黑暗,什么也没有<br>一声<不悔>,如一颗石子落进纯黑的水中,惊起圈圈涟猗<br>乾坤睁眼醒来,身边空无一人,他却伸手做出一个要抓住什么的动作<br>空的<br>什么也没抓住<br>这瞬间,他铁铸般的心往下坠了一下<br>可这也只是乾坤漫长生命里微不足道的一瞬间,相比起数万年的光阴来说,这一瞬间,太短太短了<br>短得令他无法深究,那想要伸手去抓住的,究竟是什么<br>毕竟,身为开启鸿蒙之门,主宰天道之人,乾坤绝无兴趣去探索戒律与天道之外的事<br><神明,不需要多余的感情>',
+                        HL_dihuanglong:
+                            '帝皇龙,创世龙族的万世至尊,同时也是这片宇宙中最古老的创世神之一<br>帝皇龙远在宇宙爆炸的微粒汇聚成世界之前,便已栖息在这个位面的缝隙中观察着这片宇宙<br>亿万年前,自太初之火引燃这片宇宙的奇点引发了被后世视为万物起源的宇宙大爆炸<br>神灵族创造这片宇宙中的全部灵魂,意识与感知;魔神族创造了宇宙中容纳灵魂的身躯,载体与其他一切生命物质;龙族开辟了整个宇宙所需要的时间与空间维度,让物质得以存在<br>而帝皇龙则是这片宇宙中,时空最初的缔造者<br>无人知晓这场诸神创世的真正意义<br>他们不知晓肉身与灵魂或许只是诸神汇聚散落于大爆炸中的太初之火的容器<br>更不知晓时间与空间,只是诸神为了将这片宇宙的奇点与低维造物隔绝所打造的最无形,不可跨越的墙<br>造物们歌唱着诸神让自己诞生的神迹,直到魔神王带着太初之火焚寂世界之时,这场酝酸了亿万年的阴谋才逐渐浮出水面<br>但那时候诸神已回归更高纬度的世界,只等着下一个带着太初之火的王者,中响高维宇宙的大门,诸神也将太初之火回收<br>但同为创世者的帝皇龙却选择将自己的神识留于这片宇宙<br>传说中,帝皇龙的力量足以颠倒时空,改变过去和未来,即使是创世者中,他也是最强的几个之一.......<br>然而帝皇龙却自诩为中立者,于时空起源处观察着宇宙的演化和历史的进程,不去干涉,也不去评判,只是静静地窥视着宇宙的真理<br>即使这个宇宙单调而无趣,其所有世界线的未来都无一例外地通向同一个毁灭的未来<br>但在他沉睡的亿万年间,这个世界却调诞生出连他也无法视其未来的世界线<br>有趣实在是太有趣了!<br>曾于无根宇宙中游,全知全能的龙族至尊感受到了太初之火降临于这片宇宙或许并非偶然<br>新的世界线的诞生,也并非偶然<br>冥冥之中,那根诸神也无法左右的命运蛛丝仿佛再次被牵动<br>帝皇龙相信蛛丝的另一头,便是那名为宇宙真理的存在',
+                        HL_qiankun:
+                            '一个经典的悲剧<br>勇士拿起曾经那把屠龙的刀,这次,没有恶龙,他却将刀尖对准了自己最亲的人<br>鲜血满足了杀戮的欲望,腹部的饱食感掩盖了家中的空荡荡<br>他望向镜中,仿佛正有个怪物朝他露出笑容<br>夜色漆黑,伴随着电闪雷鸣,乾坤降临此地<br>面对此等惨剧,他心中既无痛恨,也无怜悯,只有一如既往的冷酷<br>尔后,乾坤宣判了对怪物的抹杀<br>此起彼伏的笑声夹杂在雷鸣中,一阵渗人<br>怪物问:<你听说过龙之诅咒吗？><br>以龙之性命结成的诅咒,无法消除,无法转移,唯待诅咒完成,才能终止<br>而这诅咒,没有落在勇士身上,却报复性地施加给了勇士的至亲之人<br>一一他的亲人将在诅咒的力量下,逐渐失去五感、六欲、七情,换来不灭躯体与浓烈杀欲,最终沦为没有感情的杀人怪物<br>于是,在亲人们彻底怪物化之前,他不得不再次拿起了那把屠龙的刀<br>故事说罢,欲降的神罚却并未因此而止,雷鸣依然轰隆作响<br>乾坤悬飞于空中,居高临下地审视着他:<忍痛灭亲,是为大义.但,擅用秘法吞食他人沦为怪物,乃戒律所不容><br>话音刚落,乾坤掌中便翻涌起神力.来自九天之上的神罚如闪电般迅速降下<br>在即将抵达大地清除掉所有罪恶的这刹那,忽听见怪物躯体中同时响起女人、小孩急切的声音<br><不,不要!><br><放过我们吧><br><只有这样,我们才能继续生活在一起.><br><我想要我们一家人永远地在一起><br>.....<br>然而,乾坤只是冷眼看着眼前这个违背天地法则而诞生的怪物,毫不犹豫地降下神罚<br>怪物的躯体在神罚中逐渐消散,这一家人似是知晓命运将至终点,连哀哭都止住了,抓紧最后的时间依依话别<br><对不起.若你当初嫁的人不是我,该多好><br><可我,不悔><br>怪物的躯体终是消散了,什么也没留下<br>乾坤如常地回到虚无空间,陷入沉眠<br>他的梦里一片黑暗,什么也没有<br>一声<不悔>,如一颗石子落进纯黑的水中,惊起圈圈涟猗<br>乾坤睁眼醒来,身边空无一人,他却伸手做出一个要抓住什么的动作<br>空的<br>什么也没抓住<br>这瞬间,他铁铸般的心往下坠了一下<br>可这也只是乾坤漫长生命里微不足道的一瞬间,相比起数万年的光阴来说,这一瞬间,太短太短了<br>短得令他无法深究,那想要伸手去抓住的,究竟是什么<br>毕竟,身为开启鸿蒙之门,主宰天道之人,乾坤绝无兴趣去探索戒律与天道之外的事<br><神明,不需要多余的感情>',
                     },
                     characterTitle: {
                         HL_李白: `<b style='color: #00FFFF; font-size: 25px;'>醉酒狂詩  青蓮劍仙</b>`,
@@ -4014,7 +4212,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_guiluan: {
                             trigger: { player: 'useCard' },
                             filter(event, player) {
-                                if (!['sha', 'juedou', 'guohe', 'shunshou', 'zhujinqiyuan'].includes(event.card.name)) return false;
+                                if (!['sha', 'juedou', 'guohe', 'shunshou', 'zhujinqiyuan'].includes(event.card.name)) {
+                                    return false;
+                                }
                                 return event.targets && player.getEnemies().some((q) => !event.targets.includes(q));
                             },
                             forced: true,
@@ -4034,13 +4234,17 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         playerEnabled(card, player, target) {
                                             const q = game.players.find((i) => i.hasSkill('HL_quanyu'));
                                             if (q && player.isEnemiesOf(q)) {
-                                                if (target != q && get.tag(card, 'damage')) return false;
+                                                if (target != q && get.tag(card, 'damage')) {
+                                                    return false;
+                                                }
                                             }
                                         },
                                         targetEnabled(card, player, target) {
                                             const q = game.players.find((i) => i.hasSkill('HL_quanyu'));
                                             if (q && player.isEnemiesOf(q)) {
-                                                if (target != q && get.tag(card, 'damage')) return false;
+                                                if (target != q && get.tag(card, 'damage')) {
+                                                    return false;
+                                                }
                                             }
                                         },
                                     },
@@ -4655,30 +4859,42 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 1: {
                                     enable: ['chooseToRespond', 'chooseToUse'],
                                     filterCard(card, player) {
-                                        if (get.zhu(player, 'shouyue')) return true;
+                                        if (get.zhu(player, 'shouyue')) {
+                                            return true;
+                                        }
                                         return get.color(card) == 'black';
                                     },
                                     position: 'hes',
                                     viewAs: { name: 'sha' },
                                     viewAsFilter(player) {
                                         if (get.zhu(player, 'shouyue')) {
-                                            if (!player.countCards('hes')) return false;
+                                            if (!player.countCards('hes')) {
+                                                return false;
+                                            }
                                         } else {
-                                            if (!player.countCards('hes', { color: 'black' })) return false;
+                                            if (!player.countCards('hes', { color: 'black' })) {
+                                                return false;
+                                            }
                                         }
                                     },
                                     prompt: '将一张黑色牌当杀使用或打出',
                                     check(card) {
                                         const val = get.value(card);
-                                        if (_status.event.name == 'chooseToRespond') return 1 / Math.max(0.1, val);
+                                        if (_status.event.name == 'chooseToRespond') {
+                                            return 1 / Math.max(0.1, val);
+                                        }
                                         return 5 - val;
                                     },
                                     ai: {
                                         skillTagFilter(player, tag) {
                                             if (get.zhu(player, 'shouyue')) {
-                                                if (!player.countCards('hes')) return false;
+                                                if (!player.countCards('hes')) {
+                                                    return false;
+                                                }
                                             } else {
-                                                if (!player.countCards('hes', { color: 'black' })) return false;
+                                                if (!player.countCards('hes', { color: 'black' })) {
+                                                    return false;
+                                                }
                                             }
                                         },
                                         respondSha: true,
@@ -4752,7 +4968,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 if (get.effect(player, trigger.card, trigger.player, player) < 0) {
                                     //FILTER里面放get.effect=>get.value出bug没有_status.event.player
-                                    var E = get.cards(1);
+                                    const E = get.cards(1);
                                     game.cardsGotoOrdering(E);
                                     player.showCards(E, '玲珑');
                                     if (get.color(E[0]) == 'black') {
@@ -5286,8 +5502,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     logTarget(event, player) {
-                                        if (event.name == 'respond') return event.source;
-                                        if (event.card.name == 'sha') return event.targets[0];
+                                        if (event.name == 'respond') {
+                                            return event.source;
+                                        }
+                                        if (event.card.name == 'sha') {
+                                            return event.targets[0];
+                                        }
                                         return event.respondTo[0];
                                     },
                                     async content(event, trigger, player) {
@@ -6350,30 +6570,44 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 target: 'useCardToTargeted',
                             },
                             filter(event, player) {
-                                if (['respond', 'useCard'].includes(event.name)) return ['shan'].includes(event.card.name);
-                                if (!(event.card.name == 'juedou' || event.card.name == 'sha')) return false;
+                                if (['respond', 'useCard'].includes(event.name)) {
+                                    return ['shan'].includes(event.card.name);
+                                }
+                                if (!(event.card.name == 'juedou' || event.card.name == 'sha')) {
+                                    return false;
+                                }
                                 return player == event.target || event.parent.triggeredTargets3.length == 1;
                             },
                             forced: true,
                             content() {
-                                var card = [];
-                                var card1 = get.cardPile(function (card) {
+                                let card = [];
+                                const card1 = get.cardPile(function (card) {
                                     return card.name == 'sha';
                                 });
-                                var card2 = get.cardPile(function (card) {
+                                const card2 = get.cardPile(function (card) {
                                     return card.name == 'shan';
                                 });
-                                if (card1) card.add(card1);
-                                if (card2) card.add(card2);
-                                if (card.length) player.gain(card, 'gain2');
+                                if (card1) {
+                                    card.add(card1);
+                                }
+                                if (card2) {
+                                    card.add(card2);
+                                }
+                                if (card.length) {
+                                    player.gain(card, 'gain2');
+                                }
                             },
                             ai: {
                                 effect: {
                                     target(card, player, target) {
-                                        if (card.name == 'sha') return [1, 0.6];
+                                        if (card.name == 'sha') {
+                                            return [1, 0.6];
+                                        }
                                     },
                                     player(card, player, target) {
-                                        if (card.name == 'sha') return [1, 1];
+                                        if (card.name == 'sha') {
+                                            return [1, 1];
+                                        }
                                     },
                                 },
                             },
@@ -6392,10 +6626,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             mod: {
                                 cardnature(card, player) {
-                                    if (card.name == 'sha' && get.color(card) == 'red') return 'fire';
+                                    if (card.name == 'sha' && get.color(card) == 'red') {
+                                        return 'fire';
+                                    }
                                 },
                                 cardUsable(card, player) {
-                                    if (card.name == 'sha' && get.color(card) == 'red') return Infinity;
+                                    if (card.name == 'sha' && get.color(card) == 'red') {
+                                        return Infinity;
+                                    }
                                 },
                             },
                         },
@@ -6406,10 +6644,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             content() {
-                                if (trigger.name == 'loseHp') trigger.cancel();
-                                else {
+                                if (trigger.name == 'loseHp') {
+                                    trigger.cancel();
+                                } else {
                                     if (trigger.player == player) {
-                                        var players = player.getEnemies().sortBySeat();
+                                        let players = player.getEnemies().sortBySeat();
                                         for (const i of players) {
                                             i.chooseToDiscard(true, 'he');
                                         }
@@ -6426,7 +6665,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     filter(event, player) {
-                                        if (event.getl && !event.getl(player)) return false;
+                                        if (event.getl && !event.getl(player)) {
+                                            return false;
+                                        }
                                         return player.countCards('h') > 20;
                                     },
                                     content() {
@@ -6444,8 +6685,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             content() {
-                                if (trigger.nature == 'fire') trigger.cancel();
-                                else {
+                                if (trigger.nature == 'fire') {
+                                    trigger.cancel();
+                                } else {
                                     trigger.num--;
                                     if (player.hp == player.maxHp) {
                                         player.changeHujia();
@@ -6457,8 +6699,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             ai: {
                                 effect: {
                                     target(card, player, target) {
-                                        if (get.tag(card, 'fireDamage')) return [0, 2];
-                                        if (get.tag(card, 'thunderDamage')) return [0, 1.5];
+                                        if (get.tag(card, 'fireDamage')) {
+                                            return [0, 2];
+                                        }
+                                        if (get.tag(card, 'thunderDamage')) {
+                                            return [0, 1.5];
+                                        }
                                     },
                                 },
                             },
@@ -6515,8 +6761,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             mod: {
                                 cardUsable(card, player, num) {
-                                    var n = Math.floor(player.countMark('HL_shaoEGO') / 3);
-                                    if (card.name == 'sha') return num + n;
+                                    const n = Math.floor(player.countMark('HL_shaoEGO') / 3);
+                                    if (card.name == 'sha') {
+                                        return num + n;
+                                    }
                                 },
                             },
                             group: ['bosshp', 'bossfinish', 'HL_shaoEGO_1'],
@@ -6627,14 +6875,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             filter: (event, player) => game.players.some((q) => q.countMark('_HL_shaoshang')),
                             async content(event, trigger, player) {
                                 //QQQ
-                                var num = 0;
+                                let num = 0;
                                 for (const i of game.players) {
                                     num += i.countMark('_HL_shaoshang');
                                 }
                                 const num1 = num * player.countMark('HL_shaoEGO');
                                 for (const i of game.players) {
                                     if (i.countMark('_HL_shaoshang') && i.isEnemiesOf(player)) {
-                                        var num2 = 6;
+                                        let num2 = 6;
                                         while (num2-- > 0) {
                                             await i.damage(num1, 'fire');
                                         }
@@ -6648,7 +6896,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             filter(event, player) {
-                                var num = 0;
+                                let num = 0;
                                 for (const i of game.players) {
                                     num += i.countMark('_HL_shaoshang');
                                 }
@@ -6657,7 +6905,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             async content(event, trigger, player) {
                                 const { result } = await player.chooseToDiscard(1, 'he', true);
                                 if (result.cards && result.cards[0]) {
-                                    var num = 0;
+                                    let num = 0;
                                     for (const i of game.players) {
                                         num += i.countMark('_HL_shaoshang');
                                     }
@@ -6687,7 +6935,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             forced: true,
                             async content(event, trigger, player) {
-                                var num = 0;
+                                let num = 0;
                                 for (const i of game.players) {
                                     num += i.countMark('_HL_shaoshang');
                                 }
@@ -6702,7 +6950,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     forced: true,
                                     async content(event, trigger, player) {
-                                        var num = 0;
+                                        let num = 0;
                                         for (const i of game.players) {
                                             num += i.countMark('_HL_shaoshang');
                                         }
@@ -7221,7 +7469,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     npc.update();
                                     npc.draw(numx * 4 - 4);
                                     npc.ai.modAttitudeFrom = function (from, to, att) {
-                                        if (to == from.boss) return 99;
+                                        if (to == from.boss) {
+                                            return 99;
+                                        }
                                         return att;
                                     }; //这里from是随从
                                     npc.ai.modAttitudeTo = function (from, to, att) {
@@ -8000,8 +8250,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 const storage = Object.assign({}, player.storage); //清空代理
                                 player.storage = new Proxy(storage, {
                                     get(u, i) {
-                                        if (i == 'skill_blocker') return [];
-                                        if (i.startsWith('temp_ban_')) return false;
+                                        if (i == 'skill_blocker') {
+                                            return [];
+                                        }
+                                        if (i.startsWith('temp_ban_')) {
+                                            return false;
+                                        }
                                         return u[i];
                                     },
                                 }); //技能失效抗性//不能直接用空对象初始化,会清空之前技能的init里面的storage
@@ -8204,15 +8458,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 new MutationObserver(async function () {
                                     const num = player.node.handcards1.childNodes.length - 5;
                                     if (num > 0) {
-                                        const { result } = await player
-                                            .chooseCard('将手牌数调整为5', 'h', num, true)
-                                            .set('ai', (c) => {
-                                                if (player.isPhaseUsing()) {
-                                                    if (player.hasValueTarget(c, null, true)) return -1;
-                                                    return 20 - get.value(c);
+                                        const { result } = await player.chooseCard('将手牌数调整为5', 'h', num, true).set('ai', (c) => {
+                                            if (player.isPhaseUsing()) {
+                                                if (player.hasValueTarget(c, null, true)) {
+                                                    return -1;
                                                 }
-                                                return 6 - get.useful(c);
-                                            });
+                                                return 20 - get.value(c);
+                                            }
+                                            return 6 - get.useful(c);
+                                        });
                                         if (result?.cards?.length) {
                                             for (const card of result.cards) {
                                                 ui.discardPile.appendChild(card);
@@ -8398,7 +8652,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         const { result } = await player
                                             .chooseToUse()
                                             .set('filterCard', (c) => player.filterCardx(c) && get.tag(c, 'damage'))
-                                            .set('filterTarget', (c, p, t) => true)//可以对自己用伤害牌
+                                            .set('filterTarget', (c, p, t) => true) //可以对自己用伤害牌
                                             .set('ai1', (card, arg) => {
                                                 if (lib.card[card.name]) {
                                                     return number0(player.getUseValue(card, null, true)) + 10;
@@ -8507,7 +8761,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     async content(event, trigger, player) {
                                         game.removeGlobalSkill('g_lejishengbei');
                                         game.removeGlobalSkill('g_lejishengbei_1');
-                                        let maxnum = Math.max(...game.players.map((q) => q.countMark('g_lejishengbei')));
+                                        const maxnum = Math.max(...game.players.map((q) => q.countMark('g_lejishengbei')));
                                         if (maxnum > 0) {
                                             const maxplayer = game.players.filter((q) => q.countMark('g_lejishengbei') == maxnum);
                                             for (const npc of game.players) {
@@ -8980,7 +9234,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player != player && event.player.isjingling() && event.targets && !['equip', 'delay'].includes(get.type(event.card));
                             },
                             check(event, player) {
-                                if (player.hp < 2) return 0;
+                                if (player.hp < 2) {
+                                    return 0;
+                                }
                                 let value = 0;
                                 for (const npc of game.players.filter((q) => !event.targets.includes(q))) {
                                     const effect = get.effect(npc, event.card, event.player, player);
@@ -9031,7 +9287,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return event.player != player && !event.player.isjingling() && event.targets?.length;
                             },
                             check(event, player) {
-                                if (player.hp < 2) return 0;
+                                if (player.hp < 2) {
+                                    return 0;
+                                }
                                 let value = 0;
                                 for (const npc of event.targets) {
                                     const effect = get.effect(npc, event.card, event.player, player);
@@ -9642,24 +9900,36 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return 8 - get.value(card);
                             },
                             hiddenCard(player, name) {
-                                if (name == 'juedou') return player.countCards('hes', { suit: 'spade' });
-                                if (name == 'sha') return player.countCards('hes', { suit: 'club' });
+                                if (name == 'juedou') {
+                                    return player.countCards('hes', { suit: 'spade' });
+                                }
+                                if (name == 'sha') {
+                                    return player.countCards('hes', { suit: 'club' });
+                                }
                             },
                             filterCard(card, player, event) {
-                                if (card.suit == 'spade' && player.filterCard('juedou')) return true;
-                                if (card.suit == 'club' && player.filterCard('sha')) return true;
+                                if (card.suit == 'spade' && player.filterCard('juedou')) {
+                                    return true;
+                                }
+                                if (card.suit == 'club' && player.filterCard('sha')) {
+                                    return true;
+                                }
                                 return false;
                             },
                             selectCard: 1,
                             position: 'hes',
                             filter(event, player) {
-                                if (player.filterCard('sha') && player.countCards('hes', { suit: 'club' })) return true;
-                                if (player.filterCard('juedou') && player.countCards('hes', { suit: 'spade' })) return true;
+                                if (player.filterCard('sha') && player.countCards('hes', { suit: 'club' })) {
+                                    return true;
+                                }
+                                if (player.filterCard('juedou') && player.countCards('hes', { suit: 'spade' })) {
+                                    return true;
+                                }
                                 return false;
                             },
                             prompt: '将♠️️️️/♣️️️️牌当做【决斗】/【杀】使用或打出',
                             viewAs(cards, player) {
-                                var name;
+                                let name;
                                 switch (cards[0]?.suit) {
                                     case 'spade':
                                         name = 'juedou';
@@ -10096,16 +10366,24 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_zhongjieji: {
                             mod: {
                                 canBeGained(card, source, player) {
-                                    if (card.name == 'HL_zhongjieji') return false;
+                                    if (card.name == 'HL_zhongjieji') {
+                                        return false;
+                                    }
                                 },
                                 canBeDiscarded(card, source, player) {
-                                    if (card.name == 'HL_zhongjieji') return false;
+                                    if (card.name == 'HL_zhongjieji') {
+                                        return false;
+                                    }
                                 },
                                 canBeReplaced(card, player) {
-                                    if (card.cards?.some((c) => c.name == 'HL_zhongjieji')) return false;
+                                    if (card.cards?.some((c) => c.name == 'HL_zhongjieji')) {
+                                        return false;
+                                    }
                                 }, //这里是vcard
                                 cardDiscardable(card, player) {
-                                    if (card.name == 'HL_zhongjieji') return false;
+                                    if (card.name == 'HL_zhongjieji') {
+                                        return false;
+                                    }
                                 },
                             },
                             trigger: {
@@ -10136,7 +10414,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 for (let i = players.length - 1; i > 0; i--) {
                                     const j = Math.floor(Math.random() * (i + 1));
                                     [players[i], players[j]] = [players[j], players[i]];
-                                }// Fisher-Yates 算法洗牌
+                                } // Fisher-Yates 算法洗牌
                                 players.forEach((player, index) => {
                                     player.dataset.position = index;
                                 });
@@ -10165,8 +10443,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             for (const npc of game.players.filter((q) => q.countCards('h') > min && q != player)) {
                                                 await npc.chooseToDiscard(`将手牌数弃置至${min}`, 'h', npc.countCards('h') - min, true);
                                             }
-                                        }
-                                        else {
+                                        } else {
                                             trigger.cancel();
                                         }
                                     },
@@ -10339,7 +10616,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         }
                                     },
                                 },
-                            }
+                            },
                         },
                         // 帝皇龙吼
                         // 当一张牌名的牌累计进入弃牌堆三次后,你令所有敌方角色进行一次濒死结算
@@ -10368,8 +10645,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             if (npc.isAlive() && allcards.length) {
                                                 const {
                                                     result: { cards },
-                                                } = await npc.chooseCard('选择一张牌保留', 'he', true)
-                                                    .set('ai', (c) => get.value(c));
+                                                } = await npc.chooseCard('选择一张牌保留', 'he', true).set('ai', (c) => get.value(c));
                                                 if (cards?.length) {
                                                     allcards.remove(cards[0]);
                                                 }
@@ -10394,9 +10670,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 await player.showCards(cards);
                                 const {
                                     result: { links },
-                                } = await player
-                                    .chooseButton(['将其中任意张牌标为<鳞>随机置于牌堆中,获得其余牌', cards])
-                                    .set('ai', (button) => 6 - get.value(button.link));
+                                } = await player.chooseButton(['将其中任意张牌标为<鳞>随机置于牌堆中,获得其余牌', cards]).set('ai', (button) => 6 - get.value(button.link));
                                 if (links?.length) {
                                     for (const card of links) {
                                         card.addGaintag('HL_shenshiqianban');
@@ -10577,7 +10851,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_jielv: '戒律',
                         HL_tianqi: '天启拈作劫',
                         HL_tianqi_info: '①每轮开始时,你从四项律法中选择获得其中两项律法(覆盖之前)<br>②敌方角色亵渎对应律法时,其获得持续2轮的对应律法的亵渎印记<br>③准备阶段,若敌方单个角色的亵渎印记种类数大于1,你进入『真理裁决』3轮',
-                        HL_tianqi_append: '真理裁决<br><b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b><br>生命律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限</b><br>生命亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b><br>智慧律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b><br>智慧亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b><br>战争律法<br><b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b><br>战争亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b><br>威严律法<br><b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b><br>威严亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
+                        HL_tianqi_append:
+                            '真理裁决<br><b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b><br>生命律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你回复7点体力值<br>你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限</b><br>生命亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色回复量大于1时,视为亵渎生命律法<br>持有此印记时,无法使用回复牌,无法回复体力值</b><br>智慧律法<br><b style="color:rgba(228, 213, 9, 1)">准备阶段和结束阶段,你摸七张牌</b><br>智慧亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色于摸牌阶段外获得牌时,视为亵渎智慧律法<br>持有此印记时,无法使用或打出这些牌,且回合结束时弃置这些牌</b><br>战争律法<br><b style="color:rgba(228, 213, 9, 1)">你使用伤害牌后,摸造成伤害数张牌或回复等量体力值</b><br>战争亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色一回合内使用伤害牌数大于1时,视为亵渎战争律法<br>持有此印记时,防止造成的伤害.回合结束时,受到本回合造成伤害数的等量伤害</b><br>威严律法<br><b style="color:rgba(228, 213, 9, 1)">你成为牌的目标/受到伤害/失去体力时,你摸一张牌</b><br>威严亵渎<br><b style="color:rgba(226, 18, 36, 1)">敌方角色使用非回复牌指定你为目标时,视为亵渎威严律法<br>持有此印记时,无法指定你为目标.出牌阶段内使用非回复牌后,结束出牌阶段.回合结束时,翻面或跳过下个出牌阶段</b>',
                         _HL_zhenlicaijue: '真理裁决',
                         _HL_zhenlicaijue_info: '<b style="color:rgba(231, 21, 214, 1)">你视为拥有全部律法,且律法增加强化效果<br>生命:你回复牌的回复量翻倍<br>智慧:摸牌阶段外,你摸牌数翻倍<br>战争:你伤害牌的伤害翻倍<br>威严:你使用牌时额外结算一次,重铸牌时摸一张牌</b>',
                         HL_shengming: '生命律法',
@@ -11075,6 +11350,20 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                             },
                         },
+                        // 逆流
+                        // 出牌阶段对所有角色使用,你记录目标体力值,令其进入『逆流河』
+                        HL_niliu: {},
+                        // 逆流河
+                        // ①不在『逆流河』中的角色对『逆流河』中角色<使用牌/造成伤害>时,将目标改为其自身
+                        // ②『逆流河』中所有角色技能失效,自己回合结束后失去一点体力摸两张牌
+                        // ③一名角色进入濒死时,可选择退出『逆流河』,将体力值改为记录值
+                        // ④最后留在『逆流河』内的角色获得『坚持』
+
+                        // 坚持
+                        // 逆流河对你的效果改为:
+                        // ①每回合限一次,不在『逆流河』中的角色对你<使用牌/造成伤害>时,你可将目标改为其自身
+                        // ②你的回合结束后,摸两张牌
+                        // ③当你进入濒死时,『逆流河』消失,将你的体力值改为记录值
                     },
                     translate: {
                         shuidan: '水弹',
@@ -11127,7 +11416,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     }
                     lib.inpile.add(i);
-                    if (info.mode && !info.mode.includes(lib.config.mode)) continue;
+                    if (info.mode && !info.mode.includes(lib.config.mode)) {
+                        continue;
+                    }
                     lib.card.list.push([lib.suits.randomGet(), lib.number.randomGet(), i]);
                 }
                 lib.config.all.cards.add('火灵月影');
