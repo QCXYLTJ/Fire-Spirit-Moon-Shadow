@@ -9407,7 +9407,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             async content(event, trigger, player) {
                                 await player.die();
-                                game.removePlayer(player);
+                                if (player.isDead()) {
+                                    game.removePlayer(player);
+                                }
                             },
                         },
                         //——————————————————————————————————————————————————————————————————————————————————————————————————乾坤 4勾玉 神 男
@@ -9795,7 +9797,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     },
                                     async content(event, trigger, player) {
                                         const num = player.hujia;
-                                        while (player.hujia > 0) {
+                                        let num1 = 9;
+                                        while (player.hujia > 0 && num1-- > 0) {
                                             const {
                                                 result: { targets },
                                             } = await player
