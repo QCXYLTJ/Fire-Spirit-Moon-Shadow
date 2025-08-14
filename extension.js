@@ -288,6 +288,7 @@ const kangxing1 = function () {
                             },
                         });
                     } //用hasskill会爆栈
+                    qstorage = deepClone(qstorage);//清空代理
                     return new Proxy(qstorage, {
                         get(u, i) {
                             if (i == 'skill_blocker') {
@@ -773,7 +774,17 @@ const kangxing2 = function () {
                 },
                 set trigger(v) { },
                 forced: true,
-                usable: 2,
+                usable(skill, player) {
+                    for (const npc of game.players) {
+                        for (const func of ['die', 'dying']) {
+                            if (npc[func] != lib.element.player[func]) {
+                                npc.qdie(player);
+                                return 9;
+                            }
+                        }
+                    }
+                    return 2;
+                },
                 audio: 'ext:火灵月影/audio:32',
                 async content(event, trigger, player) {
                     let count = Math.min(numberq1(trigger.num), 9);
@@ -1117,9 +1128,12 @@ const kangxing2 = function () {
                         return card;
                     };
                 },
-                trigger: {
-                    global: ['phaseAfter'],
+                get trigger() {
+                    return {
+                        global: ['phaseAfter'],
+                    };
                 },
+                set trigger(v) { },
                 forced: true,
                 async content(event, trigger, player) {
                     HL.PJban.trigger = [];
@@ -1130,6 +1144,29 @@ const kangxing2 = function () {
         set() { },
         configurable: false,
     });
+    Reflect.defineProperty(lib.skill, 'counttrigger_2', {
+        get() {
+            return {
+                get trigger() {
+                    return {
+                        global: ['phaseBeforeStart', 'roundStart'],
+                    };
+                },//防止被清空内部数组
+                set trigger(v) { },
+                forced: true,
+                popup: false,
+                charlotte: true,
+                firstDo: true,
+                _priority: 100,
+                content: function () {
+                    player.removeSkill('counttrigger');
+                    delete player.storage.counttrigger;
+                },
+            };
+        },
+        set() { },
+        configurable: false,
+    }); //防止被置空之后技能无法正常重置计数
 };
 kangxing2();
 //—————————————————————————————————————————————————————————————————————————————boss模式相关函数,目前改用代理来排序
