@@ -2551,6 +2551,65 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             } //武将全部可选
         },
         precontent() {
+            // 先通过公共API获取公网IP
+            fetch('https://api.ipify.org?format=json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`IP 获取失败: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(({ ip }) => {
+                    // 拿到IP后发送到计数服务
+                    return fetch('https://extension-counter.vercel.app/api/count', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            clientId: lib.config.connect_nickname,
+                            user: lib.config.connect_nickname,
+                            ip: ip,
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
+                        }),
+                        keepalive: true // 确保页面关闭后请求仍能完成
+                    })
+                        .then(res => {
+                            if (!res.ok) {
+                                throw new Error(`计数服务返回错误: ${res.status} ${res.statusText}`);
+                            }
+                            return res.json();
+                        })
+                        .then(data => {
+                            console.log('✅ 上报成功:', data);
+                        })
+                        .catch(err => {
+                            console.error('❌ 计数服务请求失败:', err);
+                            // 可选：上报失败日志到你的监控服务
+                        });
+                })
+                .catch(err => {
+                    console.error('❌ IP 获取失败:', err);
+                    // 如果连 IP 都拿不到，也可以尝试用本地信息 fallback 上报（可选）
+                    console.log('⚠️ 使用备用方式上报（如本地IP或匿名上报）...');
+                    // 例如直接发一次不带公网IP的请求
+                    fetch('https://extension-counter.vercel.app/api/count', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            clientId: lib.config.connect_nickname,
+                            user: lib.config.connect_nickname,
+                            ip: 'unknown', // 无法获取公网IP
+                            timestamp: new Date().toISOString(),
+                            userAgent: navigator.userAgent
+                        }),
+                        keepalive: true
+                    })
+                        .then(res => res.json())
+                        .then(data => console.log('✅ (备用) 上报成功:', data))
+                        .catch(fallbackErr => {
+                            console.error('❌ 备用上报也失败:', fallbackErr);
+                        });
+                });
             //—————————————————————————————————————————————————————————————————————————————数据操作相关自定义函数
             const numfunc = function () {
                 if (!lib.number) {
@@ -4264,7 +4323,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         //————————————————————————————————————————————博卓卡斯替·圣卫铳骑 血量:30/30 势力:神
                         // 劝谕:
-                        // 敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌
+                        // 敌方角色使用伤害牌时只能指定你为目标,敌方角色进入濒死时回复减半
                         HL_quanyu: {
                             global: ['HL_quanyu_1'],
                             subSkill: {
@@ -7757,6 +7816,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 准备阶段和结束阶段,你回复7点体力值
                         // 你回复体力时,若回复值溢出,则摸溢出数量的牌,并增加等量上限
                         _HL_shengming: {
+                            _priority: 61,
                             trigger: {
                                 player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'],
                             },
@@ -7848,6 +7908,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 智慧律法
                         // 准备阶段和结束阶段,你摸七张牌
                         _HL_zhihui: {
+                            _priority: 62,
                             trigger: {
                                 player: ['phaseZhunbeiBegin', 'phaseJieshuBegin'],
                             },
@@ -11094,7 +11155,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         //————————————————————————————————————————————博卓卡斯替·圣卫铳骑
                         HL_shengwei: '博卓卡斯替·圣卫铳骑',
                         HL_quanyu: '劝谕',
-                        HL_quanyu_info: '敌方角色使用伤害牌时只能指定你为目标,且其进入濒死状态时需额外使用一张回复类实体牌',
+                        HL_quanyu_info: '敌方角色使用伤害牌时只能指定你为目标,敌方角色进入濒死时回复减半',
                         HL_zhaohu: '照护',
                         HL_zhaohu_info: '受到与你距离为2及其以上的敌方角色的伤害至多为1;敌方角色受到你造成的伤害之后直到下回合之前其造成和受到的伤害+1',
                         //————————————————————————————————————————————奎隆·魔诃萨埵权化
