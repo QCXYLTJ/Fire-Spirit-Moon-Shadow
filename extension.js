@@ -3123,7 +3123,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     next.source = source;
                     next.player = player;
                     next._triggered = null;
-                    next.setContent(lib.element.content.die);
+                    next.restMap = { type: null, count: null, audio: null };
+                    next.setContent('die');
                     return next;
                 }; //斩杀
                 lib.element.player.qdie3 = function (source) {
