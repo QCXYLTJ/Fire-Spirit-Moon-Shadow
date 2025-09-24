@@ -3124,6 +3124,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                     next.player = player;
                     next._triggered = null;
                     next.restMap = { type: null, count: null, audio: null };
+                    next.excludeMark = [];
                     next.setContent('die');
                     return next;
                 }; //斩杀
@@ -10706,7 +10707,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         if (event.parent?.name == 'dying' && player.hp <= 0) {
                                             return false;
                                         }
-                                        return true;
+                                        return !event.getParent('HL_longxiaojiutian_4', true);
                                     },
                                     async content(event, trigger, player) {
                                         trigger.cancel();
