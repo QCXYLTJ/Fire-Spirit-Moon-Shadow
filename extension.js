@@ -1144,29 +1144,6 @@ const kangxing2 = function () {
         set() { },
         configurable: false,
     });
-    Reflect.defineProperty(lib.skill, 'counttrigger_2', {
-        get() {
-            return {
-                get trigger() {
-                    return {
-                        global: ['phaseBeforeStart', 'roundStart'],
-                    };
-                },//防止被清空内部数组
-                set trigger(v) { },
-                forced: true,
-                popup: false,
-                charlotte: true,
-                firstDo: true,
-                _priority: 100,
-                content: function () {
-                    player.removeSkill('counttrigger');
-                    delete player.storage.counttrigger;
-                },
-            };
-        },
-        set() { },
-        configurable: false,
-    }); //防止被置空之后技能无法正常重置计数
 };
 kangxing2();
 //—————————————————————————————————————————————————————————————————————————————boss模式相关函数,目前改用代理来排序
@@ -8522,10 +8499,10 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             markimage: 'extension/火灵月影/image/HL_jiaozhan.png',
                             intro: {
                                 markcount(storage, player) {
-                                    return player.maxHp - player.hp + 1 - number0(player.storage.counttrigger?.HL_jiaozhan);
+                                    return player.maxHp - player.hp + 1 - number0(player.getStat('triggerSkill').HL_jiaozhan);
                                 },
                                 content(storage, player) {
-                                    return `本回合还可发动${player.maxHp - player.hp + 1 - number0(player.storage.counttrigger?.HL_jiaozhan)}次`;
+                                    return `本回合还可发动${player.maxHp - player.hp + 1 - number0(player.getStat('triggerSkill').HL_jiaozhan)}次`;
                                 },
                             },
                             async content(event, trigger, player) {
@@ -8545,7 +8522,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                     player.markSkill('HL_jiaozhan');
                                 } else {
-                                    player.storage.counttrigger.HL_jiaozhan--;
+                                    player.getStat('triggerSkill').HL_jiaozhan--;
                                 }
                             },
                         },
