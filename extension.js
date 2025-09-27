@@ -3993,10 +3993,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 ui.backgroundMusic.loop = true;
                             },
                             trigger: {
-                                player: ['damageBegin4'],
+                                player: ['damageBegin2'],
                             },
                             forced: true,
-                            lastDo: true,
                             mark: true,
                             intro: {
                                 name: '无敌',
@@ -4006,9 +4005,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     }
                                     return '当前阿米娅未处于无敌状态';
                                 },
-                            },
-                            filter(event, player) {
-                                return player.wudi || event.num > 1;
                             },
                             async content(event, trigger, player) {
                                 if (player.wudi) {
@@ -4775,10 +4771,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         // 帷幕:三阶段解锁,我方角色始终拥有1限伤,且每回合至多受到5次伤害
                         HL_weimu: {
                             trigger: {
-                                global: ['damageBegin4'],
+                                global: ['damageBegin2'],
                             },
                             forced: true,
-                            lastDo: true,
                             filter(event, player) {
                                 return event.player.isFriendsOf(player);
                             },
@@ -4787,10 +4782,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 if (his[his.length - 1].damage.length > 4) {
                                     trigger.cancel();
                                 }
-                                if (trigger.num > 1) {
-                                    trigger.num = 1;
-                                    trigger.realnum = 1;
-                                }
+                                trigger.num = 1;
+                                trigger.realnum = 1;
                             },
                         },
                         // 惩雄:四阶段解锁,敌方角色使用于其摸牌阶段外获得的牌时,失去一点体力
@@ -5256,13 +5249,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 ui.background.setBackgroundImage('extension/火灵月影/image/bg_HL_wangzuo.jpg');
                             },
                             trigger: {
-                                player: ['damageBegin4'],
+                                player: ['damageBegin2'],
                             },
                             kangxing: true,
                             charlotte: true,
                             fixed: true,
                             forced: true,
-                            lastDo: true,
                             async content(event, trigger, player) {
                                 trigger.num = Math.min(trigger.num / 10, 50);
                                 trigger.realnum = Math.min(trigger.num / 10, 50);
@@ -5974,19 +5966,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_A_zhi: {
                             audio: 'ext:火灵月影/audio:true',
                             trigger: {
-                                player: ['damageBegin4'],
+                                player: ['damageBegin2'],
                             },
                             kangxing: true,
                             charlotte: true,
                             fixed: true,
                             forced: true,
-                            lastDo: true,
                             mark: true,
                             intro: {
                                 content: 'mark',
-                            },
-                            filter(event, player) {
-                                return event.num > 1;
                             },
                             async content(event, trigger, player) {
                                 player.addMark('HL_A_zhi');
@@ -10257,7 +10245,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player.storage.HL_heianzhixing_2 = 0;
                                     },
                                     trigger: {
-                                        player: ['damageBegin'],
+                                        player: ['damageBegin2'],
                                     },
                                     forced: true,
                                     mark: true,
@@ -10646,20 +10634,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 },
                                 2: {
                                     trigger: {
-                                        player: ['damageBegin4'],
+                                        player: ['damageBegin2'],
                                     },
                                     forced: true,
-                                    lastDo: true,
-                                    filter(event, player) {
-                                        const num = Math.floor(player.hujia % 10000);
-                                        if (num < 1) {
-                                            return false;
-                                        }
-                                        return event.num > num;
-                                    },
                                     async content(event, trigger, player) {
-                                        trigger.num = Math.floor(player.hujia % 10000);
-                                        trigger.realnum = Math.floor(player.hujia % 10000);
+                                        const num = Math.floor(player.hujia % 10000);
+                                        if (num > 0) {
+                                            trigger.num = Math.floor(num);
+                                            trigger.realnum = Math.floor(num);
+                                        }
                                     },
                                 },
                                 3: {
