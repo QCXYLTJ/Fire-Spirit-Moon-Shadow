@@ -7698,7 +7698,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return player.getEnemies().some((npc) => {
                                             let num = 0;
                                             for (const i of player.storage.HL_tianqi) {
-                                                if (npc.storage[`xiedu_${i}`] > 0) {
+                                                if (npc.storage[`_${i}_xiedu`] > 0) {
                                                     num++;
                                                 }
                                             }
@@ -8261,7 +8261,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     npc.xiedujilu = false;
                                     let num = 0;
                                     for (const i of player.storage.HL_tianqi) {
-                                        if (npc.storage[`xiedu_${i}`] > 0) {
+                                        if (npc.storage[`_${i}_xiedu`] > 0) {
                                             num++;
                                         }
                                     }
