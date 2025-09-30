@@ -1530,13 +1530,13 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 trigger: {
                     player: ['damageAfter'],
                 },
-                popup: false,
                 lastDo: true,
                 _priority: 999,
-                forced: true,
                 charlotte: true,
                 fixed: true,
                 kangxing: true,
+                forced: true,
+                popup: false,
                 filter(event, player) {
                     return event.num > 0;
                 },
@@ -1651,10 +1651,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 }
                 lib.skill._HL_ws_boss = {
                     trigger: {
-                        player: 'dieEnd',
+                        player: ['die'],
                     },
                     forced: true,
                     forceDie: true,
+                    popup: false,
                     mode: ['boss'],
                     filter(event, player) {
                         return HL.HL_ws_boss?.boss.every((q) => !game.players.includes(q)) && HL.HL_ws_boss.num < 4;
@@ -1716,10 +1717,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 };
                 lib.skill._HL_libai_boss = {
                     trigger: {
-                        player: ['dieEnd'],
+                        player: ['die'],
                     },
                     forced: true,
                     forceDie: true,
+                    popup: false,
                     mode: ['boss'],
                     filter(event, player) {
                         return HL.HL_libai_boss && HL.HL_libai_boss < 4 && game.boss == player;
@@ -3995,7 +3997,11 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBegin2'],
                             },
+                            kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
+                            popup: false,
                             mark: true,
                             intro: {
                                 name: '无敌',
@@ -4774,6 +4780,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 global: ['damageBegin2'],
                             },
                             forced: true,
+                            popup: false,
                             filter(event, player) {
                                 return event.player.isFriendsOf(player);
                             },
@@ -5255,6 +5262,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             charlotte: true,
                             fixed: true,
                             forced: true,
+                            popup: false,
                             async content(event, trigger, player) {
                                 trigger.num = Math.min(trigger.num / 10, 50);
                                 trigger.realnum = Math.min(trigger.num / 10, 50);
@@ -5972,12 +5980,15 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             charlotte: true,
                             fixed: true,
                             forced: true,
+                            popup: false,
                             mark: true,
                             intro: {
                                 content: 'mark',
                             },
                             async content(event, trigger, player) {
-                                player.addMark('HL_A_zhi');
+                                if (trigger.num > 1) {
+                                    player.addMark('HL_A_zhi');
+                                }
                                 trigger.num = 1;
                                 trigger.realnum = 1;
                             },
@@ -10175,6 +10186,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 global: ['roundStart'],
                             },
+                            kangxing: true,
+                            charlotte: true,
+                            fixed: true,
                             forced: true,
                             async content(event, trigger, player) {
                                 player.storage.HL_heianzhixing_2 = 0;
@@ -10248,6 +10262,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['damageBegin2'],
                                     },
                                     forced: true,
+                                    popup: false,
                                     mark: true,
                                     intro: {
                                         content: '本轮已受到#点伤害',
@@ -10592,12 +10607,12 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageEnd'],
                             },
-                            firstDo: true,
-                            forced: true,
-                            popup: false,
                             charlotte: true,
                             fixed: true,
                             kangxing: true,
+                            firstDo: true,
+                            forced: true,
+                            popup: false,
                             filter(event, player) {
                                 return event.num > 0;
                             },
@@ -10637,6 +10652,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['damageBegin2'],
                                     },
                                     forced: true,
+                                    popup: false,
                                     async content(event, trigger, player) {
                                         const num = Math.floor(player.hujia % 10000);
                                         if (num > 0) {
