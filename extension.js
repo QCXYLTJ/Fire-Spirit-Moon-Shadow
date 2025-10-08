@@ -1532,11 +1532,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                 },
                 lastDo: true,
                 _priority: 999,
-                charlotte: true,
-                fixed: true,
-                kangxing: true,
                 forced: true,
-                popup: false,
+                kangxing: true,
                 filter(event, player) {
                     return event.num > 0;
                 },
@@ -3997,9 +3994,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBegin2'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             popup: false,
                             mark: true,
@@ -4032,6 +4026,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         return player.hp < player.maxHp / 2 && !player.storage.HL_buyingcunzai_1;
                                     },
                                     forced: true,
+                                    popup: false,
                                     limited: true,
                                     async content(event, trigger, player) {
                                         player.awakenSkill('HL_buyingcunzai_1');
@@ -4208,6 +4203,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             _priority: 997,
                             audio: 'ext:火灵月影/audio:true',
                             forced: true,
+                            popup: false,
                             juexingji: true,
                             trigger: {
                                 player: ['damageAfter'],
@@ -4262,6 +4258,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             },
                             limited: true,
                             forced: true,
+                            popup: false,
                             forceDie: true,
                             filter(event, player, name) {
                                 return player.hp < 1 && !player.storage.yongheng;
@@ -4534,9 +4531,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['phaseZhunbeiBefore'],
                             },
                             forced: true,
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             async content(event, trigger, player) {
                                 let num = 4;
                                 let numx = 0;
@@ -4696,9 +4690,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['phaseZhunbeiBegin'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             mark: true,
                             intro: {
@@ -4860,9 +4851,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 global: ['useCardBefore'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             filter(event, player) {
                                 return event.player.isEnemiesOf(player) && get.tag(event.card, 'damage') && event.targets?.some((q) => q != player);
@@ -5069,9 +5057,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['useCardBefore'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             firstDo: true,
                             filter(event, player) {
@@ -5258,9 +5243,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBegin2'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             popup: false,
                             async content(event, trigger, player) {
@@ -5276,6 +5258,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                         player: ['damageAfter'],
                                     },
                                     forced: true,
+                                    popup: false,
                                     filter(event, player) {
                                         return player.hp < 50 && !player.storage.HL_shengzhe_1;
                                     },
@@ -5734,9 +5717,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.storage.HL_pozhu = [];
                             },
                             enable: ['chooseToUse', 'chooseToRespond'],
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             hiddenCard(player, name) {
                                 return player.countCards('hes') && !player.storage.HL_pozhu.includes(name);
                             },
@@ -5976,9 +5956,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBegin2'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             popup: false,
                             mark: true,
@@ -6251,6 +6228,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageAfter'],
                             },
                             forced: true,
+                            popup: false,
                             limited: true,
                             filter(event, player) {
                                 return player.hp < player.maxHp / 2 && !player.storage.HL_A_zhuan;
@@ -6472,6 +6450,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['damageAfter'],
                             },
                             forced: true,
+                            popup: false,
                             juexingji: true,
                             filter(event, player) {
                                 return player.hp < 1 && !player.storage.HL_A_ce;
@@ -6796,7 +6775,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player.removeMark('_HL_shaoshang', Math.ceil(player.countMark('_HL_shaoshang') / 2));
                             },
                             forced: true,
-                            charlotte: true,
                             marktext: '烧伤',
                             intro: {
                                 name: '烧伤',
@@ -6818,9 +6796,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             filter(event, player) {
                                 return player.countMark('HL_shaoEGO') < 15;
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             async content(event, trigger, player) {
                                 if (trigger.name == 'damage') {
@@ -7059,10 +7034,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBefore'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
+                            popup: false,
                             filter(event, player) {
                                 if (event.cards?.length && event.card && event.cards[0].name == event.card.name) {
                                     return false;
@@ -7459,9 +7432,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 global: ['damageEnd'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             mark: true,
                             intro: {
@@ -7857,7 +7827,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['recoverBegin'],
                             },
                             forced: true,
-                            kangxing: true,
                             filter(event, player) {
                                 return player.storage._HL_shengming_xiedu > 0;
                             },
@@ -7935,7 +7904,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['phaseEnd'],
                             },
                             forced: true,
-                            kangxing: true,
                             filter(event, player) {
                                 return player.storage._HL_zhihui_xiedu > 0 && player.hasCard((c) => c.gaintag.includes('_HL_zhihui_xiedu'), 'he');
                             },
@@ -8034,7 +8002,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 source: ['damageBefore'],
                             },
                             forced: true,
-                            kangxing: true,
                             filter(event, player) {
                                 return player.storage._HL_zhanzheng_xiedu > 0;
                             },
@@ -8131,7 +8098,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 player: ['useCardEnd'],
                             },
                             forced: true,
-                            kangxing: true,
                             filter(event, player) {
                                 return player.storage._HL_weiyan_xiedu > 0 && !get.tag(event.card, 'recover') && _status.currentPhase == player;
                             },
@@ -8196,10 +8162,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBefore'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
+                            popup: false,
                             filter(event, player) {
                                 return event.num > 1;
                             },
@@ -9015,9 +8979,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageBefore', 'recoverBefore'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             async content(event, trigger, player) {
                                 if (trigger.name == 'damage') {
@@ -10186,9 +10147,6 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 global: ['roundStart'],
                             },
-                            kangxing: true,
-                            charlotte: true,
-                            fixed: true,
                             forced: true,
                             async content(event, trigger, player) {
                                 player.storage.HL_heianzhixing_2 = 0;
@@ -10607,12 +10565,9 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                             trigger: {
                                 player: ['damageEnd'],
                             },
-                            charlotte: true,
-                            fixed: true,
                             kangxing: true,
                             firstDo: true,
                             forced: true,
-                            popup: false,
                             filter(event, player) {
                                 return event.num > 0;
                             },
