@@ -189,7 +189,7 @@ const kangxing1 = function () {
         set(value) {
             alldead = value;
         },
-    }); //锁定死亡列表
+    }); //锁定死亡列表    
     //—————————————————————————————————————————————————————————————————————————————生成玩家时载入抗性
     const kname = new Map();
     let ocreateplayer = ui.create.player;
@@ -639,6 +639,7 @@ const kangxing1 = function () {
         set() { },
         configurable: false,
     }); //名字抗性加入,类列表节点监听
+
     Reflect.defineProperty(game, 'HL_dead', {
         get() {
             return function (player) {
@@ -1504,6 +1505,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 maxhp = value;
                             }
                         },
+                        configurable: false
                     }); //扣减体力上限抗性
                     let qhp = Math.max(info.hp, player.hp);
                     Reflect.defineProperty(player, 'hp', {
@@ -1519,12 +1521,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 }
                             }
                         },
+                        configurable: false
                     });
                     Reflect.defineProperty(player, 'skipList', {
                         get() {
                             return [];
                         },
                         set() { },
+                        configurable: false
                     });
                 },
                 trigger: {
@@ -1560,6 +1564,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return trigger.step > 5;
                             },
                             set() { },
+                            configurable: false
                         });
                         let damage = trigger.num;
                         Reflect.defineProperty(trigger, 'num', {
@@ -1571,6 +1576,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     damage = value;
                                 }
                             },
+                            configurable: false
                         });
                         const npc = trigger.player;
                         Reflect.defineProperty(trigger, 'player', {
@@ -1578,6 +1584,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return npc;
                             },
                             set() { },
+                            configurable: false
                         });
                     }
                     if (trigger.name == 'useCard') {
@@ -1586,18 +1593,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return trigger.step > 16;
                             },
                             set() { },
+                            configurable: false
                         });
                         Reflect.defineProperty(trigger, 'excluded', {
                             get() {
                                 return [];
                             },
                             set() { },
+                            configurable: false
                         });
                         Reflect.defineProperty(trigger, 'all_excluded', {
                             get() {
                                 return false;
                             },
                             set() { },
+                            configurable: false
                         });
                         if (get.tag(trigger.card, 'damage')) {
                             const targets = player.getEnemies();
@@ -1606,6 +1616,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     return targets;
                                 }, //用变量保存一下,防止杀死一名敌人之后targets数组变化导致漏过一个
                                 set() { },
+                                configurable: false
                             });
                         } //用牌击穿
                     }
@@ -1615,12 +1626,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                 return trigger.step > 12;
                             },
                             set() { },
+                            configurable: false
                         });
                         Reflect.defineProperty(trigger, 'player', {
                             get() {
                                 return player;
                             },
                             set() { },
+                            configurable: false
                         });
                     }
                 },
@@ -4445,6 +4458,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 return {};
                                             },
                                             set() { },
+                                            configurable: false
                                         });
                                     }
                                     for (const key in lib.hook) {
@@ -4454,6 +4468,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     return [];
                                                 },
                                                 set() { },
+                                                configurable: false
                                             });
                                         }
                                     }
@@ -4464,6 +4479,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                     return [];
                                                 },
                                                 set() { },
+                                                configurable: false
                                             });
                                         }
                                     }
@@ -4472,24 +4488,28 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             return [];
                                         },
                                         set() { },
+                                        configurable: false
                                     });
                                     Reflect.defineProperty(player, 'invisibleSkills', {
                                         get() {
                                             return [];
                                         },
                                         set() { },
+                                        configurable: false
                                     });
                                     Reflect.defineProperty(player, 'hiddenSkills', {
                                         get() {
                                             return [];
                                         },
                                         set() { },
+                                        configurable: false
                                     });
                                     Reflect.defineProperty(player, 'tempSkills', {
                                         get() {
                                             return {};
                                         },
                                         set() { },
+                                        configurable: false
                                     });
                                     Reflect.defineProperty(player, 'additionalSkills', {
                                         get() {
@@ -4503,6 +4523,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             );
                                         },
                                         set() { },
+                                        configurable: false
                                     });
                                 };
                                 cs(event.target);
@@ -8264,12 +8285,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             maxhp = value;
                                         }
                                     },
+                                    configurable: false
                                 }); //扣减体力上限抗性
                                 Reflect.defineProperty(player, 'disabledSlots', {
                                     get() {
                                         return {};
                                     },
                                     set() { },
+                                    configurable: false
                                 }); //装备区废除抗性
                                 game.skangxing(player); //移除/赋空技能抗性
                                 // let skills = [];
@@ -8962,18 +8985,21 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             maxhp = value;
                                         }
                                     },
+                                    configurable: false
                                 }); //扣减体力上限抗性
                                 Reflect.defineProperty(player, 'hp', {
                                     get() {
                                         return player.maxHp - 1;
                                     },
                                     set() { },
+                                    configurable: false
                                 });
                                 Reflect.defineProperty(player, 'skipList', {
                                     get() {
                                         return [];
                                     },
                                     set() { },
+                                    configurable: false
                                 });
                             },
                             trigger: {
@@ -9230,6 +9256,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 return [];
                                             },
                                             set() { },
+                                            configurable: false
                                         });
                                     },
                                     trigger: {
@@ -9245,6 +9272,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                                 return trigger.step > num;
                                             },
                                             set() { },
+                                            configurable: false
                                         });
                                     },
                                 },
@@ -10524,6 +10552,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             maxhp = value;
                                         }
                                     },
+                                    configurable: false
                                 }); //扣减体力上限抗性
                                 let qhp = Math.max(info.hp, player.hp);
                                 Reflect.defineProperty(player, 'hp', {
@@ -10539,6 +10568,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             }
                                         }
                                     },
+                                    configurable: false
                                 });
                                 let qhujia = Math.max(info.hujia, player.hujia);
                                 Reflect.defineProperty(player, 'hujia', {
@@ -10554,12 +10584,14 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                             }
                                         }
                                     },
+                                    configurable: false
                                 });
                                 Reflect.defineProperty(player, 'skipList', {
                                     get() {
                                         return [];
                                     },
                                     set() { },
+                                    configurable: false
                                 });
                             },
                             trigger: {
