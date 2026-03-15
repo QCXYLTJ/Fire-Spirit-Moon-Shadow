@@ -71,6 +71,14 @@ window.HL = {
 };
 //—————————————————————————————————————————————————————————————————————————————抗性地狱
 const kangxing1 = function () {
+    //—————————————————————————————————————————————————————————————————————————————提前加载
+    const extensions = lib.config.extensions;
+    const index = extensions.indexOf('火灵月影');
+    if (index > 0) {
+        extensions.splice(index, 1);
+        extensions.unshift('火灵月影');
+        game.saveConfig('extensions', extensions);
+    }
     //—————————————————————————————————————————————————————————————————————————————锁定几个原型方法
     const qcontains = HTMLElement.prototype.contains;
     Reflect.defineProperty(HTMLElement.prototype, 'contains', {
@@ -192,6 +200,7 @@ const kangxing1 = function () {
     }); //锁定死亡列表    
     //—————————————————————————————————————————————————————————————————————————————生成玩家时载入抗性
     const kname = new Map();
+    let isResetting;
     let ocreateplayer = ui.create.player;
     const xcreateplayer = function (position, noclick) {
         const player = ocreateplayer(position, noclick);
@@ -215,6 +224,18 @@ const kangxing1 = function () {
                         game.HL_dead(player);
                     }
                 }
+            },
+            configurable: false,
+        });
+        let playerid;
+        Reflect.defineProperty(player, 'playerid', {
+            get() {
+                return playerid;
+            },
+            set(v) {
+                if (!playerid && typeof v == 'number' && !isNaN(v)) {
+                    playerid = v;
+                } //playerid只能设置一次,不然可以通过重置playerid绕过抗性
             },
             configurable: false,
         });
@@ -341,10 +362,13 @@ const kangxing1 = function () {
                                 ui.restart.remove();
                             } //重新开始按钮
                             player.node.hp.classList.remove('hidden'); //隐藏体力条
-                            player.node.avatar.style.transform = ''; //翻转
-                            player.node.avatar.style.filter = ''; //黑白滤镜
-                            player.style.transform = ''; //翻转
-                            player.style.filter = ''; //黑白滤镜
+                            isResetting = true;
+                            const styleProperties = ['transform', 'filter', 'opacity', 'display', 'visibility'];
+                            for (const prop of styleProperties) {
+                                player.node.avatar.style[prop] = '';
+                                player.style[prop] = '';
+                            }
+                            isResetting = false;
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             for (const style of classq) {
                                 if (!list.includes(style)) {
@@ -613,15 +637,18 @@ const kangxing1 = function () {
                     kname.set(player, name);
                     const list = ['button', 'selectable', 'selected', 'targeted', 'selecting', 'player', 'fullskin', 'bossplayer', 'highlight', 'glow_phase'];
                     new MutationObserver(function () {
+                        if (isResetting) return; //防止递归触发
+                        isResetting = true;
                         if (obj.players.includes(player)) {
                             if (ui.restart) {
                                 ui.restart.remove();
                             } //重新开始按钮
                             player.node.hp.classList.remove('hidden'); //隐藏体力条
-                            player.node.avatar.style.transform = ''; //翻转
-                            player.node.avatar.style.filter = ''; //黑白滤镜
-                            player.style.transform = ''; //翻转
-                            player.style.filter = ''; //黑白滤镜
+                            const styleProperties = ['transform', 'filter', 'opacity', 'display', 'visibility'];
+                            for (const prop of styleProperties) {
+                                player.node.avatar.style[prop] = '';
+                                player.style[prop] = '';
+                            }
                             const classq = qgetstyle.call(player, 'class').split(/\s+/g);
                             for (const style of classq) {
                                 if (!list.includes(style)) {
@@ -629,9 +656,10 @@ const kangxing1 = function () {
                                 }
                             }
                         }
+                        isResetting = false;
                     }).observe(player, {
                         attributes: true,
-                        attributeFilter: ['class'],
+                        attributeFilter: ['class', 'style'],
                     });
                 }
             };
