@@ -233,7 +233,7 @@ const kangxing1 = function () {
                 return playerid;
             },
             set(v) {
-                if (!playerid && typeof v == 'number' && !isNaN(v)) {
+                if (!playerid && typeof v == 'string') {
                     playerid = v;
                 } //playerid只能设置一次,不然可以通过重置playerid绕过抗性
             },
