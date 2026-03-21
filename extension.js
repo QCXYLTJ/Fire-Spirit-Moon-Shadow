@@ -693,24 +693,6 @@ const kangxing1 = function () {
         configurable: false,
     }); //斩杀测试
     //—————————————————————————————————————————————————————————————————————————————可有可无的部分,但是防止某些人强制胜利就自以为赢了
-    let ocheckresult = game.checkResult;
-    const xcheckresult = function () {
-        if (obj.players.some((q) => q.getEnemies().length)) {
-            return;
-        }
-        return ocheckresult();
-    };
-    Reflect.defineProperty(game, 'checkResult', {
-        get() {
-            return xcheckresult;
-        },
-        set(v) {
-            if (v != xcheckresult) {
-                ocheckresult = v;
-            }
-        },
-        configurable: false,
-    }); //禁止强制结束游戏
     Reflect.defineProperty(_status, 'over', {
         get() {
             return _status.pauseManager.over.isStarted;
