@@ -793,6 +793,7 @@ const kangxing2 = function () {
                     if (player == game.me && !window.suiyue) {
                         window.suiyue = true;
                         ui.backgroundMusic.src = `extension/火灵月影/BGM/碎月剑心.mp3`;
+                        ui.backgroundMusic.loop = true;
                         game.HL_mp4('HL_李白');
                     } //李白动画
                 },
