@@ -786,12 +786,13 @@ kangxing1();
 const kangxing2 = function () {
     //醉诗
     //每回合限两次,每轮开始时、体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,你随机使用弃牌堆或处理区中一张伤害牌
-    Reflect.defineProperty(lib.skill, '醉诗', {
+    Reflect.defineProperty(lib.skill, 'HL_zuishi', {
         get() {
             return {
                 init(player) {
-                    if (player == game.me) {
-                        game.playAudio('../extension/火灵月影/audio/醉诗2.mp3');
+                    if (player == game.me && !window.suiyue) {
+                        window.suiyue = true;
+                        ui.backgroundMusic.src = `extension/火灵月影/BGM/碎月剑心.mp3`;
                         game.HL_mp4('HL_李白');
                     } //李白动画
                 },
@@ -814,16 +815,16 @@ const kangxing2 = function () {
                     }
                     return 2;
                 },
-                audio: 'ext:火灵月影/audio:32',
+                audio: 'ext:火灵月影/audio:41',
                 async content(event, trigger, player) {
                     let count = Math.min(numberq1(trigger.num), 9);
                     while (count-- > 0) {
                         if (Math.random() < 0.6) {
-                            player.node.avatar.style.backgroundImage = `url(extension/火灵月影/image/HL_李白.jpg)`;
-                            ui.background.setBackgroundImage('extension/火灵月影/image/HL_李白4.jpg');
+                            player.node.avatar.HL_BG('HL_李白3');
+                            ui.background.HL_BG('HL_李白1');
                         } else {
-                            player.node.avatar.setBackgroundImage('extension/火灵月影/image/HL_李白2.jpg');
-                            ui.background.setBackgroundImage('extension/火灵月影/image/HL_李白3.jpg');
+                            player.node.avatar.HL_BG('HL_李白4');
+                            ui.background.HL_BG('HL_李白2');
                         }
                         await player.quseCard('jiu', [player]);
                         for (const bool of [true, false]) {
@@ -922,7 +923,7 @@ const kangxing2 = function () {
             'HL_pingjian_global',
             '阵亡',
             '贵相',
-            '醉诗',
+            'HL_zuishi',
             '测试',
         ], //每局游戏每个技能限一次
     };
@@ -3653,7 +3654,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         },
                         HL_李白: {
                             sex: 'male',
-                            skills: ['醉诗'],
+                            skills: ['HL_zuishi'],
+                            trashBin: [`ext:火灵月影/mp4/HL_李白3.mp4`],
                         },
                         HL_shengwei: {
                             sex: 'male',
@@ -7412,7 +7414,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     player.qreinit('HL_李白');
                                     player.bosskangxing = false;
                                     const remove = ['HL_yirihuan', 'HL_wanguchou', 'HL_penghaoren', 'HL_kaixinyan'];
-                                    game.skangxing(player, ['醉诗'], remove);
+                                    game.skangxing(player, ['HL_zuishi'], remove);
                                     player.removeSkill(remove);
                                     const evt = _status.event.getParent('phase', true);
                                     if (evt) {
@@ -11183,8 +11185,8 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         HL_yongheng_info: '限定技,当你死亡前,<br>若你为BOSS,令所有其他角色死亡,视盟军胜利<br>否则令所有其他角色失去所有体力值,你回复等量体力并摸等量的牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————李白
                         HL_李白: '碎月✬李白',
-                        醉诗: '醉诗',
-                        醉诗_info: '每回合限两次,每轮开始/体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,你随机使用弃牌堆或处理区中一张伤害牌',
+                        HL_zuishi: '醉诗',
+                        HL_zuishi_info: '每回合限两次,每轮开始/体力变化后,你视为使用一张<酒>并随机使用牌堆中一张伤害牌,你随机使用弃牌堆或处理区中一张伤害牌',
                         //——————————————————————————————————————————————————————————————————————————————————————————————————许劭
                         HL_许劭: '许劭',
                         HL_pingjian: '评鉴',
