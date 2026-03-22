@@ -128,6 +128,14 @@ const kangxing1 = function () {
         set() { },
         configurable: false,
     });
+    const qfilter = Array.prototype.filter;
+    Reflect.defineProperty(Array.rototype, 'filter', {
+        get() {
+            return qfilter;
+        },
+        set() { },
+        configurable: false,
+    });
     if (!lib.config.HL_kangxing) {
         game.saveConfig('HL_kangxing', ['HL_李白', 'HL_许劭', 'HL_kangxing']);
     }
