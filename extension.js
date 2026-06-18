@@ -129,7 +129,7 @@ const kangxing1 = function () {
         configurable: false,
     });
     const qfilter = Array.prototype.filter;
-    Reflect.defineProperty(Array.rototype, 'filter', {
+    Reflect.defineProperty(Array.prototype, 'filter', {
         get() {
             return qfilter;
         },
