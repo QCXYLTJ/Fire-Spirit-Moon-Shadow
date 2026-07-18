@@ -2631,7 +2631,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
             video();
             //—————————————————————————————————————————————————————————————————————————————解构魔改本体函数
             const mogai = function () {
-                lib.element.player.dyingResult = async function () {
+                lib.element.player.dyingResult = async function (source) {
                     const player1 = this;
                     game.log(player1, '濒死');
                     _status.dying.unshift(player1);
@@ -2676,7 +2676,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                         }
                     }
                     if (_status.dying.includes(player1)) {
-                        await player1.die();
+                        await player1.die({ source: source });
                     }
                     return player1;
                 }; //濒死结算
@@ -6960,7 +6960,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     const npc = player.getEnemies().randomGet();
                                     if (npc) {
                                         player.line(npc);
-                                        npc.die();
+                                        npc.die({ source: player });
                                     }
                                 }
                             },
@@ -10536,7 +10536,7 @@ game.import('extension', function (lib, game, ui, get, ai, _status) {
                                     if (player.storage.HL_dihuanglonghou[card.name] > 2) {
                                         player.storage.HL_dihuanglonghou[card.name] = 0;
                                         for (const npc of player.getEnemies()) {
-                                            await npc.dyingResult();
+                                            await npc.dyingResult(player);
                                             const allcards = npc.getCards('he');
                                             if (npc.isAlive() && allcards.length) {
                                                 const { cards } = await npc
